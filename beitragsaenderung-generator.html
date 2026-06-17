@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vertragsschreiben-Generator · iQuadrat</title>
+<style>
+  :root{--navy:#0b2a4a;--blue:#1d6fa5;--green:#2f9e63;--orange:#e08e2c;--ink:#3a4a5a;--muted:#8295a6;--bg:#eef3f8;--line:#dde6ee;}
+  *{box-sizing:border-box}
+  body{font-family:'Helvetica Neue',Arial,sans-serif;margin:0;color:var(--navy);background:var(--bg)}
+  .topbar{display:flex;align-items:center;gap:16px;flex-wrap:wrap;background:#fff;border-bottom:1px solid var(--line);padding:12px 20px;position:sticky;top:0;z-index:10;box-shadow:0 1px 8px rgba(11,42,74,.06)}
+  .topbar img{height:34px}
+  .topbar .t{font-weight:700;font-size:16px;line-height:1.2}
+  .topbar .t small{display:block;font-weight:400;font-size:11.5px;color:var(--muted);margin-top:1px}
+  .topbar .sp{flex:1}
+  .btn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--navy);background:var(--navy);color:#fff;font-weight:700;font-size:13.5px;padding:9px 16px;border-radius:8px;cursor:pointer;transition:transform .08s ease,box-shadow .12s ease,background .12s ease;box-shadow:0 1px 2px rgba(11,42,74,.12)}
+  .btn.alt{background:#fff;color:var(--navy)}
+  .btn.ghost{background:#fff;color:var(--blue);border-color:var(--line);box-shadow:none}
+  .btn:hover{box-shadow:0 3px 10px rgba(11,42,74,.18)}
+  .btn:active{transform:translateY(1px)}
+  .btn:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+  .layout{display:grid;grid-template-columns:380px 1fr;gap:0;align-items:start}
+  @media(max-width:900px){.layout{grid-template-columns:1fr}}
+  .form{padding:18px 20px;max-height:calc(100vh - 60px);overflow:auto}
+  @media(max-width:900px){.form{max-height:none}}
+  .sec{font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--blue);font-weight:700;margin:18px 0 8px}
+  .sec:first-child{margin-top:0}
+  .field{margin-bottom:11px}
+  .field label{display:block;font-size:12.5px;font-weight:600;margin-bottom:4px}
+  .field input,.field select,.field textarea{width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:7px;font-size:13.5px;color:var(--navy);font-family:inherit}
+  .field textarea{resize:vertical;min-height:48px;line-height:1.4}
+  .field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(29,111,165,.12)}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .hint{font-size:11.5px;color:var(--ink);background:#fff7ec;border:1px solid #f3e2c4;border-radius:7px;padding:9px 11px;margin:8px 0 4px;line-height:1.5}
+  .hint b{color:var(--orange)}
+  .preview{display:flex;flex-direction:column;align-items:center;padding:24px 22px 40px;overflow:auto;background:linear-gradient(180deg,#e7eef6 0%,var(--bg) 140px)}
+  .preview .note{display:flex;align-items:center;gap:7px;font-size:11.5px;color:var(--muted);margin:0 0 14px;max-width:210mm;align-self:flex-start}
+  .preview .note svg{flex:none;color:var(--blue)}
+  #sheetWrap{transform-origin:top center}
+  .sheet{width:210mm;min-height:297mm;background:#fff;margin:0 auto;padding:26mm 24mm;box-shadow:0 6px 30px rgba(11,42,74,.16);border-radius:2px;font-family:'Helvetica Neue',Arial,sans-serif;color:#111}
+  /* ---- Brief-Typografie (auch im Word-Export verwendet) ---- */
+  .l-top{font-size:11pt;font-weight:bold;color:#111;margin-bottom:30pt}
+  .l-recv{font-size:11pt;line-height:1.5;margin-bottom:24pt}
+  .l-place{font-size:11pt;text-align:right;margin-bottom:22pt}
+  .l-subject{font-size:11.5pt;font-weight:bold;color:#0b2a4a;margin-bottom:16pt}
+  .l-subject u{text-decoration:underline}
+  .l-greet{font-size:11pt;margin-bottom:12pt}
+  .l-body{font-size:11pt;line-height:1.55}
+  .l-body p{margin:0 0 11pt}
+  .l-close{font-size:11pt;margin-top:12pt}
+  .l-sign{margin-top:42pt}
+  .l-sign .ln{border-bottom:.7pt solid #111;width:64mm;height:0;margin-bottom:5pt}
+  .nm{font-size:11pt;font-weight:bold;color:#111}
+  /* ---- Antrag-Layout ---- */
+  .a-title{font-size:13pt;font-weight:bold;color:#0b2a4a;margin:24pt 0 18pt}
+  .a-block{font-size:11pt;line-height:1.8;margin-bottom:22pt}
+  .a-place{font-size:11pt;margin-top:30pt}
+  @media print{
+    @page{size:A4;margin:18mm}
+    body{background:#fff}
+    .topbar,.form,.preview .note{display:none!important}
+    .layout{display:block}
+    .preview{display:block;padding:0;overflow:visible;background:none}
+    #sheetWrap{zoom:1!important;transform:none!important}
+    .sheet{width:auto;min-height:0;margin:0;padding:0;box-shadow:none;border-radius:0}
+  }
+</style>
+</head>
+<body>
+  <div class="topbar">
+    <img src="../assets/logo_iquadrat.png" alt="iQuadrat">
+    <div class="t">Vertragsschreiben-Generator<small>Beitragsänderung &amp; Standard-Anträge · DOCX + PDF</small></div>
+    <div class="sp"></div>
+    <button class="btn ghost" id="btnGen" title="Textbaustein neu aus den Feldern erzeugen">↻ Text neu generieren</button>
+    <button class="btn alt" id="btnDoc">⬇ Als Word (.doc)</button>
+    <button class="btn" id="btnPdf">⬇ Als PDF speichern</button>
+  </div>
+
+  <div class="layout">
+    <!-- FORMULAR -->
+    <div class="form">
+      <div class="sec">Vorgang</div>
+      <div class="field"><label for="art">Art des Schreibens</label>
+        <select id="art">
+          <option value="erhoehung">Beitragserhöhung</option>
+          <option value="senkung">Beitragssenkung</option>
+          <option value="freistellung">Beitragsfreistellung (Antrag)</option>
+          <option value="dyn_aus">Dynamik aussetzen</option>
+          <option value="dyn_an">Dynamik aktivieren</option>
+          <option value="zuzahlung">Sonderzahlung / Zuzahlung</option>
+          <option value="pause">Beitragspause / Stundung</option>
+          <option value="bank">Bankverbindung ändern</option>
+          <option value="kuendigung">Kündigung</option>
+          <option value="sonstiges">Sonstiges (Freitext)</option>
+        </select>
+      </div>
+
+      <div class="sec">Vertrag &amp; Gesellschaft</div>
+      <div class="field"><label for="gesellschaft">Versicherungsgesellschaft</label><input id="gesellschaft" placeholder="z. B. Alte Leipziger Lebensversicherung AG"></div>
+      <div class="field cond" data-for="erhoehung senkung dyn_aus dyn_an zuzahlung pause bank kuendigung sonstiges"><label for="anschriftG">Anschrift der Gesellschaft</label><textarea id="anschriftG" placeholder="Alte Leipziger-Platz 1&#10;61440 Oberursel"></textarea></div>
+      <div class="row2">
+        <div class="field"><label for="vsnr">Versicherungsnummer</label><input id="vsnr" placeholder="8741848"></div>
+        <div class="field cond" data-for="freistellung"><label for="vertragsart">Vertragsart</label><input id="vertragsart" placeholder="Altersvorsorge"></div>
+      </div>
+
+      <div class="sec">Personen</div>
+      <div class="field"><label for="name">Versicherungsnehmer/in</label><input id="name" placeholder="z. B. Luisa Marie Gebel"></div>
+      <div class="field cond" data-for="freistellung"><label for="versichertePerson">Versicherte Person (falls abweichend)</label><input id="versichertePerson" placeholder="z. B. Sophie Sperling"></div>
+
+      <div class="sec">Details</div>
+      <div class="row2">
+        <div class="field cond" data-for="erhoehung senkung"><label for="alt">Beitrag bisher</label><input id="alt" inputmode="decimal" placeholder="100,00"></div>
+        <div class="field cond" data-for="erhoehung senkung"><label for="neu">Beitrag neu</label><input id="neu" inputmode="decimal" placeholder="350,00"></div>
+      </div>
+      <div class="field cond" data-for="erhoehung senkung"><label for="zahlweise">Zahlweise</label>
+        <select id="zahlweise">
+          <option value="monatlich">monatlich</option>
+          <option value="vierteljährlich">vierteljährlich</option>
+          <option value="halbjährlich">halbjährlich</option>
+          <option value="jährlich">jährlich</option>
+        </select>
+      </div>
+      <div class="field cond" data-for="zuzahlung"><label for="betrag">Betrag der Sonderzahlung</label><input id="betrag" inputmode="decimal" placeholder="5.000,00"></div>
+      <div class="field cond" data-for="bank"><label for="iban">Neue IBAN</label><input id="iban" placeholder="DE00 0000 0000 0000 0000 00"></div>
+      <div class="field"><label for="wirksam">Wirksam zum</label><input id="wirksam" type="date"></div>
+      <div class="field"><label for="freitext">Bemerkung / Zusatz (optional)</label><textarea id="freitext" placeholder="Wird als zusätzlicher Absatz übernommen."></textarea></div>
+
+      <div class="sec">Schreiben</div>
+      <div class="row2">
+        <div class="field"><label for="ort">Ort</label><input id="ort"></div>
+        <div class="field"><label for="datum">Datum</label><input id="datum" type="date"></div>
+      </div>
+
+      <div class="sec">Dokumenttext (editierbar)</div>
+      <div class="field"><label for="betreff">Betreff / Titel</label><input id="betreff"></div>
+      <div class="field"><label for="body">Textbaustein</label><textarea id="body" style="min-height:150px"></textarea></div>
+      <div class="hint"><b>Beitragserhöhung &amp; -freistellung</b> sind euren echten Vorlagen (Alte Leipziger / AXA) nachgebildet. Die übrigen Arten sind Standard-Muster — schick mir je ein Original, dann ziehe ich sie nach. Text vor dem Export jederzeit anpassbar; <b>↻ Text neu generieren</b> setzt ihn aus den Feldern zurück.</div>
+    </div>
+
+    <!-- VORSCHAU -->
+    <div class="preview">
+      <p class="note"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><rect x="4" y="11" width="16" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>Live-Vorschau · entspricht dem PDF/Word-Export. Eingaben bleiben lokal in deinem Browser.</p>
+      <div id="sheetWrap"><div class="sheet" id="sheet"></div></div>
+    </div>
+  </div>
+
+<script>
+(function(){
+  "use strict";
+
+  // ====== KONFIGURATION ======
+  var CONFIG={ ortDefault:'Mannheim' };
+  // ===========================
+
+  var LETTER_CSS = document.querySelector('style').textContent; // gleiche Typografie im Word-Export
+  var dirty=false;
+
+  function $(id){return document.getElementById(id);}
+  function val(id){var e=$(id);return e?e.value.trim():'';}
+  function setVal(id,v){var e=$(id);if(e)e.value=v;}
+  function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+  function today(){var d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+  function fmtDate(iso){if(!iso)return '';var p=iso.split('-');if(p.length!==3)return iso;return p[2]+'.'+p[1]+'.'+p[0];}
+  // Robustes Zahlen-Parsing: akzeptiert "5.000,00", "5000,50", "5000", "0.8"
+  function num(x){
+    var s=String(x==null?'':x).trim();
+    if(!s)return NaN;
+    if(s.indexOf(',')>=0){ s=s.replace(/\./g,'').replace(',','.'); }   // 5.000,00 → 5000.00
+    else if(/^-?\d{1,3}(\.\d{3})+$/.test(s)){ s=s.replace(/\./g,''); } // 5.000 → 5000 (reine Tausendertrennung)
+    var n=parseFloat(s); return isNaN(n)?NaN:n;
+  }
+  function fmtEur(n){return n.toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2});}
+  function beitrag(x,periode){var n=num(x);var s=isNaN(n)?'__,__':fmtEur(n);return s+' EUR / '+periode;}
+  function eur(x){var n=num(x);return isNaN(n)?'__,__ EUR':fmtEur(n)+' EUR';}
+
+  function collect(){
+    return {gesellschaft:val('gesellschaft'),anschriftG:val('anschriftG'),vsnr:val('vsnr'),vertragsart:val('vertragsart'),
+      name:val('name'),versichertePerson:val('versichertePerson'),art:val('art'),alt:val('alt'),neu:val('neu'),zahlweise:val('zahlweise'),
+      betrag:val('betrag'),iban:val('iban'),wirksam:val('wirksam'),datum:val('datum'),ort:val('ort'),freitext:val('freitext'),
+      betreff:val('betreff'),body:val('body')};
+  }
+  function styleFor(art){return art==='freistellung'?'antrag':'letter';}
+
+  // ====== Textbausteine je Vorgangsart (hier euren Wortlaut hinterlegen) ======
+  function genBody(art,v){
+    var per={monatlich:'Monat',vierteljährlich:'Vierteljahr',halbjährlich:'Halbjahr',jährlich:'Jahr'}[v.zahlweise||'monatlich'];
+    var w = v.wirksam ? 'zum '+fmtDate(v.wirksam) : 'zum nächstmöglichen Termin';
+    var zw = v.zahlweise || 'monatlich';
+    var vsnr = v.vsnr||'____________';
+    switch(art){
+      case 'erhoehung':
+      case 'senkung':
+        var wort = art==='erhoehung'?'Beitragserhöhung':'Beitragssenkung';
+        var wirkSatz = 'Die '+wort+' soll '+(v.wirksam?'zum '+fmtDate(v.wirksam):'zum nächstmöglichen Termin')+' wirksam werden.';
+        return {betreff:wort+' – Versicherungsnummer '+vsnr,
+          body:'hiermit bitte ich Sie, meinen '+zw+'en Beitrag zur oben genannten Versicherung wie folgt anzupassen:\n\n'+
+               'Bisheriger Beitrag: '+beitrag(v.alt,per)+'\n'+
+               'Neuer Beitrag: '+beitrag(v.neu,per)+'\n\n'+
+               wirkSatz+'\n\n'+
+               'Bitte bestätigen Sie mir die Anpassung sowie den genauen Wirksamkeitstermin schriftlich.'};
+      case 'freistellung':
+        var vp = (v.versichertePerson && v.versichertePerson!==v.name) ? v.versichertePerson : '';
+        var aufVP = vp ? ' auf die versicherte Person '+vp : '';
+        var dt = v.wirksam ? fmtDate(v.wirksam) : '[Datum]';
+        return {betreff:'Antrag auf Beitragsfreistellung',
+          body:'hiermit beantrage ich, '+(v.name||'[Name]')+' (Versicherungsnehmer/in), die Beitragsfreistellung des oben genannten Vertrages'+aufVP+' zum '+dt+'.\n\n'+
+               'Bitte stellen Sie den Vertrag zum '+dt+' beitragsfrei und bestätigen Sie mir die Durchführung schriftlich.\n\n'+
+               'Für Rückfragen stehe ich gerne zur Verfügung.'};
+      case 'dyn_aus':
+        return {betreff:'Aussetzung der Beitragsdynamik – Versicherungsnummer '+vsnr,
+          body:'hiermit bitte ich Sie, die jährliche Beitragsdynamik meiner oben genannten Versicherung mit Wirkung '+w+' auszusetzen.\n\nBitte bestätigen Sie mir die Aussetzung schriftlich.'};
+      case 'dyn_an':
+        return {betreff:'Aktivierung der Beitragsdynamik – Versicherungsnummer '+vsnr,
+          body:'hiermit bitte ich Sie, die jährliche Beitragsdynamik meiner oben genannten Versicherung mit Wirkung '+w+' wieder zu aktivieren.\n\nBitte bestätigen Sie mir die Aktivierung schriftlich.'};
+      case 'zuzahlung':
+        return {betreff:'Sonderzahlung / Zuzahlung – Versicherungsnummer '+vsnr,
+          body:'hiermit möchte ich eine Sonderzahlung in Höhe von '+eur(v.betrag)+' auf meine oben genannte Versicherung leisten'+(v.wirksam?' (gewünschtes Datum: '+fmtDate(v.wirksam)+')':'')+'.\n\nBitte teilen Sie mir die hierfür notwendige Vorgehensweise und die Bankverbindung mit.'};
+      case 'pause':
+        return {betreff:'Beitragspause / Stundung – Versicherungsnummer '+vsnr,
+          body:'hiermit bitte ich Sie, für meine oben genannte Versicherung eine Beitragspause bzw. eine Stundung der Beiträge mit Wirkung '+w+' einzurichten.\n\nBitte bestätigen Sie mir Zeitraum und Konditionen schriftlich.'};
+      case 'bank':
+        return {betreff:'Änderung der Bankverbindung – Versicherungsnummer '+vsnr,
+          body:'hiermit teile ich Ihnen eine neue Bankverbindung für den Einzug der Beiträge meiner oben genannten Versicherung mit.\n\nNeue IBAN: '+(v.iban||'________________________')+'\nGültig '+w+'.\n\nDie Einzugsermächtigung / das SEPA-Lastschriftmandat erteile ich entsprechend.'};
+      case 'kuendigung':
+        return {betreff:'Kündigung – Versicherungsnummer '+vsnr,
+          body:'hiermit kündige ich meine oben genannte Versicherung ordentlich '+w+'.\n\nBitte bestätigen Sie mir den Beendigungszeitpunkt und die Wirksamkeit der Kündigung schriftlich.'};
+      default:
+        return {betreff:'Vertragsänderung – Versicherungsnummer '+vsnr,
+          body:(v.freitext||'[Bitte das Anliegen im Feld „Bemerkung / Zusatz" beschreiben.]')};
+    }
+  }
+
+  function autofill(){
+    var v=collect();
+    var g=genBody(v.art,v);
+    var body=g.body;
+    // Bemerkung als Zusatzabsatz anhängen — außer bei "Sonstiges", wo sie bereits der Haupttext ist
+    if(v.art!=='sonstiges' && v.freitext) body += '\n\n'+v.freitext;
+    setVal('betreff',g.betreff);
+    setVal('body',body);
+  }
+
+  function toggleFields(art){
+    document.querySelectorAll('.cond').forEach(function(grp){
+      grp.style.display = grp.getAttribute('data-for').split(' ').indexOf(art)>=0 ? '' : 'none';
+    });
+  }
+
+  function render(){
+    var v=collect();
+    var style=styleFor(v.art);
+    var dateStr=fmtDate(v.datum||today());
+    var name=esc(v.name||'[Name Versicherungsnehmer/in]');
+    var bodyHtml=(v.body||'').split(/\n\n+/).map(function(p){return '<p>'+esc(p).replace(/\n/g,'<br>')+'</p>';}).join('');
+    var html;
+    if(style==='antrag'){
+      var vp=(v.versichertePerson && v.versichertePerson!==v.name)?v.versichertePerson:v.name;
+      html='<div class="l-top">'+name+'</div>'+
+        '<div class="a-title">'+esc(v.betreff||'Antrag')+'</div>'+
+        '<div class="a-block">'+
+          'Versicherungsunternehmen: '+esc(v.gesellschaft||'____________')+'<br>'+
+          'Versicherungsnehmer/in: '+esc(v.name||'____________')+'<br>'+
+          'Versicherte Person: '+esc(vp||'____________')+'<br>'+
+          'Versicherungsnummer: '+esc(v.vsnr||'____________')+'<br>'+
+          'Vertragsart: '+esc(v.vertragsart||'Altersvorsorge')+'</div>'+
+        '<div class="l-greet">Sehr geehrte Damen und Herren,</div>'+
+        '<div class="l-body">'+bodyHtml+'</div>'+
+        '<div class="l-close">Mit freundlichen Grüßen,</div>'+
+        '<div class="nm" style="margin-top:8pt">'+name+'</div>'+
+        '<div class="a-place">'+esc(v.ort||CONFIG.ortDefault)+', '+dateStr+'</div>';
+    } else {
+      var recv=esc(v.gesellschaft||'[Versicherungsgesellschaft]')+(v.anschriftG?'<br>'+esc(v.anschriftG).replace(/\n/g,'<br>'):'');
+      html='<div class="l-top">'+name+'</div>'+
+        '<div class="l-recv">'+recv+'</div>'+
+        '<div class="l-place">'+esc(v.ort||CONFIG.ortDefault)+', den '+dateStr+'</div>'+
+        '<div class="l-subject">Betreff: <u>'+esc(v.betreff||'[Betreff]')+'</u></div>'+
+        '<div class="l-greet">Sehr geehrte Damen und Herren,</div>'+
+        '<div class="l-body">'+bodyHtml+'</div>'+
+        '<div class="l-close">Mit freundlichen Grüßen,</div>'+
+        '<div class="l-sign"><div class="ln"></div><div class="nm">'+name+'</div></div>';
+    }
+    $('sheet').innerHTML=html;
+  }
+
+  // Vorschau-Blatt auf die verfügbare Breite einpassen (nie über 100 % vergrößern)
+  function fitZoom(){
+    var prev=document.querySelector('.preview'); if(!prev)return;
+    var avail=prev.clientWidth-48;            // abzgl. Innenabstand
+    var pxW=210*96/25.4;                      // A4-Breite (210 mm) in px
+    var z=Math.max(.3,Math.min(1,avail/pxW));
+    $('sheetWrap').style.zoom=z;
+  }
+
+  function onInput(e){
+    var id=e.target.id;
+    // Wechsel der Vorgangsart = neuer Dokumenttyp → Text immer frisch aus der passenden Vorlage erzeugen
+    if(id==='art'){ toggleFields(e.target.value); dirty=false; autofill(); }
+    else if(id==='betreff'||id==='body'){ dirty=true; }
+    else if(id!=='ort'&&id!=='datum'){ if(!dirty) autofill(); }
+    render();
+  }
+
+  function downloadDoc(){
+    var v=collect();
+    var html='<!DOCTYPE html><html><head><meta charset="utf-8"><style>'+LETTER_CSS+
+      ' body{background:#fff}.sheet{box-shadow:none;margin:0;padding:0;width:auto;min-height:0}</style></head><body>'+
+      $('sheet').outerHTML+'</body></html>';
+    var blob=new Blob(['﻿'+html],{type:'application/msword'});
+    var a=document.createElement('a');
+    a.href=URL.createObjectURL(blob);
+    var safe=(v.name||'Kunde').replace(/[^\wäöüÄÖÜß \-]/g,'').trim().replace(/\s+/g,'_')||'Kunde';
+    var tag={erhoehung:'Beitragserhoehung',senkung:'Beitragssenkung',freistellung:'Beitragsfreistellung',dyn_aus:'Dynamik_aus',dyn_an:'Dynamik_an',zuzahlung:'Sonderzahlung',pause:'Beitragspause',bank:'Bankverbindung',kuendigung:'Kuendigung',sonstiges:'Schreiben'}[v.art]||'Schreiben';
+    a.download=tag+'_'+safe+'_'+(v.datum||today())+'.doc';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(function(){URL.revokeObjectURL(a.href);},1500);
+  }
+
+  // Init
+  document.querySelector('.form').addEventListener('input',onInput);
+  $('btnGen').addEventListener('click',function(){dirty=false;autofill();render();});
+  $('btnPdf').addEventListener('click',function(){window.print();});
+  $('btnDoc').addEventListener('click',downloadDoc);
+  window.addEventListener('resize',fitZoom);
+
+  setVal('ort',CONFIG.ortDefault);
+  setVal('datum',today());
+  // Prefill per URL (?art=…&name=…) — z. B. später aus Pipedrive heraus
+  try{
+    var qs=new URLSearchParams(location.search);
+    ['art','name','versichertePerson','gesellschaft','anschriftG','vsnr','vertragsart','alt','neu','zahlweise','betrag','iban','wirksam','ort','datum'].forEach(function(k){ if(qs.has(k)) setVal(k,qs.get(k)); });
+  }catch(e){}
+  toggleFields(val('art'));
+  autofill();
+  render();
+  fitZoom();
+})();
+</script>
+</body>
+</html>

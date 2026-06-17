@@ -1,0 +1,1006 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Konzept-Generator · iQuadrat</title>
+<style>
+  :root{--navy:#0b2a4a;--blue:#1d6fa5;--green:#2f9e63;--orange:#e08e2c;--purple:#7a4fc9;--red:#c0492f;--ink:#3a4a5a;--muted:#8295a6;--bg:#eef3f8;--line:#dde6ee;}
+  *{box-sizing:border-box}
+  body{font-family:'Helvetica Neue',Arial,sans-serif;margin:0;color:var(--navy);background:var(--bg)}
+  .topbar{display:flex;align-items:center;gap:14px;flex-wrap:wrap;background:#fff;border-bottom:1px solid var(--line);padding:11px 18px;position:sticky;top:0;z-index:20}
+  .topbar img{height:32px}
+  .topbar .t{font-weight:700;font-size:15.5px;line-height:1.2}
+  .topbar .t small{display:block;font-weight:400;font-size:11px;color:var(--muted)}
+  .topbar .sp{flex:1}
+  .btn{border:1px solid var(--navy);background:var(--navy);color:#fff;font-weight:700;font-size:13px;padding:9px 15px;border-radius:8px;cursor:pointer}
+  .btn.alt{background:#fff;color:var(--navy)}
+  .btn:hover{opacity:.92}
+  .layout{display:grid;grid-template-columns:380px 1fr;align-items:start}
+  @media(max-width:980px){.layout{grid-template-columns:1fr}}
+  .form{padding:14px 16px;max-height:calc(100vh - 56px);overflow:auto}
+  @media(max-width:980px){.form{max-height:none}}
+
+  details.grp{border:1px solid var(--line);border-radius:9px;margin-bottom:9px;background:#fff;overflow:hidden}
+  details.grp>summary{list-style:none;cursor:pointer;padding:10px 12px;font-size:12px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--blue);display:flex;align-items:center;gap:8px}
+  details.grp>summary::-webkit-details-marker{display:none}
+  details.grp>summary::before{content:"▸";color:var(--muted);font-size:11px;transition:transform .15s}
+  details.grp[open]>summary::before{transform:rotate(90deg)}
+  details.grp .body{padding:4px 12px 12px}
+
+  .field{margin-bottom:9px}
+  .field label{display:block;font-size:12px;font-weight:600;margin-bottom:3px}
+  .field input,.field textarea,.field select{width:100%;padding:7px 9px;border:1px solid var(--line);border-radius:6px;font-size:13px;color:var(--navy);font-family:inherit;background:#fff}
+  .field textarea{resize:vertical;min-height:46px;line-height:1.4}
+  .field input:focus,.field textarea:focus,.field select:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(29,111,165,.12)}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+  .rng{display:flex;align-items:center;gap:8px}
+  .rng input[type=range]{flex:1;accent-color:var(--blue)}
+  .rng .v{font-size:12.5px;font-weight:700;color:var(--blue);min-width:54px;text-align:right;font-variant-numeric:tabular-nums}
+  .hint{font-size:11px;color:var(--muted);background:#eef6fb;border:1px solid #cfe3f0;border-radius:6px;padding:7px 9px;margin-top:8px;line-height:1.45}
+  .toggle{display:flex;align-items:center;gap:9px;font-size:12.5px;font-weight:600;padding:5px 0}
+  .toggle input{width:auto;accent-color:var(--blue);transform:scale(1.15)}
+  .miniout{font-size:11px;color:var(--ink);background:#f4f8fc;border:1px dashed #cfe0ee;border-radius:6px;padding:8px 10px;margin-top:6px;line-height:1.5}
+  .miniout b{color:var(--navy)}
+  .parsebtn{width:100%;border:1px solid var(--blue);background:var(--blue);color:#fff;font-weight:700;font-size:12.5px;padding:8px;border-radius:7px;cursor:pointer;margin-top:6px}
+  .parsemsg{font-size:11px;margin-top:6px;line-height:1.4}
+  .dropzone{border:2px dashed #bcd2e6;border-radius:9px;background:#f4f9fd;padding:14px 12px;text-align:center;cursor:pointer;transition:.15s}
+  .dropzone:hover{border-color:var(--blue);background:#eef6fb}
+  .dropzone.drag{border-color:var(--blue);background:#e3f0fa}
+  .dropzone .dz-ico{font-size:22px;line-height:1}
+  .dropzone .dz-main{font-size:12.5px;color:var(--navy);margin-top:4px}
+  .dropzone .dz-link{color:var(--blue);text-decoration:underline;font-weight:700}
+  .dropzone .dz-sub{font-size:10.5px;color:var(--muted);margin-top:3px}
+  #statuspanel{margin-top:8px}
+  #statuspanel .sp-title{font-size:10.5px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);margin:8px 0 5px}
+  .chips{display:flex;flex-wrap:wrap;gap:5px}
+  .chip{font-size:11px;font-weight:600;padding:4px 8px;border-radius:14px;display:inline-flex;align-items:center;gap:4px;line-height:1.2}
+  .chip.ok{background:#eef8f0;color:#237a4a;border:1px solid #c9e7d4}
+  .chip.miss{background:#fdf3e9;color:#b06a18;border:1px solid #f3dcc0}
+
+  .stage{padding:18px;overflow:auto}
+  .stage .note{font-size:11px;color:var(--muted);margin:0 0 12px}
+
+  /* ===== DECK (landscape A4) — auch im PDF-Export ===== */
+  .deck{transform-origin:top left}
+  .slide{width:297mm;height:210mm;background:#fff;position:relative;overflow:hidden;padding:15mm 17mm;margin:0 auto 16px;box-shadow:0 4px 22px rgba(11,42,74,.14);page-break-after:always}
+  .slide:last-child{page-break-after:avoid}
+  .logo{position:absolute;top:11mm;right:15mm;height:11mm}
+  .kicker{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--blue);font-weight:700;margin-bottom:6px}
+  .slide h1{font-size:30px;color:var(--navy);margin:0 0 6px}
+  .slide h2{font-size:22px;color:var(--navy);margin:0 0 4px}
+  .slide .sub{font-size:13.5px;color:var(--ink);margin:0 0 16px;max-width:200mm;line-height:1.5}
+  .cover{background:linear-gradient(135deg,#0b2a4a 0%,#1d6fa5 100%);color:#fff;display:flex;flex-direction:column;justify-content:center}
+  .cover .kicker{color:#9fd3ff}
+  .cover h1{color:#fff;font-size:46px;line-height:1.08;max-width:230mm}
+  .cover .sub{color:#eaf3fb;font-size:17px;margin-top:14px}
+  .cover .meta{margin-top:40px;font-size:14px;color:#cfe3f4}
+  .cover .logo{filter:brightness(0) invert(1);opacity:.95}
+  .cards{display:grid;gap:10px;margin-top:8px}
+  .c5{grid-template-columns:repeat(5,1fr)} .c4{grid-template-columns:repeat(4,1fr)} .c3{grid-template-columns:repeat(3,1fr)} .c2{grid-template-columns:1fr 1fr}
+  .card{background:var(--bg);border-left:4px solid var(--blue);border-radius:7px;padding:11px 13px}
+  .card .l{font-size:10.5px;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);font-weight:700}
+  .card .b{font-size:13px;color:var(--navy);margin-top:3px;line-height:1.35}
+  .card.green{border-left-color:var(--green);background:#eef8f0}
+  .card.orange{border-left-color:var(--orange);background:#fdf3e9}
+  .card.purple{border-left-color:var(--purple);background:#f3eefb}
+  .facts{display:flex;gap:26px;margin:6px 0 14px;flex-wrap:wrap}
+  .facts .f .n{font-size:24px;font-weight:800;color:var(--navy)} .facts .f .t{font-size:11.5px;color:var(--muted)}
+  .big{font-size:40px;font-weight:800;color:var(--orange);margin:6px 0}
+  .big.navy{color:var(--navy)} .big.green{color:var(--green)}
+  .barwrap{margin:14px 0}
+  .barrow{display:flex;align-items:center;gap:12px;margin-bottom:9px}
+  .barrow .lab{width:52mm;font-size:13px;color:var(--ink)}
+  .barrow .track{flex:1;background:#e7eef5;border-radius:7px;height:26px;position:relative;overflow:hidden}
+  .barrow .fill{height:100%;border-radius:7px;display:flex;align-items:center;padding:0 10px;color:#fff;font-size:12.5px;font-weight:700;white-space:nowrap}
+  .fill.blue{background:var(--blue)} .fill.grey{background:#9fb3c4} .fill.orange{background:var(--orange)} .fill.green{background:var(--green)}
+  .split{display:grid;grid-template-columns:1.25fr 1fr;gap:18px;align-items:center}
+  .split.even{grid-template-columns:1fr 1fr}
+  .stat3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:6px}
+  .stat{background:var(--bg);border-radius:8px;padding:10px 12px}
+  .stat .l{font-size:10.5px;text-transform:uppercase;color:var(--muted);font-weight:700}
+  .stat .v{font-size:20px;font-weight:800;color:var(--navy);margin-top:2px;font-variant-numeric:tabular-nums}
+  .stat.green .v{color:var(--green)} .stat.orange .v{color:var(--orange)}
+  .narr{background:#eef8f0;border-left:4px solid var(--green);border-radius:8px;padding:12px 15px;margin-top:14px;font-size:14px;line-height:1.5}
+  .narr.blue{background:#eef6fb;border-left-color:var(--blue)}
+  .narr.orange{background:#fdf3e9;border-left-color:var(--orange)}
+  .narr b{color:var(--navy)}
+  ul.steps{margin:6px 0 0;padding:0;list-style:none}
+  ul.steps li{font-size:14.5px;color:var(--ink);padding:8px 0 8px 34px;position:relative;border-bottom:1px solid var(--line)}
+  ul.steps li b{color:var(--navy)}
+  ul.steps li .num{position:absolute;left:0;top:6px;width:24px;height:24px;border-radius:50%;background:var(--blue);color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center}
+  ul.ticks{margin:4px 0 0;padding:0;list-style:none}
+  ul.ticks li{font-size:13px;color:var(--ink);padding:6px 0 6px 26px;position:relative;line-height:1.4}
+  ul.ticks li::before{content:"✓";position:absolute;left:0;top:5px;color:var(--green);font-weight:800}
+  ul.ticks.x li::before{content:"✕";color:var(--red)}
+  .quote{font-size:14px;font-style:italic;color:var(--navy);line-height:1.5;border-left:3px solid var(--orange);padding:4px 0 4px 12px;margin:8px 0}
+  .quote .src{display:block;font-style:normal;font-size:11.5px;color:var(--muted);margin-top:4px}
+  .ctable{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:8px}
+  .ctable th,.ctable td{text-align:left;padding:7px 9px;border-bottom:1px solid var(--line);vertical-align:top}
+  .ctable th{font-size:10.5px;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);font-weight:700}
+  .ctable td.feat{color:var(--ink);width:42%}
+  .ctable .yes{color:var(--green);font-weight:700} .ctable .no{color:var(--red);font-weight:700}
+  .ctable tr:last-child td{border-bottom:none}
+  .etfgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+  .etf{background:var(--bg);border-radius:7px;padding:9px 11px;border-left:3px solid var(--blue)}
+  .etf .n{font-size:13px;font-weight:700;color:var(--navy)}
+  .etf .meta{font-size:10.5px;color:var(--muted);margin-top:1px}
+  .etf .role{font-size:11.5px;color:var(--ink);margin-top:3px;line-height:1.35}
+  .etf.core{border-left-color:var(--orange);background:#fdf3e9}
+  .disc{font-size:11.5px;color:var(--ink);line-height:1.6;max-width:215mm}
+  .foot{position:absolute;bottom:9mm;left:17mm;right:17mm;display:flex;justify-content:space-between;font-size:9px;color:var(--muted);border-top:1px solid var(--line);padding-top:5px}
+  svg.chart{width:100%;height:auto;display:block}
+  .badge{display:inline-block;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;padding:3px 8px;border-radius:20px;background:#eef6fb;color:var(--blue);margin-bottom:8px}
+  .badge.green{background:#eef8f0;color:var(--green)} .badge.orange{background:#fdf3e9;color:var(--orange)}
+
+  @media print{
+    @page{size:A4 landscape;margin:0}
+    body{background:#fff}
+    .topbar,.form,.stage>.note{display:none!important}
+    .layout{display:block}
+    .stage{padding:0;overflow:visible}
+    .deck{zoom:1!important;transform:none!important}
+    .slide{margin:0;box-shadow:none}
+  }
+</style>
+</head>
+<body>
+  <div class="topbar">
+    <img src="../assets/logo_iquadrat.png" alt="iQuadrat">
+    <div class="t">Konzept-Generator<small>T2-Vorsorge-Konzept · Rentenlücke · ETF · Steuer · Kindervorsorge</small></div>
+    <div class="sp"></div>
+    <button class="btn alt" id="btnReset">↺ Zurücksetzen</button>
+    <button class="btn" id="btnPdf">⬇ Als PDF speichern</button>
+  </div>
+
+  <div class="layout">
+    <!-- ============ FORMULAR ============ -->
+    <div class="form" id="form">
+
+      <details class="grp" open>
+        <summary>📋 Transkript hochladen</summary>
+        <div class="body">
+          <div class="dropzone" id="dropzone">
+            <input type="file" id="fileinput" accept=".txt,.text,text/plain" hidden>
+            <div class="dz-ico">📄</div>
+            <div class="dz-main"><b>Transkript (.txt) hier ablegen</b> oder <span class="dz-link">Datei auswählen</span></div>
+            <div class="dz-sub">Wird sofort ausgelesen — danach siehst du, was erkannt wurde und was noch fehlt.</div>
+          </div>
+          <div class="field" style="margin-top:8px">
+            <textarea id="importbox" placeholder="…oder Text/JSON direkt hier einfügen." style="min-height:64px"></textarea>
+          </div>
+          <button class="parsebtn" id="btnParse">⟳ Auslesen &amp; übernehmen</button>
+          <div class="parsemsg" id="parsemsg"></div>
+          <div id="statuspanel"></div>
+          <div class="hint">Du lädst nur die <b>.txt</b> hoch — der Rechner liest Alter, Rentenpunkte, Einkommen, Wunschrente usw. selbst aus. Was nicht eindeutig im Gespräch steht, wird unten als „fehlt" markiert, damit du es schnell selbst ergänzen kannst.</div>
+        </div>
+      </details>
+
+      <details class="grp" open>
+        <summary>Stammdaten</summary>
+        <div class="body">
+          <div class="field"><label>Kundenname</label><input id="kundenname" placeholder="z. B. Markus Müller"></div>
+          <div class="row2">
+            <div class="field"><label>Berater/in</label><input id="berater"></div>
+            <div class="field"><label>Datum</label><input id="datum" type="date"></div>
+          </div>
+          <div class="row3">
+            <div class="field"><label>Geburtsdatum</label><input id="geburtsdatum" type="date"></div>
+            <div class="field"><label>Alter (Jahre)</label><input id="alter" inputmode="numeric" value="42"></div>
+            <div class="field"><label>Renteneintritt</label><input id="renteneintritt" inputmode="numeric" value="67"></div>
+          </div>
+          <div class="hint">Geburtsdatum hat Vorrang — daraus wird das Alter berechnet (wie in der Excel). Sonst zählt das eingetragene Alter.</div>
+        </div>
+      </details>
+
+      <details class="grp" open>
+        <summary>Einkommen &amp; gesetzliche Rente</summary>
+        <div class="body">
+          <div class="row2">
+            <div class="field"><label>Bruttoeinkommen €/Mt</label><input id="brutto" inputmode="numeric" value="5500"></div>
+            <div class="field"><label>Nettoeinkommen €/Mt</label><input id="netto" inputmode="numeric" value="3300"></div>
+          </div>
+          <div class="row3">
+            <div class="field"><label>Urlaubsgeld €</label><input id="urlaub" inputmode="numeric" value="0"></div>
+            <div class="field"><label>Weihnachtsg. €</label><input id="weihnacht" inputmode="numeric" value="0"></div>
+            <div class="field"><label>Sonstige €</label><input id="sonstige" inputmode="numeric" value="0"></div>
+          </div>
+          <div class="row2">
+            <div class="field"><label>Aktuelle Rentenpunkte</label><input id="rentenpunkte" inputmode="numeric" value="18"></div>
+            <div class="field"><label>Bisher in GRV (Jahre)</label><input id="jahreGRV" inputmode="numeric" value="19"></div>
+          </div>
+          <div class="field"><label>Wunschrente €/Mt (heutige Kaufkraft)</label><input id="wunschrente" inputmode="numeric" value="2500"></div>
+          <div class="miniout" id="renteOut"></div>
+        </div>
+      </details>
+
+      <details class="grp">
+        <summary>Annahmen</summary>
+        <div class="body">
+          <div class="row2">
+            <div class="field"><label>Einkommenssteigerung %/J</label><input id="einkSteig" inputmode="numeric" value="3"></div>
+            <div class="field"><label>Inflation %/J</label><input id="inflation" inputmode="numeric" value="2,5"></div>
+          </div>
+          <div class="row2">
+            <div class="field"><label>Rendite %/J (Ansparphase)</label><input id="rendite" inputmode="numeric" value="6"></div>
+            <div class="field"><label>Spardynamik %/J</label><input id="spardynamik" inputmode="numeric" value="3"></div>
+          </div>
+          <div class="field"><label>Aktueller Rentenwert €</label><input id="rentenwert" inputmode="numeric" value="39,19"></div>
+        </div>
+      </details>
+
+      <details class="grp">
+        <summary>Vorsorge-Kosten (für Sparrate)</summary>
+        <div class="body">
+          <div class="row2">
+            <div class="field"><label>Abschlusskosten %</label><input id="abschluss" inputmode="numeric" value="2,5"></div>
+            <div class="field"><label>Verwaltungskosten %</label><input id="verwaltung" inputmode="numeric" value="5,75"></div>
+          </div>
+          <div class="row2">
+            <div class="field"><label>Laufende Kosten %</label><input id="laufend" inputmode="numeric" value="0,2"></div>
+            <div class="field"><label>Fondskosten %</label><input id="fonds" inputmode="numeric" value="0,18"></div>
+          </div>
+          <div class="hint">Standard = Konditionen aus deinem Excel-Lückenrechner. Für ein Netto-Tarif-Beispiel Abschluss/Verwaltung entsprechend reduzieren.</div>
+        </div>
+      </details>
+
+      <details class="grp">
+        <summary>Ziele (Bischoff)</summary>
+        <div class="body">
+          <div class="field"><label>Must-haves</label><input id="ziel1" placeholder="Was ist nicht verhandelbar?"></div>
+          <div class="field"><label>No-Gos</label><input id="ziel2" placeholder="Was möchte der Kunde nicht?"></div>
+          <div class="field"><label>Flexibilität</label><input id="ziel3" placeholder="Wie flexibel?"></div>
+          <div class="field"><label>Rendite vs. Sicherheit</label><input id="ziel4" placeholder="Gewichtung"></div>
+          <div class="field"><label>Steuer / Vererbung / Kontrolle</label><input id="ziel5" placeholder="Priorität"></div>
+        </div>
+      </details>
+
+      <details class="grp">
+        <summary>Empfehlung</summary>
+        <div class="body">
+          <div class="field"><label>Produkt/Lösung</label><input id="produktname" value="Fondsgebundene Netto-Rentenversicherung (Alte Leipziger) mit ETF-Strategie"></div>
+          <div class="field"><label>Empfehlungstext</label><textarea id="empfehlung">Auf Basis deiner Ziele empfehlen wir einen renditeorientierten, flexibel anpassbaren Vorsorgebaustein mit breiter ETF-Streuung im steuerlich optimierten Versicherungsmantel.</textarea></div>
+        </div>
+      </details>
+
+      <details class="grp">
+        <summary>⚖️ Vergleich Police vs. Depot</summary>
+        <div class="body">
+          <label class="toggle"><input type="checkbox" id="modCompare" checked> Vergleichsfolie zeigen</label>
+          <div class="field"><label>Vergleichs-Sparrate €/Mt (leer = empfohlene Rate)</label><input id="vglRate" inputmode="numeric" placeholder="automatisch"></div>
+          <div class="sec" style="font-size:10px;color:var(--muted);font-weight:700;letter-spacing:.5px;text-transform:uppercase;margin:6px 0 4px">Police (Alte Leipziger · Brutto)</div>
+          <div class="row3">
+            <div class="field"><label>Abschluss α %</label><input id="alphaP" inputmode="numeric" value="2,5"></div>
+            <div class="field"><label>… über Jahre</label><input id="alphaJahreP" inputmode="numeric" value="5"></div>
+            <div class="field"><label>Verwaltung β %</label><input id="betaP" inputmode="numeric" value="6"></div>
+          </div>
+          <div class="row3">
+            <div class="field"><label>γ p.a. %</label><input id="gammaP" inputmode="numeric" value="0,24"></div>
+            <div class="field"><label>Stückk. €/J</label><input id="stueckP" inputmode="numeric" value="36"></div>
+            <div class="field"><label>Fonds (TER) %</label><input id="terP" inputmode="numeric" value="0,18"></div>
+          </div>
+          <div class="sec" style="font-size:10px;color:var(--muted);font-weight:700;letter-spacing:.5px;text-transform:uppercase;margin:8px 0 4px">Depot (ETF)</div>
+          <div class="row3">
+            <div class="field"><label>Umschichtung %/J</label><input id="depUmschicht" inputmode="numeric" value="20"></div>
+            <div class="field"><label>Ausgabeaufschlag %</label><input id="depAA" inputmode="numeric" value="0"></div>
+            <div class="field"><label>Fonds (TER) %</label><input id="depTer" inputmode="numeric" value="0,2"></div>
+          </div>
+          <div class="sec" style="font-size:10px;color:var(--muted);font-weight:700;letter-spacing:.5px;text-transform:uppercase;margin:8px 0 4px">Steuer</div>
+          <div class="row2">
+            <div class="field"><label>Steuersatz Ruhestand % (12/62)</label><input id="grenz" inputmode="numeric" value="35"></div>
+            <div class="field"><label>Abgeltungst. %</label><input id="abg" inputmode="numeric" value="25"></div>
+          </div>
+          <div class="row3">
+            <div class="field"><label>Soli %</label><input id="soli" inputmode="numeric" value="5,5"></div>
+            <div class="field"><label>KiSt %</label><input id="kist" inputmode="numeric" value="0"></div>
+            <div class="field"><label>Basiszins %</label><input id="basiszins" inputmode="numeric" value="2,53"></div>
+          </div>
+          <div class="hint">Wichtig: Beim Auszahlen wird das Depot verkauft → der gesamte Gewinn ist abgeltungssteuerpflichtig. Die <b>Umschichtung</b> (Rebalancing des Welt-Portfolios) löst zusätzlich jedes Jahr steuerpflichtige Gewinne aus — in der Police steuerfrei. Beides ist hier berücksichtigt und einstellbar.</div>
+        </div>
+      </details>
+
+      <details class="grp">
+        <summary>👶 Kindervorsorge</summary>
+        <div class="body">
+          <label class="toggle"><input type="checkbox" id="modKind"> Kindervorsorge-Folie zeigen</label>
+          <div class="row2">
+            <div class="field"><label>Name des Kindes</label><input id="kindName" placeholder="z. B. Emma"></div>
+            <div class="field"><label>Alter des Kindes</label><input id="kindAlter" inputmode="numeric" value="5"></div>
+          </div>
+          <div class="row2">
+            <div class="field"><label>Beitrag €/Mt</label><input id="kindBeitrag" inputmode="numeric" value="100"></div>
+            <div class="field"><label>Anlagehorizont (Jahre)</label><input id="kindJahre" inputmode="numeric" value="55"></div>
+          </div>
+          <div class="hint">Tipp: Die Kindervorsorge spielt ihre zwei Steuervorteile (steuerfreies Wachstum + halbe Versteuerung) v. a. über lange Laufzeiten aus. Bei kurzen Horizonten (≤ ~20 J.) ist der Kapitalunterschied gering — dann zählen vor allem Kontrolle &amp; Flexibilität.</div>
+        </div>
+      </details>
+
+      <details class="grp">
+        <summary>Folien-Module ein/aus</summary>
+        <div class="body">
+          <label class="toggle"><input type="checkbox" id="modEtfWhy" checked> Warum ETFs (Verkaufsargumente)</label>
+          <label class="toggle"><input type="checkbox" id="modEtfPick" checked> Unsere ETF-Auswahl</label>
+          <label class="toggle"><input type="checkbox" id="modTax" checked> Steuervorteile Versicherungsmantel</label>
+        </div>
+      </details>
+
+      <details class="grp">
+        <summary>Zusammenfassung (optional)</summary>
+        <div class="body">
+          <div class="field"><textarea id="zusammenfassung" placeholder="Leer lassen = automatisch aus den Eckdaten."></textarea></div>
+        </div>
+      </details>
+
+      <div class="hint">Alle Berechnungen laufen lokal in deinem Browser. Die Rentenlücke folgt 1:1 deinem Excel-Lückenrechner. „Als PDF speichern" erzeugt das Deck als PDF (A4 quer).</div>
+    </div>
+
+    <!-- ============ DECK-VORSCHAU ============ -->
+    <div class="stage" id="stage">
+      <p class="note">Live-Vorschau · jede Folie = eine PDF-Seite. Eingaben bleiben lokal in deinem Browser.</p>
+      <div class="deck" id="deck"></div>
+    </div>
+  </div>
+
+<script>
+(function(){
+  "use strict";
+  var CONFIG={ berater:'Daniel Weisbrod', firma:'iQuadrat' };
+
+  /* ===== Konstanten gesetzliche Rente (aus Excel-Lückenrechner) ===== */
+  var BBG=82800, DURCH=40551, GKV=0.0785, PFLEGE=0.0305, STEUER_RENTE=0.04, KAPFAKTOR=285;
+
+  /* ===== ETF-Bausteine (aus Vermögensrechner verifiziert) ===== */
+  var ETFS=[
+    {n:'Amundi Prime Global', isin:'LU2089238203', ter:'0,05 %', core:true,
+     role:'Kostengünstiger Welt-Kern (Industrieländer) — das Fundament des Portfolios.'},
+    {n:'iShares Core MSCI World', isin:'IE00B4L5Y983', ter:'0,20 %', core:true,
+     role:'Klassischer Welt-Kern über ~1.400 Unternehmen der Industrieländer.'},
+    {n:'iShares Core MSCI EM IMI', isin:'IE00BKM4GZ66', ter:'0,18 %',
+     role:'Schwellenländer (China, Indien, Brasilien …) für zusätzliche Renditequellen.'},
+    {n:'iShares Core S&P 500', isin:'IE00B5BMR087', ter:'0,07 %',
+     role:'USA-Schwerpunkt — die innovationsstärkste Volkswirtschaft.'},
+    {n:'iShares Core MSCI Europe', isin:'IE00B1YZSC51', ter:'0,12 %',
+     role:'Europa als Heimatmarkt-Baustein zur Streuung.'},
+    {n:'iShares STOXX Europe 600 (inkl. UK)', isin:'DE0002635307', ter:'0,20 %',
+     role:'Breites Europa inkl. UK/FTSE — über 600 Titel.'},
+    {n:'iShares Pacific ex Japan', isin:'IE00B52MJY50', ter:'0,20 %',
+     role:'Australien, Hongkong, Singapur — Pazifikraum ohne Japan.'},
+    {n:'iShares Nikkei 225 (Japan)', isin:'IE00B52MJD48', ter:'0,48 %',
+     role:'Japan als eigenständiger, gering korrelierter Baustein.'}
+  ];
+
+  /* ===== Helpers ===== */
+  function $(id){return document.getElementById(id);}
+  function val(id){var e=$(id);return e?(''+e.value).trim():'';}
+  function setVal(id,v){var e=$(id);if(e)e.value=v;}
+  function chk(id){var e=$(id);return e?e.checked:false;}
+  function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+  function num(x){
+    var s=String(x).trim(); if(!s) return 0;
+    if(s.indexOf(',')>=0){ s=s.replace(/\./g,'').replace(',','.'); }
+    else if(/^-?\d{1,3}(\.\d{3})+$/.test(s)){ s=s.replace(/\./g,''); }
+    var n=parseFloat(s); return isNaN(n)?0:n;
+  }
+  function today(){var d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+  function fmtDate(iso){if(!iso)return '';var p=iso.split('-');if(p.length!==3)return iso;return p[2]+'.'+p[1]+'.'+p[0];}
+  var eur0=new Intl.NumberFormat('de-DE',{style:'currency',currency:'EUR',maximumFractionDigits:0});
+  function pct(v,d){return v.toLocaleString('de-DE',{minimumFractionDigits:d==null?1:d,maximumFractionDigits:d==null?1:d})+' %';}
+  function ageFrom(iso){ if(!iso) return null; var p=iso.split('-'); if(p.length!==3) return null;
+    var b=new Date(+p[0],+p[1]-1,+p[2]), n=new Date(); var a=n.getFullYear()-b.getFullYear();
+    if(n.getMonth()<b.getMonth()||(n.getMonth()===b.getMonth()&&n.getDate()<b.getDate())) a--; return a; }
+
+  /* ============================================================
+     RENTEN-ENGINE — 1:1 aus Excel "Altersvorsorge_Lückenrechner"
+     (zellgenau validiert)
+     ============================================================ */
+  function endwert(dauer,dyn,d){
+    if(dauer<=0) return 0;
+    var akBase=Math.min(dauer,35)*1200*d.abschluss/5, verwFix=1200*d.verwaltung;
+    var AEprev=0,Yprev=1200,AE=0;
+    for(var i=1;i<=dauer;i++){
+      var Y,Z;
+      if(!dyn){ Y=1200; Z=(i<=5)?akBase:0; }
+      else if(i===1){ Y=1200; Z=akBase; }
+      else { Y=Yprev*(1+d.spardynamik); var factor=(dauer-(i-1))>35?35:dauer; Z=((i<=5)?akBase:0)+factor*(Y-Yprev)*d.abschluss; }
+      var AA=verwFix, AC=(i===1)?(Y-Z-AA):(AEprev+Y-Z-AA);
+      var AB=AC*d.laufend, AD=(AC-AB)*(d.rendite-d.fonds);
+      AE=AC-AB+AD; AEprev=AE; Yprev=Y;
+    }
+    return AE;
+  }
+  function renteCalc(d){
+    var dauer=Math.max(0, d.rente-d.alter);
+    var gesamt=d.brutto*12+d.urlaub+d.weihnacht+d.sonstige;
+    var einkGrund=Math.min(gesamt,BBG);
+    var epJahr=einkGrund/DURCH;
+    var bisherEP=d.rentenpunkte>0? d.rentenpunkte : epJahr*d.jahreGRV;
+    var P=DURCH,Q=gesamt,R=BBG,sum=0,futureEP=0;
+    for(var i=1;i<=dauer;i++){ if(i>1){P*=(1+d.inflation);Q*=(1+d.einkSteig);R*=(1+d.inflation);} sum+=Math.min(Q,R)/P; if(i===dauer) futureEP=sum; }
+    var summeEP=bisherEP+futureEP;
+    var k22=(67-d.rente)*12, k23=d.rente>67?k22*0.005:k22*0.003, l23=d.rente>67?(1+k23):(1-k23);
+    var zugang=d.rente<63?0:l23;
+    var wertHeute=summeEP*d.rentenwert*zugang;
+    var bruttoRente=wertHeute*Math.pow(1.01,dauer);
+    var sozial=bruttoRente*(GKV+PFLEGE), steuer=bruttoRente*STEUER_RENTE;
+    var nettoRente=bruttoRente-sozial-steuer;
+    var nettoKK=dauer>0? nettoRente/Math.pow(1+d.inflation,dauer) : nettoRente;
+    var wunschZukunft=d.wunschrente*Math.pow(1+d.inflation,dauer);
+    var luecke=Math.max(0, wunschZukunft-nettoRente);
+    var lueckeKK=Math.max(0, d.wunschrente-nettoKK);
+    var kapitalberg=luecke*KAPFAKTOR;
+    var ewStat=endwert(dauer,false,d), ewDyn=endwert(dauer,true,d);
+    var sparrate=(kapitalberg>0&&ewStat>0)? kapitalberg/ewStat*100 : 0;
+    var sparrateDyn=(kapitalberg>0&&ewDyn>0)? kapitalberg/ewDyn*100 : 0;
+    return {dauer:dauer,summeEP:summeEP,bisherEP:bisherEP,futureEP:futureEP,bruttoRente:bruttoRente,
+      sozial:sozial,steuer:steuer,abgaben:sozial+steuer,nettoRente:nettoRente,nettoKK:nettoKK,
+      wunschZukunft:wunschZukunft,luecke:luecke,lueckeKK:lueckeKK,kapitalberg:kapitalberg,
+      sparrate:sparrate,sparrateDyn:sparrateDyn,ewStat:ewStat,ewDyn:ewDyn};
+  }
+  // Kapitalverlauf für die empfohlene Rate (linear skaliert aus der 100€-Tabelle)
+  function kapitalSeries(dauer,d,monthly){
+    if(dauer<=0) return [{year:0,val:0}];
+    var akBase=Math.min(dauer,35)*1200*d.abschluss/5, verwFix=1200*d.verwaltung, scale=monthly/100;
+    var AEprev=0,pts=[{year:0,val:0}];
+    for(var i=1;i<=dauer;i++){
+      var Y=1200, Z=(i<=5)?akBase:0, AA=verwFix, AC=(i===1)?(Y-Z-AA):(AEprev+Y-Z-AA);
+      var AB=AC*d.laufend, AD=(AC-AB)*(d.rendite-d.fonds), AE=AC-AB+AD;
+      AEprev=AE; pts.push({year:i,val:AE*scale});
+    }
+    return pts;
+  }
+
+  /* ============================================================
+     FMU-ENGINE — Police (12/62) vs. Depot (Abgeltung)
+     kompakte Portierung des FMU-Rechner-Kostenmodells
+     ============================================================ */
+  function liqTax(p,bal,cum,basis){
+    if(p.tax==='abgeltung'){ var g=bal-basis; return Math.max(0,g*(1-p.teilfrei))*p.abg*(1+p.soli)*(1+p.kist); }
+    if(p.tax==='halb'){ var persEff=p.grenz*((1+p.soli)+p.kist*(1-p.grenz)); var gg=bal-cum; return Math.max(0,gg*0.5*(1-p.teilfrei))*persEff; }
+    return 0;
+  }
+  function fmuSim(p){
+    var months=Math.max(1,Math.round(p.dauer*12)), gM=Math.pow(1+p.rendite,1/12)-1;
+    var beitragssumme=p.rate*12*Math.min(p.dauer,35), alphaTotal=p.alpha*beitragssumme;
+    var alphaMonths=Math.max(1,Math.round((p.alphaJahre||5)*12)), alphaPM=p.alpha>0?alphaTotal/alphaMonths:0;
+    var bal=0,basis=0,cum=0,taxDuring=0,series=[{year:0,val:0}];
+    for(var m=1;m<=months;m++){
+      var yIdx=Math.ceil(m/12), miy=((m-1)%12)+1;
+      var rate=p.rate*Math.pow(1+(p.dynamik||0),yIdx-1), inflow=rate; cum+=rate;
+      var beta=rate*p.betaL, aa=inflow*p.aa, net=inflow-aa-beta;
+      bal+=net; basis+=Math.max(0,net);
+      if(m<=alphaMonths&&alphaPM>0){ var a=Math.min(alphaPM,Math.max(0,bal)); bal-=a; }
+      if(p.stueck>0) bal-=p.stueck/12;
+      bal+=bal*gM;
+      if(p.gamma>0) bal-=bal*(p.gamma/12);
+      if(p.ter>0) bal-=bal*(p.ter/12);
+      if(miy===12||m===months){
+        if(p.type==='depot'){
+          var tf=1-p.teilfrei, EFF=p.abg*(1+p.soli)*(1+p.kist);
+          var div=bal*(p.income||0), tdiv=div*tf*EFF; bal-=tdiv; taxDuring+=tdiv; basis+=div-tdiv;
+          var basisertrag=bal*0.7*(p.basiszins||0), vorab=Math.max(0,Math.min(basisertrag-div,bal-basis));
+          var tvor=vorab*tf*EFF; bal-=tvor; taxDuring+=tvor; basis+=vorab;
+          if(p.umschicht>0){ var unreal=bal-basis; if(unreal>0){ var sf=p.umschicht, realized=unreal*sf, tre=realized*tf*EFF, soldBasis=basis*sf, proceeds=bal*sf-tre, aaT=proceeds*p.aa; basis=basis-soldBasis+proceeds-aaT; bal-=tre+aaT; taxDuring+=tre; } }
+        }
+        // Netto-Cash-out-Wert: Depot zahlt beim Verkauf Abgeltung auf den unrealisierten Gewinn,
+        // Police zahlt 12/62 — beide Kurven sind so direkt vergleichbar.
+        var fTax=liqTax(p,bal,cum,basis);
+        series.push({year:yIdx,val:bal-fTax});
+      }
+    }
+    var finalTax=liqTax(p,bal,cum,basis);
+    if(series.length) series[series.length-1].val=bal-finalTax;
+    return {brutto:bal,netto:bal-finalTax,eingezahlt:cum,steuer:finalTax+taxDuring,series:series};
+  }
+
+  /* ===== Chart-Helpers ===== */
+  function niceMax(v){if(v<=0)return 1;var p=Math.pow(10,Math.floor(Math.log10(v))),n=v/p,m;if(n<=1)m=1;else if(n<=2)m=2;else if(n<=2.5)m=2.5;else if(n<=5)m=5;else m=10;return m*p;}
+  function abbrEur(v){if(v>=1e6)return (v/1e6).toLocaleString('de-DE',{maximumFractionDigits:1})+' Mio €';if(v>=1e3)return Math.round(v/1e3).toLocaleString('de-DE')+' Tsd €';return Math.round(v)+' €';}
+  function bandChart(exp,pess,opt,years,yMax){
+    var W=600,H=280,padL=60,padR=14,padT=12,padB=30,plotW=W-padL-padR,plotH=H-padT-padB;
+    function X(y){return padL+(years?y/years:0)*plotW;}
+    function Y(v){return padT+plotH-(yMax?v/yMax:0)*plotH;}
+    function path(p){return p.map(function(d,i){return (i?'L':'M')+X(d.year).toFixed(1)+' '+Y(d.val).toFixed(1);}).join(' ');}
+    var band=opt.map(function(d,i){return (i?'L':'M')+X(d.year).toFixed(1)+' '+Y(d.val).toFixed(1);}).join(' ')+' '+
+             pess.slice().reverse().map(function(d){return 'L'+X(d.year).toFixed(1)+' '+Y(d.val).toFixed(1);}).join(' ')+' Z';
+    var s='';
+    for(var g=0;g<=4;g++){var yv=yMax*g/4,yy=Y(yv);s+='<line x1="'+padL+'" y1="'+yy.toFixed(1)+'" x2="'+(W-padR)+'" y2="'+yy.toFixed(1)+'" stroke="#e7eef5"/>'+
+      '<text x="'+(padL-7)+'" y="'+(yy+3.5).toFixed(1)+'" text-anchor="end" font-size="10" fill="#8295a6">'+abbrEur(yv)+'</text>';}
+    var step=years<=12?2:(years<=25?5:10);
+    for(var x=0;x<=years;x+=step){s+='<text x="'+X(x).toFixed(1)+'" y="'+(H-padB+18)+'" text-anchor="middle" font-size="10" fill="#8295a6">'+x+'</text>';}
+    s+='<path d="'+band+'" fill="rgba(29,111,165,.14)"/>';
+    s+='<path d="'+path(pess)+'" fill="none" stroke="#1d6fa5" stroke-width="1" stroke-dasharray="3 3" opacity=".6"/>';
+    s+='<path d="'+path(opt)+'" fill="none" stroke="#1d6fa5" stroke-width="1" stroke-dasharray="3 3" opacity=".6"/>';
+    s+='<path d="'+path(exp)+'" fill="none" stroke="#0b2a4a" stroke-width="2.5"/>';
+    return '<svg class="chart" viewBox="0 0 '+W+' '+H+'">'+s+'</svg>';
+  }
+  function twoLineChart(a,b,years,yMax,colA,colB){
+    var W=600,H=270,padL=60,padR=14,padT=12,padB=30,plotW=W-padL-padR,plotH=H-padT-padB;
+    function X(y){return padL+(years?y/years:0)*plotW;}
+    function Y(v){return padT+plotH-(yMax?v/yMax:0)*plotH;}
+    function path(p){return p.map(function(d,i){return (i?'L':'M')+X(d.year).toFixed(1)+' '+Y(d.val).toFixed(1);}).join(' ');}
+    var s='';
+    for(var g=0;g<=4;g++){var yv=yMax*g/4,yy=Y(yv);s+='<line x1="'+padL+'" y1="'+yy.toFixed(1)+'" x2="'+(W-padR)+'" y2="'+yy.toFixed(1)+'" stroke="#e7eef5"/>'+
+      '<text x="'+(padL-7)+'" y="'+(yy+3.5).toFixed(1)+'" text-anchor="end" font-size="10" fill="#8295a6">'+abbrEur(yv)+'</text>';}
+    var step=years<=12?2:(years<=25?5:10);
+    for(var x=0;x<=years;x+=step){s+='<text x="'+X(x).toFixed(1)+'" y="'+(H-padB+18)+'" text-anchor="middle" font-size="10" fill="#8295a6">'+x+'</text>';}
+    s+='<path d="'+path(b)+'" fill="none" stroke="'+colB+'" stroke-width="2"/>';
+    s+='<path d="'+path(a)+'" fill="none" stroke="'+colA+'" stroke-width="2.5"/>';
+    return '<svg class="chart" viewBox="0 0 '+W+' '+H+'">'+s+'</svg>';
+  }
+
+  function LOGO(){return '<img class="logo" src="../assets/logo_iquadrat.png" alt="">';}
+  function FOOT(d){return '<div class="foot"><span>'+esc(CONFIG.firma)+' · Persönliches Vorsorge-Konzept</span><span>'+esc(d.kundenname||'')+' · '+fmtDate(d.datum||today())+'</span></div>';}
+
+  /* ===== Eingaben lesen ===== */
+  function readInputs(){
+    var alterFromBirth=ageFrom(val('geburtsdatum'));
+    var alter = alterFromBirth!=null ? alterFromBirth : num(val('alter'));
+    if(alterFromBirth!=null) setVal('alter',alter);
+    return {
+      kundenname:val('kundenname'), berater:val('berater')||CONFIG.berater, datum:val('datum')||today(),
+      alter:alter, rente:num(val('renteneintritt')),
+      brutto:num(val('brutto')), netto:num(val('netto')), urlaub:num(val('urlaub')), weihnacht:num(val('weihnacht')), sonstige:num(val('sonstige')),
+      rentenpunkte:num(val('rentenpunkte')), jahreGRV:num(val('jahreGRV')), wunschrente:num(val('wunschrente')),
+      einkSteig:num(val('einkSteig'))/100, inflation:num(val('inflation'))/100, rendite:num(val('rendite'))/100,
+      spardynamik:num(val('spardynamik'))/100, rentenwert:num(val('rentenwert'))||39.19,
+      abschluss:num(val('abschluss'))/100, verwaltung:num(val('verwaltung'))/100, laufend:num(val('laufend'))/100, fonds:num(val('fonds'))/100,
+      ziele:[val('ziel1'),val('ziel2'),val('ziel3'),val('ziel4'),val('ziel5')],
+      produkt:val('produktname'), empfehlung:val('empfehlung'), zus:val('zusammenfassung'),
+      grenz:num(val('grenz'))/100, abg:num(val('abg'))/100, soli:num(val('soli'))/100, kist:num(val('kist'))/100, basiszins:num(val('basiszins'))/100,
+      alphaP:num(val('alphaP'))/100, alphaJahreP:num(val('alphaJahreP'))||5, betaP:num(val('betaP'))/100, gammaP:num(val('gammaP'))/100, stueckP:num(val('stueckP')), terP:num(val('terP'))/100,
+      depUmschicht:num(val('depUmschicht'))/100, depAA:num(val('depAA'))/100, depTer:num(val('depTer'))/100,
+      vglRate:num(val('vglRate')),
+      kindName:val('kindName'), kindAlter:num(val('kindAlter')), kindBeitrag:num(val('kindBeitrag')), kindJahre:num(val('kindJahre')),
+      mEtfWhy:chk('modEtfWhy'), mEtfPick:chk('modEtfPick'), mTax:chk('modTax'), mCompare:chk('modCompare'), mKind:chk('modKind')
+    };
+  }
+
+  /* ============================================================
+     RENDER
+     ============================================================ */
+  function render(){
+    var d=readInputs();
+    var r=renteCalc(d);
+
+    // Live-Mini-Ausgabe im Formular
+    $('renteOut').innerHTML='Dauer bis Rente: <b>'+r.dauer+' J.</b> · Entgeltpunkte: <b>'+r.summeEP.toFixed(1)+'</b> · erw. Nettorente: <b>'+eur0.format(r.nettoRente)+'</b> (heute '+eur0.format(r.nettoKK)+')<br>'+
+      'Rentenlücke: <b>'+eur0.format(r.luecke)+'/Mt</b> · Kapitalbedarf: <b>'+eur0.format(r.kapitalberg)+'</b><br>'+
+      'Empf. Sparrate: <b>'+eur0.format(r.sparrate)+'/Mt</b> · mit Dynamik <b>'+eur0.format(r.sparrateDyn)+'/Mt</b>';
+
+    // Hochrechnung mit empfohlener Rate
+    var planRate=r.sparrate>0? r.sparrate : 100;
+    var dCopy=Object.assign({},d);
+    var exp=kapitalSeries(r.dauer,dCopy,planRate);
+    var dPess=Object.assign({},d,{rendite:Math.max(0,d.rendite-0.02)});
+    var dOpt =Object.assign({},d,{rendite:d.rendite+0.02});
+    var pess=kapitalSeries(r.dauer,dPess,planRate);
+    var opt =kapitalSeries(r.dauer,dOpt,planRate);
+    var endExp=exp[exp.length-1].val, endPess=pess[pess.length-1].val, endOpt=opt[opt.length-1].val;
+    var eingez=planRate*r.dauer*12, gewinn=Math.max(0,endExp-eingez);
+    var yMax=niceMax(endOpt);
+
+    var labels=['Must-haves','No-Gos','Flexibilität','Rendite vs. Sicherheit','Steuer / Vererbung'];
+    var zieleCards=d.ziele.map(function(z,i){return '<div class="card"><div class="l">'+labels[i]+'</div><div class="b">'+(z?esc(z):'—')+'</div></div>';}).join('');
+
+    var slides='';
+    var sec=0;
+    function K(){sec++;return (sec<10?'0':'')+sec;}
+
+    /* 1 — Cover */
+    slides+='<section class="slide cover">'+LOGO()+
+      '<div class="kicker">Persönliches Konzept</div>'+
+      '<h1>Dein Vorsorge-Konzept</h1>'+
+      '<div class="sub">Individuell erstellt auf Basis deiner Ziele, deiner Einkommens- und Rentensituation.</div>'+
+      '<div class="meta">Erstellt für <b>'+esc(d.kundenname||'—')+'</b> &nbsp;·&nbsp; '+fmtDate(d.datum)+' &nbsp;·&nbsp; '+esc(d.berater)+'</div>'+
+      '</section>';
+
+    /* 2 — Ausgangssituation & Ziele */
+    slides+='<section class="slide">'+LOGO()+
+      '<div class="kicker">'+K()+' · Ausgangssituation</div><h2>Deine Ausgangssituation &amp; Ziele</h2>'+
+      '<div class="facts">'+
+        '<div class="f"><div class="n">'+d.alter+'</div><div class="t">Alter</div></div>'+
+        '<div class="f"><div class="n">'+d.rente+'</div><div class="t">Renteneintritt</div></div>'+
+        '<div class="f"><div class="n">'+r.dauer+' J.</div><div class="t">bis zur Rente</div></div>'+
+        '<div class="f"><div class="n">'+eur0.format(d.brutto)+'</div><div class="t">Brutto/Monat</div></div>'+
+        '<div class="f"><div class="n">'+r.summeEP.toFixed(1)+'</div><div class="t">Entgeltpunkte (erwartet)</div></div></div>'+
+      '<div class="kicker">Deine Ziele (Bischoff)</div><div class="cards c5">'+zieleCards+'</div>'+
+      FOOT(d)+'</section>';
+
+    /* 3 — Rentenlücke */
+    var maxBar=Math.max(r.wunschZukunft,r.nettoRente,1);
+    slides+='<section class="slide">'+LOGO()+
+      '<div class="kicker">'+K()+' · Analyse</div><h2>Deine Rentenlücke</h2>'+
+      '<div class="sub">Was du dir im Ruhestand wünschst – und was die gesetzliche Rente voraussichtlich netto leistet (zum Renteneintritt, nach Abzug von Kranken-, Pflegeversicherung und Steuern).</div>'+
+      '<div class="barwrap">'+
+        '<div class="barrow"><div class="lab">Wunschrente</div><div class="track"><div class="fill blue" style="width:'+(r.wunschZukunft/maxBar*100)+'%">'+eur0.format(r.wunschZukunft)+' /Mt</div></div></div>'+
+        '<div class="barrow"><div class="lab">Erwartete Nettorente</div><div class="track"><div class="fill grey" style="width:'+Math.max(10,r.nettoRente/maxBar*100)+'%">'+eur0.format(r.nettoRente)+' /Mt</div></div></div>'+
+        '<div class="barrow"><div class="lab">Deine Rentenlücke</div><div class="track"><div class="fill orange" style="width:'+Math.max(10,r.luecke/maxBar*100)+'%">'+eur0.format(r.luecke)+' /Mt</div></div></div>'+
+      '</div>'+
+      '<div class="stat3" style="margin-top:18px">'+
+        '<div class="stat"><div class="l">Wunschrente heute</div><div class="v">'+eur0.format(d.wunschrente)+'</div></div>'+
+        '<div class="stat"><div class="l">Nettorente (heutige Kaufkraft)</div><div class="v">'+eur0.format(r.nettoKK)+'</div></div>'+
+        '<div class="stat orange"><div class="l">Lücke (heutige Kaufkraft)</div><div class="v">'+eur0.format(r.lueckeKK)+'</div></div>'+
+      '</div>'+
+      '<div class="narr orange">Deine monatliche Rentenlücke zum Renteneintritt beträgt <b>'+eur0.format(r.luecke)+'</b>. In heutiger Kaufkraft entspricht das rund <b>'+eur0.format(r.lueckeKK)+'/Monat</b>, die du zusätzlich brauchst, um deinen Lebensstandard zu halten.</div>'+
+      FOOT(d)+'</section>';
+
+    /* 4 — Kapitalbedarf & empfohlene Sparrate */
+    slides+='<section class="slide">'+LOGO()+
+      '<div class="kicker">'+K()+' · Bedarf</div><h2>Was musst du dafür zurücklegen?</h2>'+
+      '<div class="sub">Um die Lücke von '+eur0.format(r.luecke)+'/Monat über den Ruhestand zu schließen, ist folgender Kapitalstock nötig — und das ist die Sparrate, die ihn aufbaut.</div>'+
+      '<div class="split even"><div>'+
+        '<div class="kicker">Benötigter Kapitalstock zum Renteneintritt</div>'+
+        '<div class="big navy">'+eur0.format(r.kapitalberg)+'</div>'+
+        '<div class="narr blue" style="margin-top:6px">Aus diesem Kapital lässt sich die Rentenlücke über den gesamten Ruhestand finanzieren (inkl. Weiterverzinsung in der Auszahlphase).</div>'+
+      '</div><div>'+
+        '<div class="stat3" style="grid-template-columns:1fr">'+
+          '<div class="stat green"><div class="l">Empfohlene Sparrate (gleichbleibend)</div><div class="v">'+eur0.format(r.sparrate)+' /Mt</div></div>'+
+          '<div class="stat green"><div class="l">Alternativ mit '+pct(d.spardynamik*100,0)+' Dynamik (Startrate)</div><div class="v">'+eur0.format(r.sparrateDyn)+' /Mt</div></div>'+
+          '<div class="stat"><div class="l">Laufzeit / Rendite-Annahme</div><div class="v" style="font-size:16px">'+r.dauer+' Jahre · '+pct(d.rendite*100)+'</div></div>'+
+        '</div>'+
+      '</div></div>'+
+      '<div class="narr">Mit Dynamik startest du niedriger (<b>'+eur0.format(r.sparrateDyn)+'</b>) und erhöhst die Rate jährlich um '+pct(d.spardynamik*100,0)+' – passend zu deiner erwarteten Einkommensentwicklung.</div>'+
+      FOOT(d)+'</section>';
+
+    /* 5 — Hochrechnung */
+    var zusatz=r.dauer>0? endExp/KAPFAKTOR : 0;
+    var deckung=r.luecke>0? Math.min(100,Math.round(zusatz/r.luecke*100)):100;
+    slides+='<section class="slide">'+LOGO()+
+      '<div class="kicker">'+K()+' · Hochrechnung</div><h2>So entwickelt sich dein Vermögen</h2>'+
+      '<div class="sub">Mit der empfohlenen Sparrate von '+eur0.format(planRate)+'/Monat über '+r.dauer+' Jahre – Beispielrechnung, Bandbreite '+pct((d.rendite-0.02)*100)+' bis '+pct((d.rendite+0.02)*100)+'.</div>'+
+      '<div class="split"><div>'+bandChart(exp,pess,opt,r.dauer,yMax)+'</div>'+
+      '<div><div class="stat3" style="grid-template-columns:1fr">'+
+        '<div class="stat"><div class="l">Voraussichtl. Endkapital</div><div class="v">'+eur0.format(endExp)+'</div></div>'+
+        '<div class="stat"><div class="l">Bandbreite</div><div class="v" style="font-size:15px">'+eur0.format(endPess)+' – '+eur0.format(endOpt)+'</div></div>'+
+        '<div class="stat green"><div class="l">Mögliche Zusatzrente</div><div class="v">'+eur0.format(zusatz)+' /Mt</div></div>'+
+      '</div></div></div>'+
+      '<div class="narr">Das deckt rechnerisch rund <b>'+deckung+'%</b> deiner Rentenlücke. <span style="color:#8295a6">(Eingezahlt '+eur0.format(eingez)+' · Wertzuwachs '+eur0.format(gewinn)+' · Kosten bereits berücksichtigt.)</span></div>'+
+      FOOT(d)+'</section>';
+
+    /* 6 — Warum ETFs */
+    if(d.mEtfWhy){
+      slides+='<section class="slide">'+LOGO()+
+        '<div class="kicker">'+K()+' · Strategie</div><h2>Warum wir auf ETFs setzen</h2>'+
+        '<div class="split even" style="align-items:start"><div>'+
+          '<ul class="ticks">'+
+            '<li><b>Breite Streuung = mehr Sicherheit.</b> Tausende Unternehmen weltweit statt Einzelwetten – über lange Laufzeiten historisch eine der verlässlichsten Anlageformen.</li>'+
+            '<li><b>Passiv schlägt aktiv.</b> Die große Mehrheit aktiver Fonds verfehlt langfristig ihren Vergleichsindex – nach Kosten.</li>'+
+            '<li><b>Niedrige Kosten sind entscheidend.</b> Jeder eingesparte Kostenprozentpunkt landet direkt in deiner Rendite.</li>'+
+            '<li><b>Realistische Erwartung: 6–8 % p.&nbsp;a.</b> langfristig bei global gestreutem Aktienanteil.</li>'+
+            '<li><b>Einfach &amp; transparent.</b> Ein ETF bildet den Markt automatisch ab – kein Stock-Picking, kein Markt-Timing.</li>'+
+          '</ul>'+
+        '</div><div>'+
+          '<div class="quote">„Wenn ich etwas gelernt habe in meinen 60 Berufsjahren an der Wall Street, dann, dass Leute mit Aktienmarktprognosen keinen Erfolg haben."<span class="src">— Benjamin Graham</span></div>'+
+          '<div class="quote">„Das Einzige, was mit einiger Zuverlässigkeit vorhersagt, welche Investmentfonds in Zukunft am besten abschneiden, sind ihre laufenden Kosten."<span class="src">— Prof. William Sharpe, Nobelpreisträger</span></div>'+
+          '<div class="card orange" style="margin-top:10px"><div class="l">Unser Prinzip</div><div class="b">Markt kaufen statt schlagen wollen – günstig, breit gestreut, langfristig und diszipliniert.</div></div>'+
+        '</div></div>'+
+        FOOT(d)+'</section>';
+    }
+
+    /* 7 — Unsere ETF-Auswahl */
+    if(d.mEtfPick){
+      var etfHtml=ETFS.map(function(e){return '<div class="etf'+(e.core?' core':'')+'">'+
+        '<div class="n">'+esc(e.n)+(e.core?' · <span style="color:var(--orange)">Kern</span>':'')+'</div>'+
+        '<div class="meta">ISIN '+esc(e.isin)+' · TER '+esc(e.ter)+'</div>'+
+        '<div class="role">'+esc(e.role)+'</div></div>';}).join('');
+      slides+='<section class="slide">'+LOGO()+
+        '<div class="kicker">'+K()+' · Portfolio</div><h2>Unsere ETF-Auswahl: ein echtes Weltportfolio</h2>'+
+        '<div class="sub">Nicht „nur MSCI World": Wir kombinieren einen kostengünstigen Welt-Kern mit gezielten Regionen-Bausteinen und ergänzen um Small-Cap &amp; Value, um die Rendite langfristig zu stabilisieren.</div>'+
+        '<div class="etfgrid">'+etfHtml+'</div>'+
+        '<div class="narr blue">Aufbau: <b>Welt-Kern</b> (Amundi Prime Global / MSCI World) als Fundament &nbsp;→&nbsp; <b>Regionen</b> (USA, Europa inkl. UK, Schwellenländer, Pazifik, Japan) zur Feinsteuerung &nbsp;→&nbsp; <b>Ergänzung Small-Cap &amp; Value</b> als zusätzliche, langfristige Renditequellen.</div>'+
+        FOOT(d)+'</section>';
+    }
+
+    /* 8 — Steuervorteile Versicherungsmantel + FMU-Vergleich */
+    if(d.mTax || d.mCompare){
+      var vglRate=d.vglRate>0? d.vglRate : (r.sparrate>0? r.sparrate : 100);
+      var dur=r.dauer>0? r.dauer : 30;
+      var police=fmuSim({type:'police',tax:'halb',rate:vglRate,dauer:dur,rendite:d.rendite,dynamik:0,
+        alpha:d.alphaP,alphaJahre:d.alphaJahreP,betaL:d.betaP,gamma:d.gammaP,stueck:d.stueckP,ter:d.terP,aa:0,teilfrei:0.15,
+        grenz:d.grenz,abg:d.abg,soli:d.soli,kist:d.kist});
+      var depot=fmuSim({type:'depot',tax:'abgeltung',rate:vglRate,dauer:dur,rendite:d.rendite,dynamik:0,
+        alpha:0,alphaJahre:5,betaL:0,gamma:0,stueck:0,ter:d.depTer,aa:d.depAA,teilfrei:0.30,income:0,basiszins:d.basiszins,umschicht:d.depUmschicht,
+        abg:d.abg,soli:d.soli,kist:d.kist});
+      var diff=police.netto-depot.netto;
+      var yMax2=niceMax(Math.max(police.netto,depot.netto));
+
+      slides+='<section class="slide">'+LOGO()+
+        '<div class="kicker">'+K()+' · Steuer &amp; Mantel</div><h2>Versicherungsmantel vs. ETF-Depot</h2>'+
+        '<div class="sub">Dieselbe ETF-Strategie, dieselbe Sparrate ('+eur0.format(vglRate)+'/Mt über '+dur+' Jahre) – einmal im Versicherungsmantel (Alte Leipziger), einmal im klassischen ETF-Depot. Ehrlich gerechnet: beim reinen Kapital liegt das günstige Depot vorne – der Mantel zahlt sich über Steuer, Flexibilität und lebenslange Garantie aus.</div>'+
+        '<div class="split"><div>'+twoLineChart(depot.series,police.series,dur,yMax2,'#9fb3c4','#2f9e63')+
+          '<div style="font-size:11px;color:#8295a6;margin-top:2px"><span style="color:#9fb3c4;font-weight:700">■</span> ETF-Depot (nach lfd. Steuer) &nbsp; <span style="color:#2f9e63;font-weight:700">■</span> Police (nach Steuer)</div>'+
+        '</div><div>'+
+          '<div class="stat3" style="grid-template-columns:1fr">'+
+            '<div class="stat"><div class="l">ETF-Depot · Endkapital nach Steuer</div><div class="v">'+eur0.format(depot.netto)+'</div></div>'+
+            '<div class="stat"><div class="l">Police · Endkapital nach Steuer</div><div class="v">'+eur0.format(police.netto)+'</div></div>'+
+            '<div class="stat"><div class="l">Unterschied beim reinen Kapital</div><div class="v" style="font-size:16px">'+(diff>=0?'+':'−')+eur0.format(Math.abs(diff))+' für '+(diff>=0?'Police':'Depot')+'</div></div>'+
+          '</div>'+
+          '<div class="narr green" style="margin-top:8px;font-size:12.5px">Dafür bietet die Police: <b>lebenslange Rentengarantie</b> · <b>12/62</b> statt Abgeltungssteuer · <b>steuerfreies Rebalancing</b> · <b>flexible Vererbung</b>.</div>'+
+        '</div></div>'+
+        '<table class="ctable"><tr><th class="feat">Merkmal</th><th>ETF-Depot</th><th>Versicherungsmantel</th></tr>'+
+          '<tr><td class="feat">Besteuerung in der Ansparphase</td><td class="no">jährlich (Vorabpauschale, Erträge)</td><td class="yes">steuerfrei aufgeschoben</td></tr>'+
+          '<tr><td class="feat">Rebalancing / Umschichtung</td><td class="no">steuerpflichtig</td><td class="yes">steuerfrei &amp; automatisiert</td></tr>'+
+          '<tr><td class="feat">Auszahlung im Rentenalter</td><td class="no">Abgeltungsteuer 26,375 %</td><td class="yes">Halbeinkünfte (12/62) / Ertragsanteil</td></tr>'+
+          '<tr><td class="feat">Langlebigkeitsschutz</td><td class="no">Kapital kann aufgebraucht werden</td><td class="yes">lebenslange Rente garantiert</td></tr>'+
+          '<tr><td class="feat">Vererbung</td><td class="no">nach Erbrecht</td><td class="yes">frei &amp; flexibel (Bezugsrecht)</td></tr>'+
+          '<tr><td class="feat">Kosten</td><td class="yes">sehr niedrig</td><td class="no">Produktkosten (hier brutto)</td></tr>'+
+        '</table>'+
+        FOOT(d)+'</section>';
+    }
+
+    /* 9 — Kindervorsorge */
+    if(d.mKind){
+      var kName=d.kindName||'dein Kind';
+      var kj=d.kindJahre>0?d.kindJahre:18, kb=d.kindBeitrag>0?d.kindBeitrag:100;
+      // Kindervorsorge = Netto-Tarif (günstige Konditionen)
+      var kPol=fmuSim({type:'police',tax:'halb',rate:kb,dauer:kj,rendite:d.rendite,dynamik:0,
+        alpha:0,alphaJahre:5,betaL:0.025,gamma:0.002,stueck:24,ter:0.0018,aa:0,teilfrei:0.15,
+        grenz:d.grenz,abg:d.abg,soli:d.soli,kist:d.kist});
+      var kDep=fmuSim({type:'depot',tax:'abgeltung',rate:kb,dauer:kj,rendite:d.rendite,dynamik:0,
+        alpha:0,alphaJahre:5,betaL:0,gamma:0,stueck:0,ter:d.depTer,aa:d.depAA,teilfrei:0.30,income:0,basiszins:d.basiszins,umschicht:d.depUmschicht,
+        abg:d.abg,soli:d.soli,kist:d.kist});
+      var kDiff=kPol.netto-kDep.netto, kWins=kDiff>=0;
+      slides+='<section class="slide">'+LOGO()+
+        '<div class="kicker">'+K()+' · Kindervorsorge</div><h2>Kindervorsorge statt Kinderdepot</h2>'+
+        '<div class="sub">Für '+esc(kName)+': '+eur0.format(kb)+'/Monat über '+kj+' Jahre. Je länger die Laufzeit, desto stärker wirken die zwei Steuervorteile der Vorsorge – plus volle Kontrolle für euch als Eltern.</div>'+
+        '<div class="split even" style="align-items:start"><div>'+
+          '<div class="badge green">Zwei Steuervorteile der Kindervorsorge</div>'+
+          '<ul class="ticks">'+
+            '<li><b>1 · Steuerfreies Wachstum in der Ansparphase.</b> Der volle Zinseszins arbeitet ungeschmälert – keine Vorabpauschale, keine Steuer auf Umschichtungen. Im Depot wird jedes Jahr besteuert.</li>'+
+            '<li><b>2 · Nur der halbe Gewinn besteuert.</b> Bei Auszahlung greift das Halbeinkünfteverfahren (12/62) – nur 50 % des Gewinns sind steuerpflichtig, statt 100 % wie im Kinderdepot.</li>'+
+            '<li><b>Ihr entscheidet über den Zeitpunkt.</b> Nicht automatisch mit 18 – ihr gebt das Kapital frei, wenn '+esc(kName)+' bereit ist.</li>'+
+            '<li><b>Mehr Freiheiten</b> – und keine automatische BAföG-/Unterhalts-Anrechnung wie beim Depot.</li>'+
+          '</ul>'+
+        '</div><div>'+
+          '<div class="stat3" style="grid-template-columns:1fr 1fr">'+
+            '<div class="stat'+(kWins?'':' green')+'"><div class="l">Kinderdepot · nach Steuer</div><div class="v" style="font-size:18px">'+eur0.format(kDep.netto)+'</div></div>'+
+            '<div class="stat'+(kWins?' green':'')+'"><div class="l">Kindervorsorge · nach Steuer</div><div class="v" style="font-size:18px">'+eur0.format(kPol.netto)+'</div></div>'+
+          '</div>'+
+          '<div class="badge" style="margin-top:12px">Kinderdepot — zur Einordnung</div>'+
+          '<ul class="ticks x">'+
+            '<li>Geht <b>automatisch mit 18</b> in die volle Verfügung des Kindes über.</li>'+
+            '<li>Jährliche Besteuerung (Vorabpauschale, Umschichtung); beim Verkauf voller Gewinn steuerpflichtig.</li>'+
+            '<li>Kann auf BAföG / Unterhalt angerechnet werden.</li>'+
+          '</ul>'+
+        '</div></div>'+
+        '<div class="narr'+(kWins?' green':'')+'">'+
+          (kWins
+            ? 'Ergebnis: Die Kindervorsorge bringt nach Steuer <b>'+eur0.format(Math.abs(kDiff))+' mehr</b> – und je länger die Laufzeit, desto größer wird der Vorsprung durch Zinseszins auf unversteuertem Kapital. Dazu die volle Kontrolle: ihr entscheidet, wann '+esc(kName)+' über das Geld verfügt – nicht der Gesetzgeber mit dem 18. Geburtstag.'
+            : 'Bei dieser kurzen Laufzeit liegen beide nah beieinander – über längere Zeiträume gewinnt die Kindervorsorge dank steuerfreiem Wachstum und halber Versteuerung klar. Entscheidend bleibt zudem: ihr behaltet die Kontrolle, statt dass alles automatisch mit 18 übergeht.')+
+        '</div>'+
+        FOOT(d)+'</section>';
+    }
+
+    /* 10 — Zusammenfassung */
+    var zusText = d.zus ? esc(d.zus).replace(/\n/g,'<br>')
+      : 'Bis zur Rente sind es noch <b>'+r.dauer+' Jahre</b>. Deine Rentenlücke beträgt <b>'+eur0.format(r.luecke)+'/Monat</b>. Mit einer Sparrate von <b>'+eur0.format(r.sparrate)+'/Monat</b> (oder '+eur0.format(r.sparrateDyn)+' mit Dynamik) baust du das nötige Kapital von ca. <b>'+eur0.format(r.kapitalberg)+'</b> auf – breit gestreut über ETFs, im steueroptimierten Mantel.';
+    slides+='<section class="slide">'+LOGO()+
+      '<div class="kicker">'+K()+' · Fazit</div><h2>Zusammenfassung &amp; nächste Schritte</h2>'+
+      '<div class="cards c2" style="margin-bottom:6px">'+
+        '<div class="card green"><div class="l">Unsere Empfehlung</div><div class="b">'+esc(d.produkt||'—')+'</div></div>'+
+        '<div class="card"><div class="l">Empfohlene Sparrate</div><div class="b" style="font-size:20px;font-weight:800">'+eur0.format(r.sparrate)+' /Mt</div></div></div>'+
+      '<div class="sub" style="font-size:15px;max-width:215mm">'+esc(d.empfehlung||'')+'</div>'+
+      '<div class="sub" style="font-size:14px;max-width:215mm">'+zusText+'</div>'+
+      '<div class="kicker">Nächste Schritte</div><ul class="steps">'+
+        '<li><span class="num">1</span><b>Rückfragen klären</b> – offene Punkte zum Konzept besprechen.</li>'+
+        '<li><span class="num">2</span><b>Umsetzung starten</b> – Unterlagen vorbereiten und unterschreiben (T3).</li>'+
+        '<li><span class="num">3</span><b>Begleitung</b> – regelmäßige Reviews, damit dein Plan auf Kurs bleibt.</li>'+
+      '</ul>'+FOOT(d)+'</section>';
+
+    /* 11 — Disclaimer */
+    slides+='<section class="slide">'+LOGO()+
+      '<div class="kicker">Rechtliche Hinweise</div><h2>Wichtige Hinweise</h2>'+
+      '<p class="disc">Dieses Konzept ist eine unverbindliche, individuelle Aufbereitung auf Basis der von dir gemachten Angaben und stellt keine verbindliche Zusage dar. Die dargestellten Hochrechnungen beruhen auf Annahmen (u.&nbsp;a. zur Wertentwicklung, Inflation, Rentenwert-Entwicklung und Steuer) und sind keine Garantie; tatsächliche Ergebnisse können – auch deutlich – abweichen. Die Berechnung der gesetzlichen Rente erfolgt modellhaft (Entgeltpunkte, aktueller Rentenwert, pauschale Sozialabgaben und Steuer) und ersetzt keine Rentenauskunft der Deutschen Rentenversicherung. Kapitalanlagen sind mit Risiken bis hin zum Verlust verbunden. Kosten, Steuern und Inflation beeinflussen das Ergebnis. Der Steuervergleich bildet Halbeinkünfteverfahren (12/62) bzw. Abgeltungssteuer inkl. Teilfreistellung und Vorabpauschale modellhaft nach und ersetzt keine Steuerberatung. Die „mögliche Zusatzrente" unterstellt eine Verrentung des Endkapitals über den Ruhestand. Maßgeblich sind ausschließlich die Vertragsunterlagen der jeweiligen Anbieter. Es gelten unsere Erstinformation (§&nbsp;15 VersVermV) sowie unsere Datenschutzhinweise.</p>'+
+      FOOT(d)+'</section>';
+
+    $('deck').innerHTML=slides;
+  }
+
+  /* ============================================================
+     TRANSKRIPT / JSON IMPORT
+     ============================================================ */
+  var FIELD_KEYS=['kundenname','berater','datum','geburtsdatum','alter','renteneintritt','brutto','netto',
+    'urlaub','weihnacht','sonstige','rentenpunkte','jahreGRV','wunschrente','einkSteig','inflation','rendite',
+    'spardynamik','rentenwert','abschluss','verwaltung','laufend','fonds','ziel1','ziel2','ziel3','ziel4','ziel5',
+    'produktname','empfehlung','grenz','abg','soli','kist','basiszins','vglRate','kindName','kindAlter','kindBeitrag','kindJahre','zusammenfassung'];
+
+  // ---- alias-tolerantes Schlüssel-Mapping (akzeptiert beliebige sinnvolle JSON-Keys) ----
+  var CANON={};
+  (function(){
+    var m={
+      kundenname:['name','kunde','kundenname','kundename','customername','client','clientname','vollername'],
+      berater:['berater','advisor','beraterin'],
+      datum:['datum','date'],
+      geburtsdatum:['geburtsdatum','geburtstag','geburt','birthdate','dob','geboren','birthday'],
+      alter:['alter','age','lebensalter'],
+      renteneintritt:['renteneintritt','rentenalter','rentenbeginn','renteneintrittsalter','wunschrentenalter','retirementage','rentemit'],
+      brutto:['brutto','bruttoeinkommen','bruttogehalt','bruttolohn','grossincome','einkommenbrutto','monatsbrutto'],
+      netto:['netto','nettoeinkommen','nettogehalt','nettolohn','netincome','monatsnetto'],
+      urlaub:['urlaub','urlaubsgeld'],
+      weihnacht:['weihnacht','weihnachtsgeld'],
+      sonstige:['sonstige','sonstigezahlungen'],
+      rentenpunkte:['rentenpunkte','entgeltpunkte','punkte','pensionpoints','ep','entgeltpunkt'],
+      jahreGRV:['jahregrv','jahreeingezahlt','einzahljahre','grvjahre','beitragsjahre','yearscontributed','jahreingrv','versicherungsjahre'],
+      wunschrente:['wunschrente','zielrente','desiredpension','wunschrentemonatlich','wunschrentenetto','gewuenschterente','bedarfrente'],
+      einkSteig:['einksteig','einkommenssteigerung','gehaltssteigerung','salarygrowth','lohnsteigerung'],
+      inflation:['inflation','inflationsrate','teuerung'],
+      rendite:['rendite','return','renditepa','wertentwicklung'],
+      spardynamik:['spardynamik','dynamik','dynamiksparrate','beitragsdynamik'],
+      rentenwert:['rentenwert'],
+      abschluss:['abschluss','abschlusskosten'],
+      verwaltung:['verwaltung','verwaltungskosten'],
+      laufend:['laufend','laufendekosten'],
+      fonds:['fonds','fondskosten'],
+      ziel1:['ziel1','musthaves','musthave','mussziele','nichtverhandelbar'],
+      ziel2:['ziel2','nogos','nogo'],
+      ziel3:['ziel3','flexibilitaet','flexibilität','flexibility','flex'],
+      ziel4:['ziel4','renditesicherheit','renditevssicherheit'],
+      ziel5:['ziel5','steuervererbung','steuervererbungkontrolle','vererbung'],
+      produktname:['produktname','produkt','loesung','lösung','product','empfehlungprodukt'],
+      empfehlung:['empfehlung','empfehlungstext','recommendation'],
+      grenz:['grenz','steuersatz','steuersatzruhestand','grenzsteuersatz','perssteuersatz'],
+      abg:['abg','abgeltung','abgeltungssteuer','abgeltungsteuer'],
+      soli:['soli','solidaritaetszuschlag'],
+      kist:['kist','kirchensteuer'],
+      basiszins:['basiszins'],
+      vglRate:['vglrate','vergleichsrate','sparrate','beitrag','monatsbeitrag','monatlicherbeitrag','vergleichssparrate'],
+      kindName:['kindname','childname','namekind'],
+      kindAlter:['kindalter','childage','alterkind'],
+      kindBeitrag:['kindbeitrag','childcontribution','beitragkind','kindersparrate'],
+      kindJahre:['kindjahre','childyears','anlagehorizont','horizont','kinderhorizont'],
+      zusammenfassung:['zusammenfassung','summary','fazit']
+    };
+    for(var k in m){ m[k].forEach(function(a){ CANON[a]=k; }); }
+    FIELD_KEYS.forEach(function(f){ var nk=f.toLowerCase().replace(/[\s_\-]/g,''); if(!CANON[nk]) CANON[nk]=f; });
+  })();
+  var TOGGLES={modkind:'modKind',modcompare:'modCompare',modetfwhy:'modEtfWhy',modetfpick:'modEtfPick',modtax:'modTax',kindervorsorge:'modKind',vergleich:'modCompare'};
+  function normKey(k){ return String(k).toLowerCase().replace(/[\s_\-]/g,''); }
+
+  function applyData(obj){
+    var applied=[];
+    for(var rawk in obj){ if(!Object.prototype.hasOwnProperty.call(obj,rawk)) continue;
+      var nk=normKey(rawk), v=obj[rawk];
+      if(TOGGLES[nk]!==undefined){ $(TOGGLES[nk]).checked=!!v; continue; }
+      var fid=CANON[nk];
+      if(fid && v!==undefined && v!==null && v!==''){ setVal(fid,v); if(applied.indexOf(fid)<0) applied.push(fid); }
+    }
+    return applied;
+  }
+
+  // ---- robuste Mustererkennung aus rohem Transkript-Text ----
+  function parseTranscript(t){
+    var o={}, low=' '+String(t).toLowerCase().replace(/\s+/g,' ')+' ';
+    function reN(re){ var m=low.match(re); return m?num(m[1]):null; }
+    // nimmt die Zahl in der Nähe eines Stichworts (danach, sonst davor)
+    function near(kw,opt){ opt=opt||{}; var win=opt.win||28,mn=opt.min||0,mx=opt.max||1e12;
+      var re=new RegExp(kw,'g'),m;
+      while((m=re.exec(low))){
+        // danach: +8 Puffer gegen abgeschnittene Zahl; Zahl muss innerhalb des Fensters BEGINNEN
+        var after=low.slice(re.lastIndex, re.lastIndex+win+8), ma=after.match(/(\d[\d.,]*\d|\d)/);
+        if(ma && ma.index<win){ var va=num(ma[1]); if(va>=mn&&va<=mx) return va; }
+        // davor: letzte vollständige Zahl, die noch im Fenster liegt
+        var bs=Math.max(0,m.index-win-8), before=low.slice(bs,m.index), mb=before.match(/(\d[\d.,]*\d|\d)(?!.*\d)/);
+        if(mb && (before.length-mb.index)<=win+8){ var vb=num(mb[1]); if(vb>=mn&&vb<=mx) return vb; }
+      }
+      return null; }
+    var v;
+    // Renteneintritt zuerst (damit "mit 67" nicht als Alter gilt)
+    if((v=reN(/(?:rente mit|in rente mit|renteneintritt(?:salter)?[^0-9]{0,6}|rentenbeginn[^0-9]{0,6}|rentenalter[^0-9]{0,6}|aufhören mit|aufhoeren mit)\s*(\d{2})/))!=null && v>=55 && v<=75) o.renteneintritt=v;
+    else if((v=reN(/mit\s*(\d{2})\s*(?:in (?:die |den )?(?:rente|ruhestand)|in rente|aufhören|aufhoeren|aussteigen|ausstieg)/))!=null && v>=55 && v<=75) o.renteneintritt=v;
+    // Geburtsdatum / Jahrgang
+    var gd=low.match(/(?:geboren am|geburtsdatum)[^0-9]{0,4}(\d{1,2})\.(\d{1,2})\.(\d{4})/);
+    if(gd){ o.geburtsdatum=gd[3]+'-'+('0'+gd[2]).slice(-2)+'-'+('0'+gd[1]).slice(-2); }
+    else if((v=reN(/(?:jahrgang|geboren(?: im jahr)?)\s*(\d{4})/))!=null && v>1930 && v<2020){ o.alter=(new Date()).getFullYear()-v; }
+    // Alter
+    if(o.alter==null && o.geburtsdatum==null){
+      if((v=reN(/\balter\b[^0-9]{0,6}(\d{1,2})/))!=null && v>=14 && v<=90) o.alter=v;
+      else if((v=reN(/(\d{1,2})\s*jahre?\s*alt/))!=null && v>=14 && v<=90) o.alter=v;
+      else if((v=reN(/(\d{1,2})[- ]?jährige?r?\b/))!=null && v>=14 && v<=90) o.alter=v;
+      else if((v=reN(/(?:ich bin|bin jetzt|bin gerade|bin)\s*(\d{1,2})\b/))!=null && v>=18 && v<=75) o.alter=v;
+    }
+    // Rentenpunkte
+    if((v=near('renten\\s*punkte|entgelt\\s*punkte|\\bpunkte',{win:34,min:0,max:90}))!=null) o.rentenpunkte=v;
+    // Jahre in GRV
+    if((v=reN(/(\d{1,2})\s*jahre?\s*(?:in (?:die |der )?(?:grv|rentenkasse|rentenversicherung|gesetzliche)|eingezahlt|einbezahlt|gearbeitet|berufstätig|berufstaetig)/))!=null && v<=50) o.jahreGRV=v;
+    else if((v=reN(/(?:seit|bisher|eingezahlt|einbezahlt|arbeite seit|berufstätig seit|berufstaetig seit)[^0-9]{0,22}(\d{1,2})\s*jahr/))!=null && v<=50) o.jahreGRV=v;
+    // Wunschrente
+    if((v=near('wunsch\\s*rente|zielrente|gewünschte rente|gewuenschte rente',{win:18,min:300,max:30000}))!=null) o.wunschrente=v;
+    else if((v=reN(/(?:hätte gern|haette gern|möchte|moechte|brauche|will|gern[e]?)[^0-9]{0,18}(\d[\d.,]*)\s*(?:euro|eur|€)\s*(?:rente|im monat|pro monat|monatlich|netto)/))!=null) o.wunschrente=v;
+    else if((v=reN(/(\d[\d.,]*)\s*(?:euro|eur|€)\s*(?:wunschrente|rente)/))!=null && v>=300 && v<=30000) o.wunschrente=v;
+    // Brutto / Netto
+    if((v=near('brutto',{win:30,min:500,max:60000}))!=null) o.brutto=v;
+    if((v=near('netto',{win:30,min:300,max:50000}))!=null) o.netto=v;
+    // Inflation
+    if((v=reN(/inflation[^0-9]{0,22}(\d[\d.,]*)\s*(?:%|prozent)/))!=null) o.inflation=String(v).replace('.',',');
+    else if((v=reN(/(\d[\d.,]*)\s*(?:%|prozent)\s*(?:inflation|teuerung)/))!=null) o.inflation=String(v).replace('.',',');
+    // Sparrate / Beitrag
+    if((v=reN(/(?:sparrate|sparen|anlegen|investieren|beitrag|monatlich)[^0-9]{0,18}(\d[\d.,]*)\s*(?:euro|eur|€)/))!=null && v>=10 && v<=20000) o.vglRate=v;
+    // Kind erkannt → Modul an
+    if(/\bkind(es|er)?\b|tochter|sohn|nachwuchs|\bbaby\b|enkel/.test(low)) o.modKind=true;
+    // Name (aus Originaltext, Groß-/Kleinschreibung erhalten)
+    var nm=String(t).match(/(?:ich heiße|ich heisse|mein name ist|name ist|ich bin der|ich bin die|kundin?:?)\s+([A-ZÄÖÜ][a-zäöüß]+(?:\s+[A-ZÄÖÜ][a-zäöüß]+){0,2})/);
+    if(nm) o.kundenname=nm[1].trim();
+    return o;
+  }
+
+  var ESSENTIAL=[
+    {id:'kundenname',label:'Name'},
+    {id:'alter',label:'Alter',alt:'geburtsdatum'},
+    {id:'renteneintritt',label:'Renteneintritt'},
+    {id:'brutto',label:'Brutto €/Mt'},
+    {id:'netto',label:'Netto €/Mt'},
+    {id:'rentenpunkte',label:'Rentenpunkte'},
+    {id:'jahreGRV',label:'Jahre GRV'},
+    {id:'wunschrente',label:'Wunschrente €/Mt'}
+  ];
+  function buildStatus(applied,isJson){
+    applied=applied||[];
+    function got(e){ return applied.indexOf(e.id)>=0 || (e.alt && applied.indexOf(e.alt)>=0); }
+    var ok=ESSENTIAL.filter(got), miss=ESSENTIAL.filter(function(e){return !got(e);});
+    var msg=$('parsemsg');
+    if(applied.length===0){ msg.style.color='var(--orange)';
+      msg.innerHTML=isJson? 'JSON gelesen, aber keine bekannten Felder erkannt — bitte unten alles manuell ergänzen.'
+        : 'Aus dem Text ließ sich nichts eindeutig auslesen — bitte unten manuell ergänzen.'; }
+    else { msg.style.color='var(--green)';
+      msg.innerHTML='✓ <b>'+applied.length+'</b> Felder automatisch übernommen'+(miss.length? ' · noch <b>'+miss.length+'</b> offen:' : ' · alles Wichtige erkannt.'); }
+    var html='';
+    if(ok.length){ html+='<div class="sp-title">Erkannt</div><div class="chips">'+ok.map(function(e){
+        var disp=(e.id==='alter'&&applied.indexOf('geburtsdatum')>=0)?$('alter').value:$(e.id).value;
+        return '<span class="chip ok">✓ '+esc(e.label)+': '+esc(disp)+'</span>'; }).join('')+'</div>'; }
+    if(miss.length){ html+='<div class="sp-title">Bitte selbst ergänzen</div><div class="chips">'+miss.map(function(e){
+        return '<span class="chip miss">⚠ '+esc(e.label)+'</span>'; }).join('')+'</div>'; }
+    $('statuspanel').innerHTML=html;
+  }
+
+  function doImport(){
+    var raw=val('importbox'); var msg=$('parsemsg');
+    if(!raw){ msg.style.color='var(--orange)'; msg.textContent='Bitte zuerst eine .txt-Datei hochladen oder Text/JSON einfügen.'; $('statuspanel').innerHTML=''; return; }
+    var obj=null,isJson=false, s=raw.indexOf('{'), e=raw.lastIndexOf('}');
+    if(s>=0&&e>s){ try{ var p=JSON.parse(raw.slice(s,e+1)); if(p&&typeof p==='object'){ obj=p; isJson=true; } }catch(_){ isJson=false; } }
+    var applied = isJson ? applyData(obj) : applyData(parseTranscript(raw));
+    render();
+    buildStatus(applied,isJson);
+  }
+
+  function readFile(file){
+    if(!file){ return; }
+    var fr=new FileReader();
+    fr.onload=function(){ setVal('importbox',String(fr.result||'')); doImport(); };
+    fr.onerror=function(){ $('parsemsg').style.color='var(--orange)'; $('parsemsg').textContent='Datei konnte nicht gelesen werden.'; };
+    fr.readAsText(file,'utf-8');
+  }
+
+  /* ===== Zoom & Events ===== */
+  function fitZoom(){ var avail=$('stage').clientWidth-36, pxW=297*96/25.4; $('deck').style.zoom=Math.max(.2,Math.min(.85,avail/pxW)); }
+
+  $('form').addEventListener('input',render);
+  $('form').addEventListener('change',render);
+  $('btnPdf').addEventListener('click',function(){window.print();});
+  $('btnParse').addEventListener('click',doImport);
+  $('btnReset').addEventListener('click',function(){ if(confirm('Alle Eingaben auf Standardwerte zurücksetzen?')) location.reload(); });
+  $('geburtsdatum').addEventListener('change',render);
+  window.addEventListener('resize',fitZoom);
+
+  // ---- Datei-Upload & Drag-and-Drop ----
+  (function(){
+    var dz=$('dropzone'), fi=$('fileinput');
+    dz.addEventListener('click',function(){ fi.click(); });
+    fi.addEventListener('change',function(){ readFile(fi.files && fi.files[0]); fi.value=''; });
+    ['dragenter','dragover'].forEach(function(ev){ dz.addEventListener(ev,function(e){ e.preventDefault(); e.stopPropagation(); dz.classList.add('drag'); }); });
+    ['dragleave','dragend'].forEach(function(ev){ dz.addEventListener(ev,function(e){ e.preventDefault(); e.stopPropagation(); dz.classList.remove('drag'); }); });
+    dz.addEventListener('drop',function(e){ e.preventDefault(); e.stopPropagation(); dz.classList.remove('drag');
+      var f=e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]; readFile(f); });
+    // Drop überall im Fenster abfangen, damit eine danebengelegte Datei den Browser nicht ersetzt
+    window.addEventListener('dragover',function(e){ e.preventDefault(); });
+    window.addEventListener('drop',function(e){ if(!dz.contains(e.target)) e.preventDefault(); });
+  })();
+
+  setVal('berater',CONFIG.berater);
+  setVal('datum',today());
+  render();
+  fitZoom();
+})();
+</script>
+</body>
+</html>

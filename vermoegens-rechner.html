@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vorsorge- & Vermögensrechner · iQuadrat</title>
+<style>
+  :root{
+    --navy:#0b2a4a; --blue:#1d6fa5; --green:#2f9e63; --orange:#e08e2c; --purple:#7a4fc9;
+    --ink:#3a4a5a; --muted:#8295a6; --bg:#f4f8fb; --line:#dde6ee; --card:#ffffff; --line2:#eef3f8;
+  }
+  *{box-sizing:border-box}
+  body{font-family:'Helvetica Neue',Arial,sans-serif;margin:0;color:var(--navy);background:#eef3f8;line-height:1.45}
+  .wrap{max-width:1180px;margin:0 auto;padding:22px 18px 60px}
+  header{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:6px}
+  header img{height:46px}
+  .kicker{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--blue);font-weight:700}
+  h1{font-size:27px;margin:8px 0 4px}
+  h1 .fuer{font-size:16px;color:var(--blue);font-weight:600}
+  .lead{font-size:15px;color:var(--ink);max-width:680px;margin:0 0 12px}
+  .badge{display:inline-flex;align-items:center;gap:7px;font-size:12px;color:var(--blue);background:#eaf3f9;border:1px solid #cfe3f0;border-radius:20px;padding:5px 12px;margin:0 0 18px;font-weight:600}
+  .badge svg{flex:none}
+  .grid{display:grid;grid-template-columns:360px 1fr;gap:18px;align-items:start}
+  @media(max-width:900px){.grid{grid-template-columns:1fr}}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px 18px 20px;box-shadow:0 1px 3px rgba(11,42,74,.05)}
+  .card h2{font-size:13px;letter-spacing:.5px;text-transform:uppercase;color:var(--blue);margin:0 0 14px}
+  .sec{font-size:10.5px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);font-weight:700;margin:20px 0 9px;display:flex;align-items:center;gap:8px}
+  .sec:first-of-type{margin-top:0}
+  .sec::after{content:"";flex:1;height:1px;background:var(--line)}
+  .field{margin-bottom:13px}
+  .field label{display:flex;justify-content:space-between;align-items:baseline;font-size:13px;font-weight:600;color:var(--navy);margin-bottom:5px}
+  .field .val{color:var(--blue);font-weight:700;font-variant-numeric:tabular-nums}
+  .field small{display:block;font-weight:400;color:var(--muted);font-size:11.5px;margin-top:3px}
+  input[type=number],input[type=text],input[type=date]{width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:8px;font-size:14.5px;color:var(--navy);font-variant-numeric:tabular-nums;font-family:inherit}
+  input:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(29,111,165,.12)}
+  input[type=range]{width:100%;accent-color:var(--blue);margin:2px 0}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+  .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px}
+
+  /* ETF-Liste */
+  .etf{border:1px solid var(--line);border-radius:9px;overflow:hidden}
+  .etfrow{display:flex;align-items:flex-start;gap:9px;padding:9px 10px;border-top:1px solid var(--line2);font-size:13px}
+  .etfrow:first-child{border-top:none}
+  .etfrow.on{background:#f3f9fd}
+  .etfrow input[type=checkbox]{width:17px;height:17px;accent-color:var(--blue);flex:none;cursor:pointer;margin-top:1px}
+  .etfrow .nm{flex:1;min-width:0}
+  .etfrow .nm b{display:block;font-weight:600;font-size:12.5px;line-height:1.25}
+  .etfrow .nm s{display:block;text-decoration:none;color:var(--muted);font-size:10.5px;margin-top:1px}
+  .etfrow .ter{font-size:10.5px;color:var(--muted);background:var(--bg);border-radius:5px;padding:2px 6px;font-weight:600;flex:none;white-space:nowrap;margin-top:1px}
+  .etfrow .pct{width:62px;flex:none}
+  .etfrow .pct input{padding:6px 7px;text-align:right;font-size:13px}
+  .etfrow.off .pct,.etfrow.off .ter{opacity:.35}
+  .etfsum{display:flex;justify-content:space-between;align-items:center;font-size:12px;margin-top:9px;padding:7px 10px;border-radius:8px;background:var(--bg);font-weight:600}
+  .etfsum.bad{background:#fdecec;color:#b4232a}
+  .etfsum.ok{background:#eef8f0;color:var(--green)}
+  .miniinfo{display:flex;gap:14px;font-size:11.5px;color:var(--muted);margin-top:8px;flex-wrap:wrap}
+  .miniinfo b{color:var(--navy)}
+
+  details.adv{margin-top:6px;border-top:1px solid var(--line);padding-top:6px}
+  details.adv summary{cursor:pointer;font-size:11.5px;color:var(--blue);font-weight:700;letter-spacing:.5px;text-transform:uppercase;list-style:none;padding:6px 0}
+  details.adv summary::-webkit-details-marker{display:none}
+  details.adv summary::before{content:"▸ ";font-size:10px}
+  details.adv[open] summary::before{content:"▾ "}
+
+  /* Ergebnisse */
+  .results h2{margin-bottom:6px}
+  .blocktitle{font-size:11px;letter-spacing:.8px;text-transform:uppercase;color:var(--blue);font-weight:700;margin:18px 0 8px;display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .blocktitle .asof{font-weight:600;color:var(--muted);text-transform:none;letter-spacing:0}
+  .stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+  @media(max-width:560px){.stats{grid-template-columns:1fr 1fr}}
+  .stat{background:var(--bg);border-radius:9px;padding:11px 12px}
+  .stat .l{font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.4px}
+  .stat .v{font-size:20px;font-weight:800;color:var(--navy);font-variant-numeric:tabular-nums;margin-top:3px;line-height:1.1}
+  .stat .s{font-size:11px;color:var(--muted);margin-top:2px}
+  .stat.gain .v{color:var(--green)} .stat.blue .v{color:var(--blue)}
+  .realperf{background:linear-gradient(135deg,#eef4fb,#e4eef9);border:1px solid #cfe0f0;border-radius:11px;padding:13px 15px;margin:4px 0 0;display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}
+  .realperf .l{font-size:12px;color:var(--blue);font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+  .realperf .v{font-size:26px;font-weight:800;color:var(--navy);font-variant-numeric:tabular-nums;line-height:1.05}
+  .realperf .s{font-size:12px;color:var(--ink)}
+  .hero{background:linear-gradient(135deg,#eef8f1,#e3f3ea);border:1px solid #cdebd7;border-radius:11px;padding:14px 16px;margin:4px 0 2px}
+  .hero .l{font-size:12px;color:var(--green);font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+  .hero .v{font-size:36px;font-weight:800;color:var(--navy);font-variant-numeric:tabular-nums;line-height:1.05;margin:3px 0}
+  .hero .s{font-size:12.5px;color:var(--ink)}
+  .pill{display:inline-block;font-size:12px;font-weight:700;border-radius:20px;padding:3px 10px;font-variant-numeric:tabular-nums}
+  .pill.up{background:#eef8f0;color:var(--green)} .pill.down{background:#fdecec;color:#b4232a}
+
+  .years{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 2px}
+  .yc{font-size:11px;border-radius:6px;padding:3px 8px;font-weight:700;font-variant-numeric:tabular-nums;border:1px solid var(--line);background:#fff}
+  .yc .y{color:var(--muted);margin-right:5px;font-weight:600}
+  .yc.pos{color:var(--green)} .yc.neg{color:#b4232a}
+
+  .bar{display:flex;height:16px;border-radius:8px;overflow:hidden;margin:10px 0 8px;border:1px solid var(--line)}
+  .bar .b1{background:var(--blue)} .bar .b2{background:var(--green)}
+  .barleg{display:flex;gap:16px;font-size:12px;color:var(--ink);flex-wrap:wrap}
+  .barleg span{display:inline-flex;align-items:center;gap:6px}
+  .dot{width:10px;height:10px;border-radius:3px;display:inline-block}
+  .dash{width:14px;height:0;border-top:2px dashed var(--blue);display:inline-block}
+
+  .chartwrap{position:relative;margin-top:6px}
+  svg.chart{width:100%;height:auto;display:block}
+  .marker{position:absolute;top:0;width:1px;background:var(--navy);opacity:0;pointer-events:none}
+  .tip{position:absolute;pointer-events:none;background:var(--navy);color:#fff;font-size:11.5px;line-height:1.5;padding:7px 10px;border-radius:7px;opacity:0;transform:translate(-50%,-115%);white-space:nowrap;box-shadow:0 4px 14px rgba(11,42,74,.25);z-index:5}
+  .tip b{color:#9fd3ff} .tip .e{color:#fff;font-weight:700} .tip .g{color:#9fe3bd} .tip .s{color:#bcd2e6}
+  .chartnote{font-size:11.5px;color:var(--muted);margin:8px 2px 0}
+
+  .taxbox{background:linear-gradient(135deg,#fff7ec,#fdefd8);border:1px solid #f3e2c4;border-radius:11px;padding:15px 16px;margin-top:16px}
+  .taxbox .t{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--orange)}
+  .taxbox .v{font-size:30px;font-weight:800;color:var(--navy);font-variant-numeric:tabular-nums;margin:3px 0 6px}
+  .taxbox ul{margin:6px 0 0;padding-left:18px;font-size:12.5px;color:var(--ink);line-height:1.55}
+  .taxbox ul b{color:var(--navy)}
+
+  .cta{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;background:linear-gradient(135deg,var(--navy),var(--blue));color:#fff;border-radius:12px;padding:18px 20px;margin-top:18px}
+  .cta .t{font-size:16px;font-weight:700;margin:0 0 2px} .cta .s{font-size:13px;opacity:.9;margin:0;max-width:460px}
+  .cta a{background:#fff;color:var(--navy);text-decoration:none;font-weight:700;font-size:14px;padding:11px 20px;border-radius:8px;white-space:nowrap}
+  .disc{font-size:11px;color:var(--muted);line-height:1.55;margin-top:18px;border-top:1px solid var(--line);padding-top:12px}
+  footer{font-size:11px;color:var(--muted);margin-top:14px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px}
+  footer a{color:var(--muted)}
+  @media print{body{background:#fff}.cta a{display:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <div class="kicker">Service für unsere Kundinnen &amp; Kunden</div>
+      <h1>Dein Vorsorge-Rechner <span class="fuer" id="fuerTxt"></span></h1>
+    </div>
+    <img src="../assets/logo_iquadrat.png" alt="iQuadrat">
+  </header>
+  <p class="lead">Wähle deine ETFs und ihre Verteilung – der Rechner zeigt auf Basis <em>echter Kurse</em>, wie sich dein Portfolio seit Vertragsbeginn entwickelt hat, was bis zur Rente daraus werden kann und welchen <em>Steuervorteil</em> dir der Versicherungsmantel bringt.</p>
+  <div class="badge"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="4" y="11" width="16" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>Deine Eingaben bleiben in deinem Browser – nichts wird an uns übertragen.</div>
+
+  <div class="grid">
+    <!-- ================= EINGABEN ================= -->
+    <div class="card">
+      <h2>Deine Eingaben</h2>
+
+      <div class="sec">Person &amp; Vertrag</div>
+      <div class="field">
+        <label for="name">Name <span style="font-weight:400;color:var(--muted)">optional</span></label>
+        <input type="text" id="name" placeholder="z. B. Markus Müller">
+      </div>
+      <div class="row2">
+        <div class="field"><label for="geburt">Geburtsdatum</label><input type="date" id="geburt" value="1985-06-01"></div>
+        <div class="field"><label for="beginn">Vertragsbeginn</label><input type="date" id="beginn" value="2021-01-01"></div>
+      </div>
+      <div class="field">
+        <label for="endalter">Vertragsende mit Alter <span class="val" id="endeInfo">–</span></label>
+        <input type="number" id="endalter" value="67" min="55" max="80" step="1">
+        <small id="laufzeitInfo">Laufzeit –</small>
+      </div>
+
+      <div class="sec">Beiträge</div>
+      <div class="row2">
+        <div class="field"><label for="startkapital">Startkapital</label><input type="number" id="startkapital" value="0" min="0" step="500"></div>
+        <div class="field"><label for="sparrate">Beitrag / Monat</label><input type="number" id="sparrate" value="200" min="0" step="10"></div>
+      </div>
+      <div class="field">
+        <label for="dynamik">Jährliche Dynamik <span class="val" id="dynamikVal">0 %</span></label>
+        <input type="range" id="dynamik" min="0" max="5" value="0" step="0.5">
+        <small>Automatische Beitragserhöhung pro Jahr (optional).</small>
+      </div>
+
+      <div class="sec">Dein ETF-Portfolio</div>
+      <div class="etf" id="etfList"></div>
+      <div class="etfsum" id="etfSum"><span>Summe Verteilung</span><span id="etfSumVal">0 %</span></div>
+      <div class="miniinfo">
+        <span>Ø Fondskosten (TER): <b id="terInfo">–</b></span>
+        <span>Ø Rendite seit Beginn: <b id="histInfo">–</b></span>
+      </div>
+
+      <div class="sec">Annahmen</div>
+      <div class="field">
+        <label for="rendite">Erwartete Rendite p.&nbsp;a. (Prognose) <span class="val" id="renditeVal">6,0 %</span></label>
+        <input type="range" id="rendite" min="0" max="13" value="6" step="0.5">
+        <small id="renditeHint">Annahme für die Zukunft, keine Zusage.</small>
+      </div>
+      <div class="field">
+        <label for="inflation">Inflation p.&nbsp;a. <span class="val" id="inflationVal">2,0 %</span></label>
+        <input type="range" id="inflation" min="0" max="5" value="2" step="0.5">
+      </div>
+
+      <details class="adv">
+        <summary>Kosten &amp; Steuer (für Berater)</summary>
+        <div class="row2">
+          <div class="field"><label for="alpha">Abschlusskosten %</label><input type="number" id="alpha" value="0" min="0" step="0.1"><small>der Beitragssumme</small></div>
+          <div class="field"><label for="alphaJahre">verteilt über</label><input type="number" id="alphaJahre" value="5" min="1" step="1"><small>Jahre</small></div>
+        </div>
+        <div class="row3">
+          <div class="field"><label for="beta">Verwaltung %</label><input type="number" id="beta" value="2.5" min="0" step="0.1"><small>je Beitrag</small></div>
+          <div class="field"><label for="gamma">Gamma % p.a.</label><input type="number" id="gamma" value="0.2" min="0" step="0.05"><small>auf Guthaben</small></div>
+          <div class="field"><label for="stueck">Stückk. €/J.</label><input type="number" id="stueck" value="24" min="0" step="6"><small>fix</small></div>
+        </div>
+        <div class="field"><label for="steuersatz">Persönlicher Steuersatz % <span class="val" id="steuersatzVal">30 %</span></label><input type="range" id="steuersatz" min="0" max="45" value="30" step="1"><small>Für den Steuervergleich gegen ein Depot.</small></div>
+        <div class="field"><label style="font-weight:600">Fondskosten (TER) werden bereits in den echten Kursen berücksichtigt – Gamma/Verwaltung sind die zusätzlichen Mantelkosten.</label></div>
+      </details>
+    </div>
+
+    <!-- ================= ERGEBNIS ================= -->
+    <div class="card results">
+      <h2>So steht deine Vorsorge</h2>
+
+      <div class="blocktitle"><span>Stand heute · seit Vertragsbeginn</span><span class="asof" id="asof"></span></div>
+
+      <div class="realperf">
+        <div>
+          <div class="l">Wertentwicklung deiner ETF-Auswahl</div>
+          <div class="s" id="realperfSub">seit Vertragsbeginn</div>
+        </div>
+        <div style="text-align:right">
+          <div class="v" id="realperfV">–</div>
+          <div class="s" id="realperfCagr"></div>
+        </div>
+      </div>
+
+      <div class="stats" style="margin-top:10px">
+        <div class="stat blue"><div class="l">Eingezahlt bis heute</div><div class="v" id="paidNow">–</div></div>
+        <div class="stat gain"><div class="l">Vertragswert heute</div><div class="v" id="valNow">–</div><div class="s">nach Kosten</div></div>
+        <div class="stat"><div class="l">Im Vertrag vs. eingezahlt</div><div class="v" id="perfNow">–</div></div>
+      </div>
+
+      <div class="years" id="yearStrip"></div>
+
+      <div class="chartwrap" id="chartwrap">
+        <svg class="chart" id="chart" viewBox="0 0 760 380" role="img" aria-label="Diagramm der Vermögensentwicklung"></svg>
+        <div class="marker" id="marker"></div>
+        <div class="tip" id="tip"></div>
+      </div>
+      <div class="barleg" style="margin-top:6px">
+        <span><i class="dash"></i>Eingezahltes Kapital</span>
+        <span><i class="dot" style="background:var(--navy)"></i>Vertragswert (echte Kurse → Prognose)</span>
+        <span><i class="dot" style="background:rgba(47,158,99,.35)"></i>Bandbreite</span>
+      </div>
+      <p class="chartnote">Die durchgezogene Linie bis <b id="heuteJahr">heute</b> beruht auf <b>echten Monats­schlusskursen</b> deiner ETFs. Ab heute folgt eine Prognose mit der erwarteten Rendite (grün = Bandbreite ± 2 %). Fahre mit der Maus über das Diagramm.</p>
+
+      <div class="blocktitle"><span>Hochrechnung bis zur Rente (Alter <span id="endeJahr">67</span>)</span></div>
+      <div class="hero">
+        <div class="l">Voraussichtliches Kapital bei Rentenbeginn</div>
+        <div class="v" id="endwert">–</div>
+        <div class="s" id="real"></div>
+      </div>
+      <div class="stats" style="margin-top:10px">
+        <div class="stat blue"><div class="l">Eingezahlt gesamt</div><div class="v" id="eingezahlt">–</div></div>
+        <div class="stat gain"><div class="l">Wertzuwachs</div><div class="v" id="gewinn">–</div></div>
+        <div class="stat"><div class="l">Mögliche Rente</div><div class="v" id="rente">–</div><div class="s">≈ /Monat</div></div>
+      </div>
+      <div class="bar"><div class="b1" id="bar1"></div><div class="b2" id="bar2"></div></div>
+      <p class="chartnote" style="margin-top:0">Bandbreite bei Rentenbeginn: <b id="spanne">–</b></p>
+
+      <div class="taxbox">
+        <div class="t">Dein Steuervorteil mit dem Vorsorge-Mantel</div>
+        <div class="v" id="taxSave">–</div>
+        <ul>
+          <li><b>Steuerfreie Ansparphase:</b> Im Versicherungsmantel fällt – anders als im Depot – <b>keine jährliche Steuer</b> an (keine Vorabpauschale, keine Abgeltungssteuer auf Erträge). Dein Geld arbeitet ungeschmälert weiter.</li>
+          <li><b>Halbeinkünfteverfahren (12/62):</b> Bei Auszahlung ab Alter 62 und mind. 12 Jahren Laufzeit ist nur die <b>Hälfte des Ertrags</b> mit deinem persönlichen Satz zu versteuern – im Depot dagegen voll mit ca. 26,4 % Abgeltungssteuer.</li>
+          <li><span id="taxCompare" style="color:var(--muted)"></span></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="cta">
+    <div>
+      <p class="t">Sollen wir gemeinsam draufschauen?</p>
+      <p class="s">Dieser Rechner zeigt ein vereinfachtes Modell. In einem kostenlosen Gespräch prüfen wir deine echten Zahlen – Rentenlücke, Kosten, Steuern und ob dein Plan noch passt.</p>
+    </div>
+    <a href="#termin-link-hier-einsetzen" id="ctaLink">Kostenloses Gespräch vereinbaren</a>
+  </div>
+
+  <p class="disc">
+    <b>Wichtiger Hinweis:</b> Unverbindliche Beispiel-/Modellrechnung, keine Anlage-, Steuer- oder Rechtsberatung. Die Wertentwicklung „seit Vertragsbeginn" basiert auf echten Monats­schlusskursen der gewählten ETFs (Quelle: Yahoo Finance, Datenstand siehe oben) und ist eine modellhafte Näherung des Portfolioverlaufs – sie entspricht <b>nicht</b> deinem tatsächlichen Vertrags-/Depotauszug (maßgeblich ist allein dieser). Vergangene Wertentwicklung ist keine Garantie für die Zukunft; Kapitalanlagen sind mit Risiken bis zum Verlust verbunden. Die Prognose ab heute beruht auf einer angenommenen Rendite. Der „Steuervorteil" ist eine vereinfachte Schätzung (Halbeinkünfte 12/62 mit persönlichem Steuersatz vs. Abgeltungssteuer 26,375 % im Depot, jeweils inkl. Teilfreistellung). Die „mögliche Rente" unterstellt eine modellhafte Auszahlung über 25 Jahre bei 3 % Rendite (vor Steuern). TER-Angaben sind vor Einsatz zu prüfen.
+  </p>
+
+  <footer>
+    <span id="footerFirma">© 2026 iQuadrat · Unverbindliche Beispielrechnung</span>
+    <span>
+      <a href="#" id="printLink">Als PDF speichern</a> ·
+      <a href="#impressum" id="impressumLink">Impressum</a> ·
+      <a href="#datenschutz" id="datenschutzLink">Datenschutz</a>
+    </span>
+  </footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  // ====== KONFIGURATION ======
+  var CONFIG={
+    firma:'iQuadrat',
+    bookingUrl:'#termin-link-hier-einsetzen',
+    impressumUrl:'#impressum',
+    datenschutzUrl:'#datenschutz',
+    // dataProxy: Basis-URL eures eigenen Kurs-Proxys (Cloudflare Worker) für ECHTE LIVE-Daten.
+    // Leer = eingebettete Kursdaten (Snapshot, siehe DATA_ASOF). Anleitung: LIVE-DATEN-EINRICHTEN.md
+    dataProxy:''
+  };
+
+  // ETF-Stammdaten: TER illustrativ (vor Einsatz prüfen). Renditen kommen aus echten Kursen (ETFDATA).
+  var ETFS=[
+    {id:'amundi_prime', name:'Amundi Prime Global',        isin:'LU2089238203', ter:0.05},
+    {id:'msci_world',   name:'iShares Core MSCI World',     isin:'IE00B4L5Y983', ter:0.20},
+    {id:'em',           name:'iShares Core MSCI EM IMI',    isin:'IE00BKM4GZ66', ter:0.18},
+    {id:'sp500',        name:'iShares Core S&P 500',        isin:'IE00B5BMR087', ter:0.07},
+    {id:'ubs_world',    name:'UBS MSCI World',              isin:'IE00B7KQ7B66', ter:0.10},
+    {id:'pacific',      name:'iShares Pacific ex Japan',    isin:'IE00B52MJY50', ter:0.20},
+    {id:'nikkei',       name:'iShares Nikkei 225',          isin:'IE00B52MJD48', ter:0.48},
+    {id:'europe',       name:'iShares Core MSCI Europe',    isin:'IE00B1YZSC51', ter:0.12},
+    {id:'stoxx600',     name:'iShares STOXX Europe 600',    isin:'DE0002635307', ter:0.20}
+  ];
+  var DEFAULT_ALLOC={msci_world:70, em:30};
+
+  // ====== ECHTE KURSDATEN (Monatsschlusskurse EUR, Quelle Yahoo Finance) ======
+  var DATA_ASOF="2026-06";
+  var ETFDATA={
+    amundi_prime:{sym:"F50A.DE",start:"2024-11",c:[32.43,31.99,33.395,32.665,30.07,29.02,30.71,30.97,32.525,32.415,33.225,34.745,34.62,34.735,34.87,35.28,33.56,36.32,38.35,38.65]},
+    msci_world:{sym:"EUNL.DE",start:"2009-09",c:[16.75,16.855,18.01,17.94,18.37,19.67,20.09,19.56,19.02,19.21,19.4,19.44,19.56,20.49,21.5,21.34,21.88,21.04,20.97,21.19,20.73,20.59,19.09,18.71,19.89,19.99,20.8,21.58,22.21,22.53,22.39,21.84,22.41,23.45,23.54,23.55,23.19,23.44,23.39,24.06,25.01,26.07,26.16,26.86,26.01,26.86,26.25,26.97,27.99,28.41,28.51,28.06,28.92,28.92,29.02,30.1,30.56,30.83,31.97,32.56,32.95,33.89,34.32,36.07,38.44,39.52,38.84,39.58,38.14,39.28,36.08,34.78,38.17,39.66,38.03,35.45,35.59,35.99,36.05,37.56,37.14,38.57,38.67,38.71,38.91,41.0,42.18,41.77,43.86,44.07,43.8,43.31,42.9,42.55,42.2,43.41,44.89,44.8,45.43,45.869,45.053,43.403,45.098,46.741,46.839,47.997,48.904,49.26,46.841,47.037,43.099,46.497,48.346,49.556,51.362,48.904,50.81,52.644,51.776,53.448,53.4,55.75,56.608,56.752,51.712,46.109,50.556,51.816,52.698,52.532,55.664,54.968,53.46,58.588,59.712,59.966,61.888,65.694,66.97,66.77,69.934,71.216,73.434,72.014,75.708,76.196,79.246,74.934,73.652,77.098,75.09,72.492,67.886,74.852,73.428,69.26,72.402,72.62,68.478,71.818,72.244,72.378,72.566,74.336,77.202,79.012,78.548,77.28,74.614,78.974,82.26,85.044,88.198,91.452,89.576,90.726,95.186,95.374,95.132,96.396,97.572,104.805,103.59,108.18,105.525,97.178,93.36,99.308,100.155,104.99,104.585,107.195,111.835,111.465,111.775,112.28,113.535,108.055,117.035,123.42,124.27,124.315]},
+    em:{sym:"IS3N.DE",start:"2014-06",c:[19.25,20.2,19.54,19.73,19.69,19.25,20.74,21.72,22.34,23.06,22.66,21.55,20.34,18.15,17.89,19.27,19.47,18.38,17.3,17.44,18.65,18.45,18.37,19.17,20.13,20.41,20.78,21.11,20.85,20.95,21.59,22.58,23.1,23.09,22.97,22.89,23.31,23.69,23.78,24.88,24.57,25.23,26.21,25.41,25.013,25.185,25.172,24.028,24.634,23.94,23.925,22.317,23.321,22.44,24.53,24.51,25.123,25.602,23.931,24.853,24.993,23.994,24.784,25.116,25.533,27.154,25.645,24.401,20.898,22.648,22.453,24.035,24.779,25.207,25.493,25.921,27.887,29.074,30.346,30.836,31.422,31.208,31.433,32.558,30.809,31.381,31.037,31.255,30.811,31.126,31.323,30.181,29.921,29.814,29.213,27.884,28.602,29.103,26.549,25.616,28.01,26.819,28.495,27.279,27.437,26.806,27.046,27.798,29.167,27.896,27.836,26.62,28.08,28.749,28.355,29.333,30.198,30.65,30.421,32.023,31.985,31.497,33.066,32.54,32.798,32.737,33.396,33.168,32.269,30.978,32.385,33.475,34.808,34.797,36.828,38.84,38.069,38.348,41.073,43.394,39.288,44.298,48.044,49.107,48.725]},
+    sp500:{sym:"SXR8.DE",start:"2010-05",c:[90.23,93.41,89.75,98.26,96.95,77.39,81.1,80.2,82.38,80.24,78.89,80.14,78.37,77.9,73.21,74.17,78.64,79.87,85.03,87.09,89.22,92.17,92.14,92.45,93.8,98.74,98.53,98.39,95.62,95.92,94.43,97.63,103.01,108.5,107.52,113.78,110.55,113.96,110.52,111.3,116.32,119.56,120.35,118.99,121.85,122.36,122.31,127.5,129.87,131.73,138.45,143.1,146.42,152.17,156.91,162.46,172.41,177.56,172.33,176.72,170.66,176.42,163.05,158.57,175.49,182.97,176.56,165.0,168.0,169.32,167.73,176.45,176.12,182.84,182.95,181.97,183.46,197.57,202.74,199.01,211.63,210.51,208.12,204.12,202.82,200.36,198.78,204.01,212.01,213.15,216.27,219.03,216.77,206.64,214.21,225.54,227.62,233.68,242.8,244.57,233.99,236.15,214.0,230.63,240.4,247.39,257.25,244.44,254.15,267.23,262.92,270.53,269.17,283.45,287.81,290.95,264.5,239.62,265.96,271.24,274.05,275.22,294.28,289.26,281.99,303.94,307.39,310.56,321.12,343.51,352.3,348.16,368.0,376.59,390.51,382.94,405.04,415.02,432.63,407.0,399.22,423.48,410.92,394.52,371.19,413.1,407.73,385.46,404.46,396.38,370.73,385.49,389.13,390.24,390.89,406.91,423.88,433.51,435.42,426.27,413.18,436.81,454.04,472.53,493.42,511.5,500.58,506.28,541.5,539.04,534.98,544.2,558.66,605.88,600.78,623.82,601.12,547.02,517.7,553.32,561.64,595.82,589.2,605.76,634.5,631.4,629.22,626.26,624.02,600.12,656.58,698.9,701.6,700.64]},
+    ubs_world:{sym:"UBU7.DE",start:"2012-04",c:[23.9941,20.9301,21.9628,20.7203,20.7041,20.4056,20.5912,20.7839,20.9785,21.7853,22.6729,22.7455,23.3668,22.6003,23.0602,22.5761,23.1651,24.0042,24.3754,24.1403,23.9074,24.813,24.7804,24.878,25.8045,26.1865,26.4303,27.048,27.8932,28.1977,29.0205,35.4272,30.6167,32.8892,33.8016,33.3205,33.9343,32.632,33.2375,30.8358,29.663,32.5447,33.8096,35.0378,29.8473,30.3656,30.7645,30.7985,32.0545,31.6896,32.4788,32.9806,33.0236,33.1696,35.0253,36.0734,35.326,37.45,37.6059,37.3634,36.9215,36.5837,35.8907,35.4792,37.0115,38.2461,38.1585,38.6401,38.8853,38.3798,36.5831,38.3701,40.0849,39.9151,40.4378,41.5997,41.8797,38.8986,40.0482,36.6847,39.2346,41.111,41.8487,43.6693,41.6112,43.2094,44.2968,43.1405,45.4414,45.4051,47.4304,48.1375,48.2391,43.6944,39.2258,42.9863,44.0109,44.8091,44.6063,46.892,46.7339,45.4665,49.8122,50.7167,50.9488,52.2825,55.765,56.8728,56.6709,59.3573,60.4763,61.8509,61.0534,64.2124,64.649,67.2091,63.4977,62.0628,65.3181,63.573,61.3739,57.4728,63.3291,61.5953,58.5585,61.2017,61.3778,57.8844,60.717,60.6848,61.1907,61.3718,62.9023,65.2962,66.7886,65.8242,65.283,63.0155,66.7678,69.5393,71.9108,74.1187,77.3272,75.738,76.7639,80.5752,80.6604,79.7526,81.5612,82.5986,88.7132,87.6759,91.6358,88.6195,82.3197,79.0752,84.1478,84.859,88.2216,88.6412,90.8875,94.82,94.4963,94.7863,95.2033,95.6423,91.714,99.242,104.705,105.35,105.56]},
+    pacific:{sym:"SXR1.DE",start:"2010-05",c:[81.63,88.67,88.13,98.39,101.29,76.01,80.56,76.99,77.77,77.3,77.67,77.45,75.79,77.1,70.34,64.99,71.6,71.95,71.49,77.17,78.71,77.31,78.77,74.29,77.6,84.59,83.55,83.73,84.57,86.17,87.12,89.05,94.28,96.28,96.83,89.39,83.8,85.05,84.69,89.19,92.41,90.0,87.04,84.04,88.02,90.12,91.59,94.59,94.38,99.33,102.27,96.21,101.79,98.61,98.41,105.57,111.58,114.88,114.29,113.38,107.18,107.62,93.1,90.56,98.1,101.51,100.73,92.13,92.29,97.64,98.42,99.28,100.97,107.16,105.4,108.55,108.03,112.06,111.59,114.82,121.0,123.33,121.17,116.25,116.89,118.06,117.52,117.4,120.94,120.28,123.6,123.52,121.82,116.28,121.64,126.14,124.72,126.44,124.92,123.84,116.28,119.88,115.94,124.56,129.8,133.04,135.66,131.92,137.44,139.56,132.54,136.06,136.34,139.0,141.14,137.3,128.08,105.78,114.82,112.76,121.44,117.36,122.44,119.14,118.74,132.66,136.94,138.14,143.08,149.38,150.92,151.6,153.84,152.26,153.2,149.5,156.86,149.2,154.98,147.66,152.18,162.86,161.86,157.86,148.68,158.96,156.78,145.84,144.22,158.2,153.64,164.32,156.6,154.58,152.54,147.36,150.86,155.72,148.16,147.42,141.4,145.54,157.02,154.34,155.5,158.6,157.02,160.38,163.56,164.68,167.16,178.04,171.92,183.48,175.72,181.5,178.72,169.08,167.2,176.62,177.36,183.68,186.56,186.12,188.48,185.1,188.02,196.78,208.55,196.78,205.65,206.6,205.65,206.75]},
+    nikkei:{sym:"SXRZ.DE",start:"2010-03",c:[74.64,72.59,72.75,71.23,70.15,70.17,69.74,77.4,81.53,77.86,80.42,70.73,70.71,71.08,72.62,75.99,70.18,71.83,70.53,71.27,72.53,75.95,77.81,80.0,77.54,76.02,77.8,78.16,78.56,77.22,75.49,77.39,79.99,78.17,83.25,90.24,94.99,91.9,93.66,92.11,90.34,96.29,95.49,99.63,99.49,94.26,93.97,92.82,89.52,94.36,97.19,100.37,100.28,104.33,107.66,105.73,106.38,118.22,125.2,133.76,130.56,134.35,133.3,134.76,124.66,117.43,127.95,137.07,130.05,122.02,118.39,118.71,117.6,125.61,124.27,129.77,132.56,132.66,137.92,140.42,141.36,141.34,146.41,145.85,145.06,144.67,143.29,140.36,136.35,140.99,153.15,157.23,155.59,157.7,155.56,148.48,158.68,161.44,160.1,160.48,163.96,170.66,159.26,161.8,147.5,155.58,158.2,160.1,168.28,159.36,163.34,167.6,166.4,175.02,178.18,183.08,183.36,179.54,164.58,151.88,162.74,173.24,175.78,167.06,173.74,180.32,181.68,202.65,208.0,209.9,217.8,217.6,211.25,207.75,210.0,203.6,208.35,220.15,212.25,207.9,214.3,202.3,200.75,200.3,193.58,191.88,180.58,199.08,194.86,181.28,183.68,191.3,180.58,189.9,186.24,192.8,190.34,203.45,209.95,210.15,203.15,200.75,193.74,205.8,212.55,224.7,240.15,246.55,227.6,224.65,231.2,238.0,240.35,239.0,232.1,242.7,241.95,247.6,240.0,223.85,224.6,232.8,240.35,239.7,248.0,261.85,298.95,281.35,279.95,296.45,324.15,289.0,330.8,363.8,381.05,381.9]},
+    europe:{sym:"IMEU.AS",start:"2008-01",c:[14.059,13.5288,14.2888,14.3757,12.9725,12.4992,12.7274,11.3389,9.8489,9.1683,8.8237,8.4612,7.5978,7.8361,8.9792,9.3798,9.2244,9.9116,10.4124,10.6852,10.44,10.5816,11.2274,10.8441,10.8165,11.6177,11.4243,10.8786,10.6749,11.2274,11.0651,11.4312,11.6695,11.4968,12.0287,12.2773,12.5571,12.1633,12.4638,12.412,12.0943,11.6281,10.4469,10.0014,10.706,10.592,10.7474,11.186,11.6177,11.6073,11.3103,10.6196,11.2447,11.4588,11.6868,11.7973,11.8111,12.077,12.2082,12.5536,12.7028,12.9176,13.0527,13.3698,12.6937,13.1712,13.3131,13.8752,14.3206,14.4916,14.6832,14.3107,15.0404,14.9515,15.1435,15.6646,15.5967,15.1424,15.6425,15.715,15.3488,15.9159,15.6393,16.7455,17.9642,18.285,18.1064,18.5453,17.6903,18.193,16.8026,16.0855,17.4566,17.8319,16.941,15.8892,15.4715,15.7305,16.0149,16.1945,15.7037,16.2756,16.2074,16.3861,16.2713,16.3938,17.3672,17.3134,17.798,18.4601,18.7261,18.8533,18.5502,18.4996,18.1454,19.0772,19.4589,18.9317,19.1101,19.4655,18.6678,18.3694,19.1929,19.0028,19.1452,19.7175,19.0852,19.368,18.3324,18.1383,17.2726,18.2155,18.8942,19.4147,20.1776,18.9578,20.0432,20.0928,19.5807,20.5577,20.725,21.1682,21.6894,21.4415,19.5503,16.823,17.8805,18.1628,18.9422,18.6913,19.0911,18.9578,18.0497,20.4569,20.9906,20.8531,21.356,22.8153,23.2763,23.6166,24.3,24.7396,25.0485,24.4876,25.6574,24.8513,26.3908,25.5543,24.7133,25.0,24.8588,24.4263,22.7931,24.5434,23.0566,21.8529,23.2286,24.7125,23.9753,25.5927,25.9143,26.0747,26.7065,25.7475,26.656,27.1755,26.2422,26.1034,25.174,26.689,27.7453,28.2587,28.6881,29.9624,29.6862,30.3228,30.3983,30.7535,30.9571,31.1651,30.1035,30.3139,30.2345,32.2748,33.3405,32.0725,31.8607,32.9873,32.9473,33.2247,33.2345,34.0933,35.0324,35.2045,36.2476,37.3575,38.7733,35.8678,37.7618,38.5382,39.615,39.775]},
+    stoxx600:{sym:"EXSA.DE",start:"2008-01",c:[21.6039,20.628,21.9181,22.0785,19.612,19.2577,19.5986,17.2791,15.0198,14.0105,13.3888,12.941,11.7779,11.9316,13.7097,14.2645,13.9436,15.1936,15.9957,16.4302,16.0893,16.2631,17.0051,16.6241,16.5773,17.8473,17.6134,16.8112,16.4703,17.3126,17.0051,17.6,18.0345,17.8206,18.723,18.9235,19.3179,18.6829,19.3246,19.2845,18.4289,17.9543,16.1495,15.334,16.457,16.2163,16.5572,17.2524,17.9676,17.7671,17.493,16.4703,17.0519,17.727,18.0478,18.1214,18.2684,18.6762,18.9168,19.4583,19.6454,19.8326,20.3337,20.805,19.4045,20.7579,20.6418,21.3863,22.4682,22.6752,22.7028,22.4725,23.6027,23.3253,23.8098,24.5125,24.0533,23.9827,24.4267,24.2435,24.1399,24.9591,24.3964,26.4536,28.242,28.6282,28.7431,29.2093,27.61,29.116,26.6788,25.3224,27.7289,28.4472,27.0472,25.2507,24.7203,24.956,25.4813,26.1908,24.5502,25.8584,26.0008,25.7086,25.771,26.0521,27.4501,27.437,28.2468,29.2019,29.5319,30.3335,29.2031,29.5004,29.2888,29.9393,30.8212,30.2964,30.4236,31.0404,29.83,29.2786,30.5612,30.6451,30.1377,31.469,30.7659,30.5598,29.1348,28.8654,27.0695,29.0053,30.1739,30.7561,32.0361,30.4977,31.4973,31.936,31.5446,32.3067,33.0187,33.9446,34.7611,34.3067,31.5077,26.8145,28.6023,29.5735,30.197,30.1812,31.1263,30.4805,29.1259,33.1356,34.1724,33.7072,34.6008,36.7679,37.611,38.7226,38.9475,40.0046,40.9565,39.3191,41.3558,40.3328,42.4359,41.0011,39.5515,39.9669,39.7244,39.4276,35.8002,39.0986,37.05,34.32,36.8563,39.4456,38.1464,40.7374,41.4556,41.1692,42.3976,41.2716,41.8369,43.2261,42.1103,40.9991,39.9428,42.5778,44.0628,44.8757,45.6933,47.4967,47.1895,48.8009,47.658,48.8688,49.6651,49.0205,47.876,48.3735,47.8042,51.2907,53.0769,50.8394,50.7277,53.2795,51.941,53.1031,53.59,53.8236,55.8186,56.2807,57.6179,59.7275,62.0262,57.1426,60.3768,62.2162,62.3844,63.36]}
+  };
+  // ============================================================================
+
+  var eur0=new Intl.NumberFormat('de-DE',{style:'currency',currency:'EUR',maximumFractionDigits:0});
+  function pct(v,d){ return v.toLocaleString('de-DE',{minimumFractionDigits:d==null?1:d,maximumFractionDigits:d==null?1:d})+' %'; }
+  function spct(v){ return (v>=0?'+':'')+pct(v); }
+  function abbrEur(v){
+    if(v>=1e6) return (v/1e6).toLocaleString('de-DE',{maximumFractionDigits:1})+' Mio €';
+    if(v>=1e3) return Math.round(v/1e3).toLocaleString('de-DE')+' Tsd €';
+    return Math.round(v).toLocaleString('de-DE')+' €';
+  }
+  function $(id){return document.getElementById(id);}
+  function val(id){var e=$(id);return e?e.value.trim():'';}
+  function setText(id,t){var e=$(id);if(e)e.textContent=t;}
+  function num(id){ var s=val(id); if(s.indexOf(',')>=0) s=s.replace(/\./g,'').replace(',','.'); var n=parseFloat(s); return isNaN(n)?0:n; }
+  function clampNum(id,min,max,def){ var n=num(id); if(!n&&n!==0) return def; return Math.max(min,Math.min(max,n)); }
+  function parseDate(s){ if(!s) return null; var d=new Date(s+'T00:00:00'); return isNaN(d.getTime())?null:d; }
+  function monthsBetween(a,b){ return (b.getFullYear()-a.getFullYear())*12 + (b.getMonth()-a.getMonth()) + (b.getDate()-a.getDate())/30.4; }
+  function annuity(K,years,rate){ var im=Math.pow(1+rate,1/12)-1,N=years*12; return im<=0? K/N : K*im/(1-Math.pow(1+im,-N)); }
+  function niceMax(v){ if(v<=0)return 1; var p=Math.pow(10,Math.floor(Math.log10(v))),n=v/p,m; if(n<=1)m=1;else if(n<=2)m=2;else if(n<=2.5)m=2.5;else if(n<=5)m=5;else m=10; return m*p; }
+  function asOfDate(){ var p=DATA_ASOF.split('-'); return new Date(+p[0], +p[1]-1, 28); }
+  var MON=['Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'];
+
+  // Kurs eines ETF für ein Kalendermonat (y,m=1..12)
+  function priceAt(id,y,m){
+    var d=ETFDATA[id]; if(!d) return null;
+    var sy=+d.start.slice(0,4), sm=+d.start.slice(5,7);
+    var off=(y-sy)*12+(m-sm);
+    if(off<0) return null;
+    if(off>=d.c.length) off=d.c.length-1;
+    return d.c[off];
+  }
+  function calMonth(start,k){ var d=new Date(start.getFullYear(),start.getMonth()+k,1); return {y:d.getFullYear(),m:d.getMonth()+1}; }
+
+  // Chart-Geometrie
+  var W=760,H=380,padL=64,padR=20,padT=18,padB=44;
+  var plotW=W-padL-padR, plotH=H-padT-padB;
+  function Xf(frac){ return padL+frac*plotW; }
+  function Yf(v,yMax){ return padT+plotH-(yMax?v/yMax:0)*plotH; }
+
+  var store={};
+
+  function buildEtfList(){
+    var html='';
+    ETFS.forEach(function(e){
+      var a=DEFAULT_ALLOC[e.id]||0, on=a>0;
+      html+='<div class="etfrow '+(on?'on':'off')+'" data-id="'+e.id+'">'+
+        '<input type="checkbox" data-cb="'+e.id+'"'+(on?' checked':'')+'>'+
+        '<div class="nm"><b>'+e.name+'</b><s>'+e.isin+'</s></div>'+
+        '<span class="ter">TER '+pct(e.ter,2)+'</span>'+
+        '<div class="pct"><input type="number" data-pct="'+e.id+'" value="'+a+'" min="0" max="100" step="5"'+(on?'':' disabled')+'></div>'+
+        '</div>';
+    });
+    $('etfList').innerHTML=html;
+  }
+
+  function getAlloc(){
+    var sel=[], total=0;
+    ETFS.forEach(function(e){
+      var cb=document.querySelector('[data-cb="'+e.id+'"]');
+      if(cb&&cb.checked){
+        var w=Math.max(0,parseFloat(document.querySelector('[data-pct="'+e.id+'"]').value)||0);
+        sel.push({id:e.id,w:w,ter:e.ter}); total+=w;
+      }
+    });
+    return {sel:sel,total:total};
+  }
+  function syncEtfRows(){
+    ETFS.forEach(function(e){
+      var row=document.querySelector('.etfrow[data-id="'+e.id+'"]');
+      var cb=document.querySelector('[data-cb="'+e.id+'"]');
+      var pi=document.querySelector('[data-pct="'+e.id+'"]');
+      if(cb.checked){ row.classList.add('on'); row.classList.remove('off'); pi.disabled=false; if(parseFloat(pi.value)<=0) pi.value=10; }
+      else{ row.classList.remove('on'); row.classList.add('off'); pi.disabled=true; }
+    });
+  }
+
+  // Echte Portfolio-Monatsrenditen vom Vertragsbeginn bis Datenstand
+  function actualReturns(start, elapsed, sel){
+    var out=new Array(elapsed+1).fill(null);
+    for(var k=1;k<=elapsed;k++){
+      var cm=calMonth(start,k), pm=calMonth(start,k-1), acc=0, sw=0;
+      sel.forEach(function(a){
+        var p1=priceAt(a.id,pm.y,pm.m), p2=priceAt(a.id,cm.y,cm.m);
+        if(p1&&p2&&p1>0){ acc+=a.w*(p2/p1-1); sw+=a.w; }
+      });
+      out[k]= sw>0? acc/sw : null;
+    }
+    return out;
+  }
+
+  function recalc(){
+    var birth=parseDate(val('geburt')), start=parseDate(val('beginn'));
+    var endAlter=clampNum('endalter',55,80,67);
+    var startkap=Math.max(0,num('startkapital')), rate=Math.max(0,num('sparrate')), dyn=Math.max(0,num('dynamik'));
+    var alpha=Math.max(0,num('alpha')), alphaJ=Math.max(1,num('alphaJahre')||5);
+    var beta=Math.max(0,num('beta')), gamma=Math.max(0,num('gamma')), stueck=Math.max(0,num('stueck'));
+    var infl=num('inflation'), persRate=clampNum('steuersatz',0,45,30), expRet=num('rendite');
+
+    setText('dynamikVal',pct(dyn)); setText('renditeVal',pct(expRet));
+    setText('inflationVal',pct(infl)); setText('steuersatzVal',Math.round(persRate)+' %');
+    setText('fuerTxt', val('name')? '· für '+val('name') : '');
+    setText('asof','Datenstand: '+MON[+DATA_ASOF.slice(5,7)-1]+' '+DATA_ASOF.slice(0,4)+(CONFIG.dataProxy?' · live':' · Snapshot'));
+
+    var al=getAlloc(), sel=al.sel, total=al.total;
+    var ter=0; if(total>0) sel.forEach(function(a){ter+=a.w*a.ter;}), ter/=total; else ter=0.20;
+    setText('terInfo',pct(ter,2));
+    var sumEl=$('etfSum'); setText('etfSumVal',Math.round(total)+' %');
+    sumEl.classList.toggle('ok', Math.round(total)===100);
+    sumEl.classList.toggle('bad', Math.round(total)!==100 && sel.length>0);
+
+    if(!birth||!start){ return; }
+    var endDate=new Date(birth.getFullYear()+Math.round(endAlter),birth.getMonth(),birth.getDate());
+    var totalM=Math.round(monthsBetween(start,endDate));
+    var asof=asOfDate();
+    var ageNow=Math.floor(monthsBetween(birth,new Date())/12);
+    setText('endeInfo', endDate.getFullYear()+''); setText('endeJahr', Math.round(endAlter)+'');
+    setText('laufzeitInfo','Laufzeit '+(totalM>0?(totalM/12).toFixed(0):'0')+' Jahre · aktuell '+ageNow+' Jahre alt');
+    if(totalM<=0){ setText('endwert','Vertragsende liegt vor Vertragsbeginn'); return; }
+
+    var elapsed=Math.max(0,Math.min(totalM,Math.round(monthsBetween(start,asof))));
+
+    // Echte Renditen + CAGR seit Beginn
+    var aR=actualReturns(start, elapsed, sel);
+    var PI=1, nEff=0, firstEff=null;
+    for(var k=1;k<=elapsed;k++){ if(aR[k]!=null){ PI*=(1+aR[k]); nEff++; if(firstEff==null) firstEff=k; } }
+    var realCum=PI-1, realCAGR=nEff>0? Math.pow(PI,12/nEff)-1 : 0;
+    setText('histInfo', nEff>0? spct(realCAGR*100) : '–');
+
+    if(nEff>0){
+      $('realperfV').innerHTML='<span class="pill '+(realCum>=0?'up':'down')+'" style="font-size:22px;padding:4px 12px">'+spct(realCum*100)+'</span>';
+      setText('realperfCagr','Ø '+spct(realCAGR*100)+' pro Jahr');
+      var cov=calMonth(start, firstEff-1);
+      setText('realperfSub','seit '+MON[cov.m-1]+' '+cov.y+(firstEff>1?' (Datenbeginn)':''));
+      // Prognose-Hinweis: bisherige Entwicklung anbieten
+      setText('renditeHint','Bisher real: '+spct(realCAGR*100)+'/Jahr. Für die Prognose meist konservativer rechnen.');
+    } else {
+      $('realperfV').textContent='–'; setText('realperfCagr',''); setText('realperfSub','noch keine Kursdaten im Zeitraum');
+      setText('renditeHint','Annahme für die Zukunft, keine Zusage.');
+    }
+
+    // Jahresrenditen
+    var yby={};
+    for(k=1;k<=elapsed;k++){ if(aR[k]!=null){ var y=calMonth(start,k).y; yby[y]=(yby[y]==null?1:yby[y])*(1+aR[k]); } }
+    var ys=Object.keys(yby).sort(); if(ys.length>9) ys=ys.slice(ys.length-9);
+    var ystr='';
+    ys.forEach(function(y){ var r=(yby[y]-1)*100; ystr+='<span class="yc '+(r>=0?'pos':'neg')+'"><span class="y">'+y+'</span>'+spct(r)+'</span>'; });
+    $('yearStrip').innerHTML=ystr;
+
+    // Monatsfaktoren Prognose
+    var gM=1-gamma/100/12;
+    function mf(annual){ return Math.pow(1+annual/100,1/12)-1; }
+    var expM=mf(expRet), optM=mf(expRet+2), pessM=mf(Math.max(0,expRet-2));
+
+    // Beitragssumme (für Abschlusskosten) inkl. Dynamik
+    var bs=startkap, cc=rate; for(k=1;k<=totalM;k++){ if(dyn&&k>1&&(k-1)%12===0) cc*=(1+dyn/100); bs+=cc; }
+    var alphaPM=(alpha/100*bs)/(alphaJ*12);
+
+    // Simulation: Vergangenheit = echte Renditen, Zukunft = Prognose
+    var balE=startkap,balO=startkap,balP=startkap,paid=startkap,c=rate;
+    var arr=[{paid:paid,e:balE,o:balO,p:balP}];
+    for(var m=1;m<=totalM;m++){
+      if(dyn&&m>1&&(m-1)%12===0) c*=(1+dyn/100);
+      paid+=c;
+      var net=c*(1-beta/100);
+      var ded=(m<=alphaJ*12?alphaPM:0)+stueck/12;
+      var fE,fO,fP;
+      if(m<=elapsed){ var rg=(aR[m]!=null?aR[m]:expM); fE=fO=fP=1+rg; }
+      else { fE=1+expM; fO=1+optM; fP=1+pessM; }
+      balE=Math.max(0,balE+net-ded)*fE*gM;
+      balO=Math.max(0,balO+net-ded)*fO*gM;
+      balP=Math.max(0,balP+net-ded)*fP*gM;
+      arr.push({paid:paid,e:balE,o:balO,p:balP});
+    }
+
+    var paidNow=arr[elapsed].paid, valNow=arr[elapsed].e;
+    var endVal=arr[totalM].e, endO=arr[totalM].o, endP=arr[totalM].p, paidEnd=arr[totalM].paid;
+    var gainEnd=Math.max(0,endVal-paidEnd);
+
+    setText('paidNow',eur0.format(paidNow));
+    setText('valNow',eur0.format(valNow));
+    var perf=paidNow>0?(valNow/paidNow-1)*100:0;
+    $('perfNow').innerHTML= elapsed>0? '<span class="pill '+(perf>=0?'up':'down')+'">'+spct(perf)+'</span>' : '<span class="pill">startet '+start.getFullYear()+'</span>';
+    setText('heuteJahr','heute ('+MON[+DATA_ASOF.slice(5,7)-1]+' '+DATA_ASOF.slice(0,4)+')');
+
+    setText('endwert',eur0.format(endVal));
+    var real=endVal/Math.pow(1+infl/100,totalM/12);
+    setText('real', infl>0? '≈ '+eur0.format(real)+' in heutiger Kaufkraft' : '');
+    setText('eingezahlt',eur0.format(paidEnd));
+    setText('gewinn',eur0.format(gainEnd));
+    setText('spanne',eur0.format(endP)+' – '+eur0.format(endO));
+    setText('rente',eur0.format(annuity(endVal,25,0.03)));
+    var tot=Math.max(1,endVal);
+    $('bar1').style.width=(paidEnd/tot*100)+'%'; $('bar2').style.width=(gainEnd/tot*100)+'%';
+
+    var steuerDepot=Math.max(0,gainEnd*(1-0.30)*0.26375);
+    var steuerPolice=Math.max(0,gainEnd*0.5*(1-0.15)*persRate/100);
+    var ersparnis=Math.max(0,steuerDepot-steuerPolice);
+    setText('taxSave','≈ '+eur0.format(ersparnis)+' weniger Steuern');
+    setText('taxCompare','Beispiel: Auf einen Wertzuwachs von '+eur0.format(gainEnd)+' fielen im Depot ca. '+eur0.format(steuerDepot)+' Abgeltungssteuer an – im Vorsorge-Mantel nur ca. '+eur0.format(steuerPolice)+' (bei '+Math.round(persRate)+' % persönl. Steuersatz).');
+
+    store={arr:arr,totalM:totalM,elapsed:elapsed,start:start,endDate:endDate};
+    drawChart();
+  }
+
+  function drawChart(){
+    var arr=store.arr,totalM=store.totalM,elapsed=store.elapsed,start=store.start,endDate=store.endDate;
+    var yMax=niceMax(Math.max(arr[totalM].o,arr[totalM].paid));
+    store.yMax=yMax;
+    var step=Math.max(1,Math.round(totalM/300));
+    var idx=[]; for(var i=0;i<=totalM;i+=step) idx.push(i); if(idx[idx.length-1]!==totalM) idx.push(totalM);
+    function Xi(i){ return Xf(i/totalM); }
+    var s='';
+    for(var g=0;g<=5;g++){ var yv=yMax*g/5, yy=Yf(yv,yMax);
+      s+='<line x1="'+padL+'" y1="'+yy.toFixed(1)+'" x2="'+(W-padR)+'" y2="'+yy.toFixed(1)+'" stroke="#e7eef5"/>';
+      s+='<text x="'+(padL-8)+'" y="'+(yy+3.5).toFixed(1)+'" text-anchor="end" font-size="10" fill="#8295a6">'+abbrEur(yv)+'</text>'; }
+    var sY=start.getFullYear(), eY=endDate.getFullYear(), span=Math.max(1,eY-sY), stp=span<=15?2:(span<=30?5:10);
+    for(var y=Math.ceil(sY/stp)*stp; y<=eY; y+=stp){
+      var frac=monthsBetween(start,new Date(y,0,1))/totalM; if(frac<0||frac>1) continue;
+      s+='<text x="'+Xf(frac).toFixed(1)+'" y="'+(H-padB+18)+'" text-anchor="middle" font-size="10" fill="#8295a6">'+y+'</text>'; }
+    var fx=Xf(elapsed/totalM);
+    s+='<rect x="'+fx.toFixed(1)+'" y="'+padT+'" width="'+(W-padR-fx).toFixed(1)+'" height="'+plotH+'" fill="rgba(29,111,165,.04)"/>';
+    var fut=idx.filter(function(i){return i>=elapsed;}); if(fut[0]!==elapsed) fut.unshift(elapsed);
+    var bd=''; fut.forEach(function(i,j){ bd+=(j?'L':'M')+Xi(i).toFixed(1)+' '+Yf(arr[i].o,yMax).toFixed(1)+' '; });
+    for(var f=fut.length-1;f>=0;f--){ bd+='L'+Xi(fut[f]).toFixed(1)+' '+Yf(arr[fut[f]].p,yMax).toFixed(1)+' '; }
+    bd+='Z'; s+='<path d="'+bd+'" fill="rgba(47,158,99,.16)"/>';
+    var pe=''; idx.forEach(function(i,j){ pe+=(j?'L':'M')+Xi(i).toFixed(1)+' '+Yf(arr[i].paid,yMax).toFixed(1)+' '; });
+    s+='<path d="'+pe+'" fill="none" stroke="#1d6fa5" stroke-width="1.6" stroke-dasharray="5 4"/>';
+    var past=idx.filter(function(i){return i<=elapsed;}); if(past[past.length-1]!==elapsed) past.push(elapsed);
+    var pPast=''; past.forEach(function(i,j){ pPast+=(j?'L':'M')+Xi(i).toFixed(1)+' '+Yf(arr[i].e,yMax).toFixed(1)+' '; });
+    var pFut=''; fut.forEach(function(i,j){ pFut+=(j?'L':'M')+Xi(i).toFixed(1)+' '+Yf(arr[i].e,yMax).toFixed(1)+' '; });
+    s+='<path d="'+pFut+'" fill="none" stroke="#0b2a4a" stroke-width="2" stroke-dasharray="2 3" opacity=".75"/>';
+    s+='<path d="'+pPast+'" fill="none" stroke="#0b2a4a" stroke-width="2.8"/>';
+    if(elapsed>0&&elapsed<totalM){
+      s+='<line x1="'+fx.toFixed(1)+'" y1="'+padT+'" x2="'+fx.toFixed(1)+'" y2="'+(padT+plotH)+'" stroke="#0b2a4a" stroke-width="1" stroke-dasharray="3 3" opacity=".4"/>';
+      s+='<text x="'+fx.toFixed(1)+'" y="'+(padT-5)+'" text-anchor="middle" font-size="10" font-weight="700" fill="#0b2a4a">heute</text>';
+      s+='<circle cx="'+fx.toFixed(1)+'" cy="'+Yf(arr[elapsed].e,yMax).toFixed(1)+'" r="3.5" fill="#2f9e63" stroke="#fff" stroke-width="1.5"/>';
+    }
+    s+='<circle cx="'+Xi(totalM).toFixed(1)+'" cy="'+Yf(arr[totalM].e,yMax).toFixed(1)+'" r="3.5" fill="#0b2a4a" stroke="#fff" stroke-width="1.5"/>';
+    $('chart').innerHTML=s;
+  }
+
+  function onMove(ev){
+    if(!store.arr) return;
+    var chart=$('chart'), rect=chart.getBoundingClientRect(), scale=rect.width/W;
+    var frac=((ev.clientX-rect.left)/scale-padL)/plotW; frac=Math.max(0,Math.min(1,frac));
+    var i=Math.round(frac*store.totalM), d=store.arr[i]; if(!d) return;
+    var px=Xf(i/store.totalM)*scale;
+    var mk=$('marker'); mk.style.left=px+'px'; mk.style.top=(padT*scale)+'px'; mk.style.height=(plotH*scale)+'px'; mk.style.opacity='.35';
+    var dt=new Date(store.start.getFullYear(),store.start.getMonth()+i,1), future=i>store.elapsed;
+    var tip=$('tip');
+    tip.innerHTML='<b>'+MON[dt.getMonth()]+' '+dt.getFullYear()+(future?' · Prognose':'')+'</b><br>'+
+      'Wert: <span class="e">'+eur0.format(d.e)+'</span><br>'+
+      'Eingezahlt: <span class="s">'+eur0.format(d.paid)+'</span><br>'+
+      'Zuwachs: <span class="g">'+eur0.format(Math.max(0,d.e-d.paid))+'</span>'+
+      (future?'<br><span class="s">Spanne '+eur0.format(d.p)+' – '+eur0.format(d.o)+'</span>':'');
+    tip.style.left=px+'px'; tip.style.top=(Yf(d.e,store.yMax)*scale)+'px'; tip.style.opacity='1';
+  }
+  function onLeave(){ $('marker').style.opacity='0'; $('tip').style.opacity='0'; }
+
+  function setRenditeFromHistory(){
+    // Default-Prognose vorsichtig aus der bisherigen realen Entwicklung ableiten
+    var birth=parseDate(val('geburt')), start=parseDate(val('beginn'));
+    if(!start) return;
+    var al=getAlloc(); if(!al.sel.length) return;
+    var asof=asOfDate(), elapsed=Math.max(0,Math.round(monthsBetween(start,asof)));
+    var aR=actualReturns(start, elapsed, al.sel), PI=1, n=0;
+    for(var k=1;k<=elapsed;k++){ if(aR[k]!=null){ PI*=(1+aR[k]); n++; } }
+    if(n>11){ var cagr=Math.pow(PI,12/n)-1; $('rendite').value=Math.max(0,Math.min(8,Math.round(cagr*100))); }
+  }
+
+  // ---- Optionales LIVE-Update über euren Proxy (CONFIG.dataProxy) ----
+  function refreshLive(){
+    if(!CONFIG.dataProxy) return;
+    var base=CONFIG.dataProxy.replace(/\/+$/,'');
+    var jobs=ETFS.map(function(e){
+      var sym=ETFDATA[e.id]?ETFDATA[e.id].sym:null; if(!sym) return Promise.resolve();
+      var url=base+'/v8/finance/chart/'+sym+'?range=max&interval=1mo';
+      return fetch(url).then(function(r){return r.json();}).then(function(d){
+        var r=d.chart.result[0], ts=r.timestamp, q=r.indicators.quote[0].close;
+        var adj=(r.indicators.adjclose&&r.indicators.adjclose[0].adjclose)||q;
+        var bym={};
+        for(var i=0;i<ts.length;i++){ var v=adj[i]!=null?adj[i]:q[i]; if(v==null) continue;
+          var dt=new Date(ts[i]*1000); bym[dt.getUTCFullYear()+'-'+String(dt.getUTCMonth()+1).padStart(2,'0')]=Math.round(v*1e4)/1e4; }
+        var ms=Object.keys(bym).sort(); if(!ms.length) return;
+        var sy=+ms[0].slice(0,4), sm=+ms[0].slice(5,7), ey=+ms[ms.length-1].slice(0,4), em=+ms[ms.length-1].slice(5,7);
+        var arr=[],last=null,cy=sy,cm=sm;
+        while(cy<ey||(cy===ey&&cm<=em)){ var ym=cy+'-'+String(cm).padStart(2,'0'); if(bym[ym]!=null)last=bym[ym]; arr.push(last); cm++; if(cm>12){cm=1;cy++;} }
+        ETFDATA[e.id]={sym:sym,start:ms[0],c:arr};
+        if(ms[ms.length-1]>DATA_ASOF) DATA_ASOF=ms[ms.length-1];
+      }).catch(function(){});
+    });
+    Promise.all(jobs).then(function(){ recalc(); });
+  }
+
+  // ---- Init ----
+  buildEtfList();
+  document.querySelector('.card').addEventListener('input',function(e){
+    if(e.target.matches('[data-cb]')||e.target.matches('[data-pct]')){ syncEtfRows(); setRenditeFromHistory(); }
+    recalc();
+  });
+  $('chartwrap').addEventListener('mousemove',onMove);
+  $('chartwrap').addEventListener('mouseleave',onLeave);
+  window.addEventListener('resize',function(){ if(store.arr) drawChart(); });
+
+  (function applyConfig(){
+    var c=$('ctaLink'); if(c) c.href=CONFIG.bookingUrl;
+    var im=$('impressumLink'); if(im) im.href=CONFIG.impressumUrl;
+    var ds=$('datenschutzLink'); if(ds) ds.href=CONFIG.datenschutzUrl;
+    var pl=$('printLink'); if(pl) pl.addEventListener('click',function(e){e.preventDefault();window.print();});
+    var ff=$('footerFirma'); if(ff) ff.textContent='© '+(new Date().getFullYear())+' '+CONFIG.firma+' · Unverbindliche Beispielrechnung';
+  })();
+
+  // Prefill per URL
+  try{
+    var qs=new URLSearchParams(location.search);
+    ['name','geburt','beginn','endalter','startkapital','sparrate','dynamik','inflation','alpha','alphaJahre','beta','gamma','stueck','steuersatz','rendite'].forEach(function(k){
+      if(qs.has(k)){ var el=$(k); if(el) el.value=qs.get(k); }
+    });
+    if(qs.has('etf')){
+      ETFS.forEach(function(e){ var cb=document.querySelector('[data-cb="'+e.id+'"]'),pi=document.querySelector('[data-pct="'+e.id+'"]'); if(cb)cb.checked=false; if(pi)pi.value=0; });
+      qs.get('etf').split(',').forEach(function(pair){ var p=pair.split(':'),cb=document.querySelector('[data-cb="'+p[0]+'"]'),pi=document.querySelector('[data-pct="'+p[0]+'"]'); if(cb)cb.checked=true; if(pi)pi.value=p[1]||10; });
+      syncEtfRows();
+    }
+  }catch(e){}
+
+  setRenditeFromHistory();
+  recalc();
+  refreshLive();
+})();
+</script>
+</body>
+</html>

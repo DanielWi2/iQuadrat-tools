@@ -1,0 +1,1060 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rentenlücken-Rechner · iQuadrat</title>
+<style>
+  :root{
+    --navy:#0b2a4a; --blue:#1d6fa5; --green:#2f9e63; --orange:#e08e2c; --purple:#7a4fc9;
+    --ink:#3a4a5a; --muted:#8295a6; --bg:#f4f8fb; --line:#dde6ee; --card:#ffffff; --line2:#eef3f8;
+    --red:#b4232a;
+  }
+  *{box-sizing:border-box}
+  body{font-family:'Helvetica Neue',Arial,sans-serif;margin:0;color:var(--navy);background:#eef3f8;line-height:1.45}
+  .wrap{max-width:1180px;margin:0 auto;padding:20px 18px 60px}
+
+  /* ---------- Header ---------- */
+  header{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:14px}
+  header img{height:46px;flex:none}
+  header .ht{flex:1;min-width:180px}
+  header .kicker{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--blue);font-weight:700}
+  header h1{font-size:24px;margin:3px 0 0}
+  .btn{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--navy);background:var(--navy);color:#fff;font-weight:700;font-size:13.5px;padding:10px 16px;border-radius:8px;cursor:pointer;font-family:inherit;transition:transform .08s ease,box-shadow .12s ease,background .12s ease;box-shadow:0 1px 2px rgba(11,42,74,.12)}
+  .btn.ghost{background:#fff;color:var(--blue);border-color:var(--line);box-shadow:none}
+  .btn:hover{box-shadow:0 3px 10px rgba(11,42,74,.18)}
+  .btn:active{transform:translateY(1px)}
+  .btn:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+
+  .badge{display:inline-flex;align-items:center;gap:7px;font-size:12px;color:var(--blue);background:#eaf3f9;border:1px solid #cfe3f0;border-radius:20px;padding:5px 12px;margin:0 0 16px;font-weight:600}
+  .badge svg{flex:none}
+
+  /* ---------- Segment-Control (Tabs) ---------- */
+  .tabs{display:inline-flex;background:#fff;border:1px solid var(--line);border-radius:11px;padding:4px;gap:4px;margin:0 0 18px;box-shadow:0 1px 3px rgba(11,42,74,.05);max-width:100%;flex-wrap:wrap}
+  .tab{border:none;background:transparent;font-family:inherit;font-size:13.5px;font-weight:700;color:var(--muted);padding:10px 18px;border-radius:8px;cursor:pointer;display:inline-flex;align-items:center;gap:8px;transition:background .12s,color .12s}
+  .tab .ic{width:18px;height:18px;flex:none}
+  .tab:hover{color:var(--navy)}
+  .tab.on{background:var(--navy);color:#fff;box-shadow:0 1px 4px rgba(11,42,74,.2)}
+
+  /* ---------- Layout ---------- */
+  .grid{display:grid;grid-template-columns:368px 1fr;gap:18px;align-items:start}
+  @media(max-width:920px){.grid{grid-template-columns:1fr}}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px 18px 20px;box-shadow:0 1px 3px rgba(11,42,74,.05)}
+  .card h2{font-size:13px;letter-spacing:.5px;text-transform:uppercase;color:var(--blue);margin:0 0 14px}
+
+  .sec{font-size:10.5px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);font-weight:700;margin:20px 0 9px;display:flex;align-items:center;gap:8px}
+  .sec:first-of-type{margin-top:0}
+  .sec::after{content:"";flex:1;height:1px;background:var(--line)}
+
+  .field{margin-bottom:12px}
+  .field label{display:flex;justify-content:space-between;align-items:baseline;font-size:13px;font-weight:600;color:var(--navy);margin-bottom:5px;gap:8px}
+  .field label .opt{font-weight:400;color:var(--muted)}
+  .field .val{color:var(--blue);font-weight:700;font-variant-numeric:tabular-nums}
+  .field small{display:block;font-weight:400;color:var(--muted);font-size:11.5px;margin-top:3px;line-height:1.4}
+  input[type=number],input[type=text],input[type=date],select{width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:8px;font-size:14.5px;color:var(--navy);font-variant-numeric:tabular-nums;font-family:inherit;background:#fff}
+  input:focus,select:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(29,111,165,.12)}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+  .ig{position:relative}
+  .ig .suf{position:absolute;right:11px;top:50%;transform:translateY(-50%);font-size:13px;color:var(--muted);pointer-events:none}
+  .ig input{padding-right:30px}
+
+  .checkrow{display:flex;align-items:center;gap:9px;font-size:13px;font-weight:600;color:var(--navy);margin-bottom:12px;cursor:pointer}
+  .checkrow input{width:17px;height:17px;accent-color:var(--blue);flex:none;cursor:pointer}
+
+  .seg2{display:inline-flex;background:var(--bg);border:1px solid var(--line);border-radius:9px;padding:3px;gap:3px;margin-bottom:12px;width:100%}
+  .seg2 button{flex:1;border:none;background:transparent;font-family:inherit;font-size:12.5px;font-weight:700;color:var(--muted);padding:9px 10px;border-radius:6px;cursor:pointer;transition:background .12s,color .12s}
+  .seg2 button.on{background:#fff;color:var(--blue);box-shadow:0 1px 2px rgba(11,42,74,.12)}
+
+  .hint{font-size:11.5px;color:var(--ink);background:#fff7ec;border:1px solid #f3e2c4;border-radius:8px;padding:9px 11px;margin:6px 0 4px;line-height:1.5}
+  .hint b{color:var(--orange)}
+  .infobox{background:#eaf3f9;border:1px solid #cfe3f0;border-radius:10px;padding:12px 14px;color:var(--ink);margin:0 0 12px}
+  .infobox .ttl{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;color:var(--navy);line-height:1.3}
+  .infobox .ttl svg{flex:none;color:var(--blue)}
+  .infobox p{margin:6px 0 0;font-size:12px;line-height:1.55;color:var(--ink)}
+  .infobox b{color:var(--navy)}
+
+  details.adv{margin-top:8px;border-top:1px solid var(--line);padding-top:4px}
+  details.adv summary{cursor:pointer;font-size:11.5px;color:var(--blue);font-weight:700;letter-spacing:.5px;text-transform:uppercase;list-style:none;padding:8px 0}
+  details.adv summary::-webkit-details-marker{display:none}
+  details.adv summary::before{content:"▸ ";font-size:10px}
+  details.adv[open] summary::before{content:"▾ "}
+
+  /* ---------- OCR ---------- */
+  .drop{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;border:2px dashed var(--line);border-radius:10px;padding:22px 14px;cursor:pointer;background:#fafdff;transition:border-color .15s,background .15s}
+  .drop:hover,.drop.drag{border-color:var(--blue);background:#f3f9fd}
+  .drop input{display:none}
+  .drop svg{display:block;color:var(--blue);margin-bottom:9px}
+  .drop .big{font-size:13.5px;font-weight:700;color:var(--navy);line-height:1.3}
+  .drop .sm{font-size:11.5px;color:var(--muted);margin-top:4px}
+  .ocrprog{margin-top:12px;font-size:12px;color:var(--blue);font-weight:600;display:none}
+  .ocrbar{height:7px;background:var(--line2);border-radius:4px;overflow:hidden;margin-top:7px}
+  .ocrbar>div{height:100%;width:0;background:var(--blue);transition:width .25s}
+  .ocrres{margin-top:12px;display:none;border:1px solid var(--line);border-radius:9px;padding:6px 12px;background:#fff}
+  .ocrrow{display:flex;align-items:center;gap:9px;font-size:12.5px;padding:7px 0;border-top:1px solid var(--line2)}
+  .ocrrow:first-child{border-top:none}
+  .ocrrow .mark{flex:none;width:19px;height:19px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff}
+  .ocrrow .mark.ok{background:var(--green)} .ocrrow .mark.warn{background:var(--orange)} .ocrrow .mark.no{background:var(--muted)}
+  .ocrrow .lab{flex:1;color:var(--ink)} .ocrrow .v{font-weight:700;color:var(--navy);font-variant-numeric:tabular-nums}
+  .ocrerr{display:none;font-size:12px;color:var(--red);background:#fdecec;border:1px solid #f3cccc;border-radius:8px;padding:9px 11px;margin-top:10px;line-height:1.5}
+
+  /* ---------- Ergebnisse ---------- */
+  .needinput{background:#fff;border:1px dashed var(--line);border-radius:12px;padding:34px 22px;text-align:center;color:var(--muted);font-size:14px}
+  .needinput svg{color:var(--line);margin-bottom:8px}
+  .needinput b{display:block;color:var(--ink);font-size:15px;margin-bottom:4px}
+
+  .blocktitle{font-size:11px;letter-spacing:.8px;text-transform:uppercase;color:var(--blue);font-weight:700;margin:20px 0 9px;display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .blocktitle .sub{font-weight:600;color:var(--muted);text-transform:none;letter-spacing:0}
+  .blocktitle:first-child{margin-top:2px}
+
+  .heroes{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+  @media(max-width:700px){.heroes{grid-template-columns:1fr}}
+  .hero{background:linear-gradient(135deg,#eef8f1,#e3f3ea);border:1px solid #cdebd7;border-radius:12px;padding:14px 15px}
+  .hero .l{font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--green);line-height:1.25;min-height:28px}
+  .hero .v{font-size:clamp(24px,2.5vw,33px);font-weight:800;color:var(--navy);font-variant-numeric:tabular-nums;line-height:1.05;margin:4px 0 2px}
+  .hero .s{font-size:11.5px;color:var(--ink);line-height:1.4}
+  .hero.blue{background:linear-gradient(135deg,#eef4fb,#e1ecf8);border-color:#cfe0f0}
+  .hero.blue .l{color:var(--blue)}
+  .hero.red{background:linear-gradient(135deg,#fdeeee,#f9e2e2);border-color:#f0caca}
+  .hero.red .l{color:var(--red)} .hero.red .v{color:var(--red)}
+  .hero.orange{background:linear-gradient(135deg,#fff6ea,#fdeed6);border-color:#f3e2c4}
+  .hero.orange .l{color:var(--orange)}
+
+  .stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:4px}
+  @media(max-width:560px){.stats{grid-template-columns:1fr 1fr}}
+  .stat{background:var(--bg);border-radius:9px;padding:11px 12px}
+  .stat .l{font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.4px}
+  .stat .v{font-size:20px;font-weight:800;color:var(--navy);font-variant-numeric:tabular-nums;margin-top:3px;line-height:1.1}
+  .stat .s{font-size:11px;color:var(--muted);margin-top:2px}
+  .stat.blue .v{color:var(--blue)} .stat.green .v{color:var(--green)} .stat.red .v{color:var(--red)}
+
+  /* Szenario-Tabelle */
+  .sctable{width:100%;border-collapse:collapse;font-size:13px;margin-top:4px;font-variant-numeric:tabular-nums}
+  .sctable th,.sctable td{padding:9px 10px;text-align:right;border-bottom:1px solid var(--line2)}
+  .sctable th:first-child,.sctable td:first-child{text-align:left;color:var(--ink);font-weight:600;font-variant-numeric:normal}
+  .sctable thead th{font-size:11px;text-transform:uppercase;letter-spacing:.3px;color:var(--muted);border-bottom:1px solid var(--line);white-space:nowrap}
+  .sctable .std{background:#eef6fc}
+  .sctable thead th.std{color:var(--blue)}
+  .sctable tr.gap td{font-weight:800;color:var(--red);font-size:14px;border-top:2px solid var(--line);border-bottom:none}
+  .sctable tr.gap td:first-child{color:var(--navy)}
+  .scbadge{display:inline-block;font-size:9px;font-weight:800;letter-spacing:.3px;text-transform:uppercase;color:#fff;background:var(--blue);border-radius:4px;padding:1px 5px;margin-left:6px;vertical-align:middle}
+
+  .dl{margin:2px 0 0;font-size:12.5px}
+  .dl .r{display:flex;justify-content:space-between;gap:12px;padding:7px 0;border-top:1px solid var(--line2)}
+  .dl .r:first-child{border-top:none}
+  .dl .r .k{color:var(--ink)} .dl .r .v{font-weight:700;color:var(--navy);font-variant-numeric:tabular-nums;text-align:right}
+  .dl .r .k small{display:block;color:var(--muted);font-weight:400;font-size:11px}
+
+  .note{font-size:11.5px;color:var(--muted);line-height:1.5;margin:8px 0 0}
+  .disc{font-size:11px;color:var(--muted);line-height:1.55;margin-top:20px;border-top:1px solid var(--line);padding-top:13px}
+
+  /* Vergleichsbalken: erwartete Rente vs. Wunschrente */
+  .cmpbar{margin:6px 0 2px}
+  .cmpbar .track{position:relative;height:34px;border-radius:9px;background:repeating-linear-gradient(135deg,#fdeeee,#fdeeee 8px,#fbe4e4 8px,#fbe4e4 16px);border:1px solid #f0caca;overflow:hidden}
+  .cmpbar .fill{position:absolute;left:0;top:0;bottom:0;background:linear-gradient(135deg,var(--blue),#15577f);display:flex;align-items:center;padding:0 11px;color:#fff;font-size:12.5px;font-weight:700;white-space:nowrap;min-width:2px}
+  .cmpbar .lbls{display:flex;justify-content:space-between;font-size:11.5px;color:var(--ink);margin-top:6px}
+  .cmpbar .lbls b{color:var(--navy);font-variant-numeric:tabular-nums}
+  .cmpbar .gaptag{position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:12px;font-weight:800;color:var(--red);font-variant-numeric:tabular-nums}
+
+  /* "Lücke schließen" — Handlungsempfehlung */
+  .solve{background:linear-gradient(135deg,var(--navy),var(--blue));color:#fff;border-radius:12px;padding:16px 18px;margin:14px 0 2px}
+  .solve .t{font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:#bfe0f4;display:flex;align-items:center;gap:7px}
+  .solve .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:10px}
+  @media(max-width:560px){.solve .grid2{grid-template-columns:1fr}}
+  .solve .b{background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.18);border-radius:10px;padding:11px 13px}
+  .solve .b .l{font-size:11px;color:#cfe3f2;font-weight:600;text-transform:uppercase;letter-spacing:.4px}
+  .solve .b .v{font-size:27px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1.1;margin-top:3px}
+  .solve .b .s{font-size:11px;color:#bfd6e8;margin-top:2px}
+  .solve .hl .v{color:#9fe3bd}
+  .solve .ass{font-size:11px;color:#bcd2e6;line-height:1.5;margin-top:10px}
+
+  /* Druck-Kopfzeile (nur im Ausdruck sichtbar) */
+  .printonly{display:none}
+  .phead .pt{font-size:16px;font-weight:800;color:var(--navy)}
+  .phead .pm{font-size:11.5px;color:var(--ink);margin-top:2px}
+  .phead{border-bottom:2px solid var(--navy);padding-bottom:8px;margin-bottom:14px}
+
+  .hideMode{display:none !important}
+
+  /* ---------- Druck ----------
+     @page-Rand = 0 unterdrückt die vom Browser eingefügte Kopf-/Fußzeile
+     (Titel + Datei-URL); Seitenränder werden über .wrap / .block2 gesetzt.
+     block1 = Rentenlücke (Seite 1), block2 = Sparplan + Detail (neue Seite). */
+  @media print{
+    @page{size:A4;margin:0}
+    html,body{background:#fff}
+    .wrap{max-width:none;padding:13mm 14mm 14mm}
+    .badge,.tabs,.formcol,.btn,header .ht .kicker{display:none !important}
+    .printonly{display:block}
+    .grid{display:block}
+    .card{border:none;box-shadow:none;padding:0}
+    #resultsCard>h2{display:none}
+    header{margin-bottom:8px}
+    /* Logo im Ausdruck nach rechts (Letterhead-Look): Titel links, Logo rechts */
+    header .ht{order:1}
+    header img{order:2;margin-left:auto;height:40px}
+    .heroes{grid-template-columns:1fr 1fr 1fr;gap:8px}
+    .hero .v{font-size:21px}
+    .solve{background:var(--navy)!important}
+
+    /* Detail-Aufklapper als echte Überschrift drucken */
+    details.adv{border:none;padding-top:0}
+    details.adv[open] .dl,details.adv .dl{display:block}
+    details.adv summary{display:block;list-style:none;cursor:auto;color:var(--blue);font-weight:700;text-transform:uppercase;font-size:11px;letter-spacing:.8px;padding:0;margin:0 0 8px}
+    details.adv summary::before{content:""!important}
+
+    /* Saubere Seitenumbrüche: keine Blöcke zerschneiden */
+    .heroes,.cmpbar,.sctable,.solve,.stats,.dl,.disc,.realperf{page-break-inside:avoid;break-inside:avoid}
+    .blocktitle{page-break-after:avoid;break-after:avoid}
+    .block1{page-break-after:auto}
+    /* Sparplan + Detailberechnung beginnen auf neuer Seite – aber nur, wenn ein
+       Sparplan vorhanden ist (.brk); sonst fließt das Detail auf Seite 1 weiter. */
+    .block2.brk{page-break-before:always;break-before:page;padding-top:13mm}
+
+    .hero,.stat,.sctable .std,.solve,.cmpbar .fill,.cmpbar .track{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  }
+</style>
+
+<!-- Externe Bibliotheken (laufen vollständig lokal im Browser) -->
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- ============ HEADER ============ -->
+  <header>
+    <img src="../assets/logo_iquadrat.png" alt="iQuadrat">
+    <div class="ht">
+      <div class="kicker">Beratungstool · Altersvorsorge</div>
+      <h1>Rentenlücken-Rechner</h1>
+    </div>
+    <button class="btn ghost" id="btnPrint" type="button">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9V3h12v6M6 18H4a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-2M6 14h12v8H6z"/></svg>
+      Drucken / PDF
+    </button>
+  </header>
+
+  <div class="badge">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="4" y="11" width="16" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+    🔒 Lokale Verarbeitung – Keine Daten werden gespeichert oder übertragen
+  </div>
+
+  <!-- ============ SEGMENT-CONTROL ============ -->
+  <div class="tabs" id="tabs" role="tablist">
+    <button class="tab on" data-mode="ang" type="button" role="tab">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/></svg>
+      Angestellte
+    </button>
+    <button class="tab" data-mode="beamte" type="button" role="tab">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18M5 21V10l7-5 7 5v11M9 21v-6h6v6"/></svg>
+      Beamte
+    </button>
+    <button class="tab" data-mode="selbst" type="button" role="tab">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 7h-4V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2zM10 5h4v2h-4z"/></svg>
+      Selbstständige
+    </button>
+  </div>
+
+  <div class="grid">
+
+    <!-- ================= EINGABEN ================= -->
+    <div class="card formcol" id="form">
+      <h2 id="formTitle">Angestellte · Gesetzliche Rentenversicherung</h2>
+
+      <!-- Gemeinsame Kopfdaten (erscheinen im Ausdruck) -->
+      <div class="row2">
+        <div class="field"><label for="kundeName">Kunde <span class="opt">für Ausdruck</span></label><input type="text" id="kundeName" placeholder="z. B. Markus Müller"></div>
+        <div class="field"><label for="kundeDatum">Datum</label><input type="date" id="kundeDatum"></div>
+      </div>
+
+      <!-- ====== MODUS 1: ANGESTELLTE ====== -->
+      <div class="modepanel" data-mode="ang">
+
+        <!-- Eingabemethode -->
+        <div class="seg2" id="angMethod">
+          <button data-m="manuell" class="on" type="button">Manuell eingeben</button>
+          <button data-m="ocr" type="button">Rentenbescheid einlesen</button>
+        </div>
+
+        <!-- OCR-Bereich -->
+        <div id="ocrZone" class="hideMode">
+          <div class="infobox">
+            <div class="ttl"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><rect x="4" y="11" width="16" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>Lokale Verarbeitung – keine Daten werden hochgeladen</div>
+            <p>Der Rentenbescheid wird ausschließlich lokal in Ihrem Browser verarbeitet (Tesseract.js). Es werden keine Daten an externe Server übermittelt – das Foto/PDF verlässt Ihr Gerät nicht.</p>
+          </div>
+          <label class="drop" id="drop" for="ocrFile">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M17 8l-5-5-5 5"/><path d="M12 3v12"/></svg>
+            <div class="big">Rentenauskunft hochladen</div>
+            <div class="sm">JPG, PNG oder PDF · Klicken oder hierher ziehen</div>
+            <input type="file" id="ocrFile" accept="image/*,application/pdf">
+          </label>
+          <div class="ocrprog" id="ocrProg">Texterkennung läuft … <span id="ocrPct">0 %</span><div class="ocrbar"><div id="ocrBar"></div></div></div>
+          <div class="ocrres" id="ocrRes"></div>
+          <div class="ocrerr" id="ocrErr"></div>
+          <p class="note">Erkannte Werte werden in die Felder übernommen. Bitte alle Felder prüfen und bei Bedarf korrigieren.</p>
+        </div>
+
+        <div class="sec">Kundendaten</div>
+        <div class="field"><label for="ang_geburt">Geburtsdatum</label><input type="date" id="ang_geburt" value="1984-05-20"></div>
+        <div class="row2">
+          <div class="field"><label for="ang_alter">Wunschrentenalter</label><input type="number" id="ang_alter" value="67" min="63" max="75" step="1"></div>
+          <div class="field"><label for="ang_jahreGRV">Beitragsjahre GRV bisher</label><input type="number" id="ang_jahreGRV" value="19" min="0" max="50" step="1"></div>
+        </div>
+
+        <div class="sec">Einkommen</div>
+        <div class="row2">
+          <div class="field"><label for="ang_brutto">Brutto / Monat</label><div class="ig"><input type="number" id="ang_brutto" value="5500" min="0" step="50"><span class="suf">€</span></div></div>
+          <div class="field"><label for="ang_netto">Netto / Monat</label><div class="ig"><input type="number" id="ang_netto" value="3300" min="0" step="50"><span class="suf">€</span></div></div>
+        </div>
+        <div class="row2">
+          <div class="field"><label for="ang_urlaub">Urlaubsgeld <span class="opt">brutto</span></label><div class="ig"><input type="number" id="ang_urlaub" value="0" min="0" step="100"><span class="suf">€</span></div></div>
+          <div class="field"><label for="ang_weihnacht">Weihnachtsgeld <span class="opt">brutto</span></label><div class="ig"><input type="number" id="ang_weihnacht" value="0" min="0" step="100"><span class="suf">€</span></div></div>
+        </div>
+        <div class="field"><label for="ang_sonstige">Sonstige rv-pflichtige Zahlungen <span class="opt">brutto / Jahr</span></label><div class="ig"><input type="number" id="ang_sonstige" value="0" min="0" step="100"><span class="suf">€</span></div></div>
+
+        <div class="sec">Rentenangaben</div>
+        <div class="row2">
+          <div class="field"><label for="ang_ep">Aktuelle Rentenpunkte (EP)</label><input type="number" id="ang_ep" value="18" min="0" max="100" step="0.01"><small>aus der Rentenauskunft</small></div>
+          <div class="field"><label for="ang_rentenwert">Rentenwert</label><div class="ig"><input type="number" id="ang_rentenwert" value="40.79" min="0" step="0.01"><span class="suf">€</span></div></div>
+        </div>
+        <div class="hint">Rentenwert <b>40,79 €</b> gilt seit 01.07.2025. Ab <b>01.07.2026</b> gilt <b>42,52 €</b> – du kannst die neuere Zahl gerne schon eintragen.</div>
+
+        <div class="sec">Wunschrente</div>
+        <div class="field"><label for="ang_wunsch">Gewünschtes Netto im Ruhestand <span class="val" id="ang_wunschHint"></span></label><div class="ig"><input type="number" id="ang_wunsch" value="2640" min="0" step="50"><span class="suf">€</span></div><small>nach heutiger Kaufkraft · Vorschlag = 80 % des heutigen Nettos</small></div>
+
+        <details class="adv">
+          <summary>Annahmen &amp; Details</summary>
+          <div class="row2" style="margin-top:8px">
+            <div class="field"><label for="ang_einkSteig">Einkommensteigerung p.a.</label><div class="ig"><input type="number" id="ang_einkSteig" value="2.0" min="0" max="8" step="0.1"><span class="suf">%</span></div></div>
+            <div class="field"><label for="ang_inflation">Inflation p.a.</label><div class="ig"><input type="number" id="ang_inflation" value="2.5" min="0" max="8" step="0.1"><span class="suf">%</span></div></div>
+          </div>
+          <label class="checkrow"><input type="checkbox" id="ang_kinderlos"> Kinderlos (Pflege 3,4 % statt 3,05 %)</label>
+          <div class="field"><label>Zugangsfaktor <span class="val" id="ang_zugangVal">1,000</span></label><small>Auto-berechnet aus dem Wunschrentenalter: 1,0 bei Regelalter 67, −0,003/Monat bei früherem, +0,005/Monat bei späterem Rentenbeginn.</small></div>
+        </details>
+      </div>
+
+      <!-- ====== MODUS 2: BEAMTE ====== -->
+      <div class="modepanel hideMode" data-mode="beamte">
+        <div class="sec">Kundendaten</div>
+        <div class="field"><label for="be_geburt">Geburtsdatum</label><input type="date" id="be_geburt" value="1980-03-15"></div>
+        <div class="row2">
+          <div class="field"><label for="be_alter">Geplantes Pensionsalter</label><input type="number" id="be_alter" value="65" min="62" max="70" step="1"></div>
+          <div class="field"><label for="be_dienst">Dienstjahre gesamt</label><input type="number" id="be_dienst" value="40" min="0" max="50" step="1"><small>bei Pensionseintritt</small></div>
+        </div>
+        <div class="hint">Mindestens <b>5 Jahre</b> Wartezeit nötig, sonst kein Ruhegehaltsanspruch.</div>
+
+        <div class="sec">Besoldung</div>
+        <div class="field"><label for="be_grund">Brutto-Grundgehalt / Monat</label><div class="ig"><input type="number" id="be_grund" value="5000" min="0" step="50"><span class="suf">€</span></div><small>Bitte das Endgehalt der aktuellen Besoldungsgruppe eintragen.</small></div>
+        <div class="field"><label for="be_fam">Familienzuschlag Stufe 1 <span class="opt">verheiratet</span></label><div class="ig"><input type="number" id="be_fam" value="0" min="0" step="10"><span class="suf">€</span></div><small>0 € wenn ledig.</small></div>
+
+        <div class="sec">Krankenversicherung</div>
+        <div class="field"><label for="be_pkv">PKV-Prämie im Ruhestand / Monat</label><div class="ig"><input type="number" id="be_pkv" value="0" min="0" step="10"><span class="suf">€</span></div><small>Beihilfe steigt im Ruhestand auf 70 % → meist niedrigere Prämie als aktiv. Wird als feste Position vom Netto abgezogen (anders als GKV: kein %-Satz).</small></div>
+
+        <div class="sec">Wunscheinkommen</div>
+        <div class="field"><label for="be_wunsch">Gewünschtes Netto im Ruhestand</label><div class="ig"><input type="number" id="be_wunsch" value="3000" min="0" step="50"><span class="suf">€</span></div><small>nach heutiger Kaufkraft</small></div>
+
+        <details class="adv">
+          <summary>Annahmen &amp; Details</summary>
+          <div class="field" style="margin-top:8px"><label for="be_inflation">Inflation p.a.</label><div class="ig"><input type="number" id="be_inflation" value="2.5" min="0" max="8" step="0.1"><span class="suf">%</span></div></div>
+        </details>
+
+        <div class="hint" style="margin-top:12px">Berechnung nach <b>§ 14 BeamtVG</b> (Bundesbeamte). Versorgungssatz = Dienstjahre × 1,79375 %, max. 71,75 %. Nettoschätzung ≈ 80 % der Bruttopension (vereinfacht – individuelle Steuerberatung empfohlen). Beihilfe + private KV, keine GKV-Beiträge auf die Pension. <b>Landesbeamte:</b> Landesrecht kann abweichen.</div>
+      </div>
+
+      <!-- ====== MODUS 3: SELBSTSTÄNDIGE ====== -->
+      <div class="modepanel hideMode" data-mode="selbst">
+        <div class="sec">Kundendaten</div>
+        <div class="field"><label for="se_geburt">Geburtsdatum</label><input type="date" id="se_geburt" value="1985-04-01"></div>
+        <div class="field"><label for="se_alter">Geplantes Renteneintrittsalter</label><input type="number" id="se_alter" value="67" min="60" max="75" step="1"></div>
+        <label class="checkrow"><input type="checkbox" id="se_vw"> Berufsständisches Versorgungswerk vorhanden</label>
+        <div class="field hideMode" id="se_vwBetragWrap"><label for="se_vwBetrag">Erwartete Versorgung daraus / Monat</label><div class="ig"><input type="number" id="se_vwBetrag" value="0" min="0" step="50"><span class="suf">€</span></div></div>
+
+        <div class="sec">Einkommen &amp; Vorsorge</div>
+        <div class="field"><label for="se_netto">Aktuelles Netto / Monat</label><div class="ig"><input type="number" id="se_netto" value="4000" min="0" step="50"><span class="suf">€</span></div></div>
+        <div class="field"><label for="se_depot">Vorhandene private Altersvorsorge gesamt</label><div class="ig"><input type="number" id="se_depot" value="50000" min="0" step="1000"><span class="suf">€</span></div><small>Depotwert heute (Rürup, ETF, Immobilie abzgl. Schulden …)</small></div>
+        <div class="row2">
+          <div class="field"><label for="se_rendite">Erwartete Rendite p.a.</label><div class="ig"><input type="number" id="se_rendite" value="5" min="0" max="12" step="0.1"><span class="suf">%</span></div></div>
+          <div class="field"><label for="se_sparrate">Sparrate / Monat</label><div class="ig"><input type="number" id="se_sparrate" value="500" min="0" step="50"><span class="suf">€</span></div></div>
+        </div>
+
+        <div class="sec">Wunscheinkommen</div>
+        <div class="field"><label for="se_wunsch">Gewünschtes Netto im Ruhestand</label><div class="ig"><input type="number" id="se_wunsch" value="3200" min="0" step="50"><span class="suf">€</span></div><small>nach heutiger Kaufkraft</small></div>
+
+        <details class="adv">
+          <summary>Annahmen &amp; Details</summary>
+          <div class="row2" style="margin-top:8px">
+            <div class="field"><label for="se_inflation">Inflation p.a.</label><div class="ig"><input type="number" id="se_inflation" value="2.5" min="0" max="8" step="0.1"><span class="suf">%</span></div></div>
+            <div class="field"><label for="se_entnahme">Entnahmerendite p.a.</label><div class="ig"><input type="number" id="se_entnahme" value="3" min="0" max="8" step="0.1"><span class="suf">%</span></div></div>
+          </div>
+          <small style="color:var(--muted)">Entnahmephase: 25 Jahre Rentenbezug (bis ca. 92 Jahre).</small>
+        </details>
+
+        <div class="hint" style="margin-top:12px"><b>Achtung:</b> Handwerker, Lehrer, Künstler (KSK) und Ein-Auftraggeber-Selbstständige können gesetzlich pflichtversichert sein – bitte prüfen!</div>
+      </div>
+
+      <!-- ====== SPARPLAN (optional · alle Modi) ====== -->
+      <div class="sec">Sparplan</div>
+      <label class="checkrow"><input type="checkbox" id="sparOn"> Sparrate zur Schließung der Lücke berechnen</label>
+      <div id="sparOpts" class="hideMode">
+        <div class="row2">
+          <div class="field"><label for="spar_rendite">Renditeannahme p.a.</label><div class="ig"><input type="number" id="spar_rendite" value="6.0" min="0" max="12" step="0.1"><span class="suf">%</span></div></div>
+          <div class="field"><label for="spar_dyn">Dynamik <span class="opt">Variante 2</span></label><div class="ig"><input type="number" id="spar_dyn" value="3.0" min="0" max="10" step="0.5"><span class="suf">%</span></div></div>
+        </div>
+        <details class="adv">
+          <summary>Produktkosten (Standard hinterlegt · editierbar)</summary>
+          <div class="row2" style="margin-top:8px">
+            <div class="field"><label for="spar_alpha">Abschluss α <span class="opt">Beitragssumme</span></label><div class="ig"><input type="number" id="spar_alpha" value="2.5" min="0" step="0.1"><span class="suf">%</span></div></div>
+            <div class="field"><label for="spar_beta">Verwaltung β <span class="opt">lfd. Beitrag</span></label><div class="ig"><input type="number" id="spar_beta" value="6.1" min="0" step="0.1"><span class="suf">%</span></div></div>
+          </div>
+          <div class="row2">
+            <div class="field"><label for="spar_gamma">Gamma γ <span class="opt">p.a. Vermögen</span></label><div class="ig"><input type="number" id="spar_gamma" value="0.24" min="0" step="0.01"><span class="suf">%</span></div></div>
+            <div class="field"><label for="spar_etf">ETF-Kosten (TER) <span class="opt">p.a.</span></label><div class="ig"><input type="number" id="spar_etf" value="0.05" min="0" step="0.01"><span class="suf">%</span></div></div>
+          </div>
+          <div class="row2">
+            <div class="field"><label for="spar_stueck">Stückkosten / Jahr</label><div class="ig"><input type="number" id="spar_stueck" value="36" min="0" step="1"><span class="suf">€</span></div></div>
+            <div class="field"><label for="spar_bisAlter">Kapitalbedarf bis Alter</label><input type="number" id="spar_bisAlter" value="90" min="75" max="105" step="1"></div>
+          </div>
+          <small style="color:var(--muted)">α wird auf 5 Jahre verteilt (Höchstbemessung 35 Jahre). Standardwerte = euer Provisions-Versicherungsmantel; für andere Tarife frei anpassbar.</small>
+        </details>
+        <div class="hint">Kapitalberg = monatliche Lücke × Monate von Renteneintritt bis Alter <b id="bisAlterEcho">90</b>. Daraus wird die nötige Sparrate <b>rückwärts</b> gerechnet – inkl. aller Kosten.</div>
+      </div>
+    </div>
+
+    <!-- ================= ERGEBNISSE ================= -->
+    <div class="card" id="resultsCard">
+      <h2>Auswertung</h2>
+      <div id="needInput" class="needinput hideMode">
+        <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+        <b>Bitte alle Pflichtfelder ausfüllen</b>
+        Geburtsdatum, Einkommen und Wunschrente werden für die Berechnung benötigt.
+      </div>
+      <div id="results"></div>
+    </div>
+
+  </div>
+
+  <p class="disc" id="discBox"></p>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ============================================================
+     KONSTANTEN  ·  Stand 2025/2026 — bei Bedarf jährlich anpassen
+     ============================================================ */
+  var BBG          = 96600;    // Beitragsbemessungsgrenze West 2025 (Jahr)
+  var DURCH        = 45358;    // Durchschnittsentgelt (Jahr) — Referenz für Entgeltpunkte
+  var GRUNDFREI    = 9984;     // Steuerlicher Grundfreibetrag (Jahr) — vereinfachte Steuerbasis
+  var RV_GKV       = 0.0785;   // Krankenversicherung Rentner
+  var RV_PFLEGE    = 0.0305;   // Pflegeversicherung (Eltern)
+  var RV_PFLEGE_KL = 0.0340;   // Pflegeversicherung (kinderlos)
+  var RV_STEUER    = 0.04;     // vereinfachter Steuersatz auf die Rente
+  var BE_SATZ_J    = 0.0179375;// Versorgungssatz je Dienstjahr (§14 BeamtVG)
+  var BE_SATZ_MAX  = 0.7175;   // Höchstversorgungssatz 71,75 %
+  var BE_NETTO     = 0.80;     // vereinfachter Netto-Faktor Beamtenpension
+  var SE_RENTENJAHRE = 25;     // angenommene Dauer Rentenbezug (Selbstständige)
+  var SZENARIEN    = [0, 0.01, 0.03]; // Rentensteigerung p.a.: pessimistisch / moderat / optimistisch
+  var STD_IDX      = 1;        // Standardszenario = 1 %
+
+  /* ===== Helpers ===== */
+  function $(id){return document.getElementById(id);}
+  function val(id){var e=$(id);return e?(''+e.value).trim():'';}
+  function setVal(id,v){var e=$(id);if(e)e.value=v;}
+  function chk(id){var e=$(id);return e?e.checked:false;}
+  function num(x){
+    var s=String(x==null?'':x).trim(); if(!s) return 0;
+    if(s.indexOf(',')>=0){ s=s.replace(/\./g,'').replace(',','.'); }
+    else if(/^-?\d{1,3}(\.\d{3})+$/.test(s)){ s=s.replace(/\./g,''); }
+    var n=parseFloat(s); return isNaN(n)?0:n;
+  }
+  var eur = new Intl.NumberFormat('de-DE',{style:'currency',currency:'EUR',minimumFractionDigits:2,maximumFractionDigits:2});
+  var eur0= new Intl.NumberFormat('de-DE',{style:'currency',currency:'EUR',maximumFractionDigits:0});
+  function pct(v,d){ d=(d==null?2:d); return v.toLocaleString('de-DE',{minimumFractionDigits:d,maximumFractionDigits:d})+' %'; }
+  function fix(v,d){ d=(d==null?2:d); return v.toLocaleString('de-DE',{minimumFractionDigits:d,maximumFractionDigits:d}); }
+  function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+  // Alter (in Jahren, exakt) aus ISO-Geburtsdatum
+  function ageFrom(iso){
+    if(!iso) return null;
+    var p=iso.split('-'); if(p.length!==3) return null;
+    var b=new Date(+p[0],+p[1]-1,+p[2]); if(isNaN(b.getTime())) return null;
+    var n=new Date(), a=n.getFullYear()-b.getFullYear();
+    if(n.getMonth()<b.getMonth() || (n.getMonth()===b.getMonth() && n.getDate()<b.getDate())) a--;
+    return a;
+  }
+
+  var state = { mode:'ang', angMethod:'manuell', wunschDirty:false };
+
+  /* ============================================================
+     ENGINE 1 — GESETZLICHE RENTE (Angestellte)
+     Renten-Hochrechnung 1:1 nach dem validierten Excel-Lückenrechner:
+     Durchschnittsentgelt & BBG wachsen mit Inflation, das persönliche
+     Einkommen mit der Einkommensteigerung → mehr EP bei Reallohnwachstum.
+     ============================================================ */
+  function calcAngestellte(d){
+    var dauer = Math.max(0, d.alter ? (d.wunschalter - d.alter) : 0);
+
+    // Schritt 1: EP pro Jahr aktuell
+    var jahresbrutto = d.brutto*12 + d.urlaub + d.weihnacht + d.sonstige;
+    var einkGrund = Math.min(jahresbrutto, BBG);
+    var epJahr = DURCH>0 ? einkGrund/DURCH : 0;
+    var bisherEP = d.ep>0 ? d.ep : epJahr*d.jahreGRV;
+
+    // Schritt 2: künftige EP bis zur Rente
+    var P=DURCH, Q=jahresbrutto, R=BBG, futureEP=0;
+    for(var i=1;i<=dauer;i++){
+      if(i>1){ P*=(1+d.inflation); Q*=(1+d.einkSteig); R*=(1+d.inflation); }
+      futureEP += (P>0 ? Math.min(Q,R)/P : 0);
+    }
+    var summeEP = bisherEP + futureEP;
+
+    // Schritt 3: Zugangsfaktor
+    var monate = (d.wunschalter - 67)*12, zugang;
+    if(monate < 0)      zugang = Math.max(0.856, 1 + monate*0.003);
+    else if(monate > 0) zugang = 1 + monate*0.005;
+    else                zugang = 1.0;
+
+    var pflegeSatz = d.kinderlos ? RV_PFLEGE_KL : RV_PFLEGE;
+    var wunschZuk  = d.wunsch * Math.pow(1+d.inflation, dauer);
+
+    // Schritte 4–8: je Szenario
+    var sz = SZENARIEN.map(function(s){
+      var steigFaktor = Math.pow(1+s, dauer);
+      var brutto  = summeEP * zugang * 1.0 * d.rentenwert * steigFaktor; // Rentenartfaktor Altersrente = 1,0
+      var kv      = brutto * RV_GKV;
+      var pflege  = brutto * pflegeSatz;
+      var steuer  = Math.max(0, (brutto - GRUNDFREI/12) * RV_STEUER);
+      var abgaben = kv + pflege + steuer;
+      var netto   = brutto - abgaben;
+      var nettoKK = dauer>0 ? netto/Math.pow(1+d.inflation, dauer) : netto;
+      var lueckeNom = Math.max(0, wunschZuk - netto);
+      var lueckeKK  = Math.max(0, d.wunsch - nettoKK);
+      return { steig:s, steigFaktor:steigFaktor, brutto:brutto, kv:kv, pflege:pflege, steuer:steuer,
+               abgaben:abgaben, netto:netto, nettoKK:nettoKK, lueckeNom:lueckeNom, lueckeKK:lueckeKK };
+    });
+
+    return { ok:true, dauer:dauer, alter:d.alter, summeEP:summeEP, bisherEP:bisherEP, futureEP:futureEP,
+             zugang:zugang, monate:monate, pflegeSatz:pflegeSatz, jahresbrutto:jahresbrutto,
+             wunsch:d.wunsch, wunschZuk:wunschZuk, inflation:d.inflation, sz:sz };
+  }
+
+  /* ============================================================
+     ENGINE 2 — BEAMTENVERSORGUNG (§14 BeamtVG)
+     ============================================================ */
+  function calcBeamte(d){
+    var dauer = Math.max(0, d.alter!=null ? (d.pensionsalter - d.alter) : 0);
+    var satz  = Math.min(BE_SATZ_MAX, Math.max(0, d.dienst) * BE_SATZ_J);
+    var basis = d.grund + d.fam;
+    var brutto= basis * satz;
+    var nettoVorPkv = brutto * BE_NETTO;                                        // vereinfachter Steuerabzug
+    var netto = Math.max(0, nettoVorPkv - d.pkv);                              // feste PKV-Prämie (kein %-Satz wie GKV)
+    var lueckeKK  = Math.max(0, d.wunsch - netto);                              // Pension in heutiger Besoldung ≈ heutige KK
+    var nettoNom  = netto * Math.pow(1+d.inflation, dauer);                     // Annahme: Besoldung folgt Inflation
+    var wunschNom = d.wunsch * Math.pow(1+d.inflation, dauer);
+    var lueckeNom = Math.max(0, wunschNom - nettoNom);
+    var wartezeitOk = d.dienst >= 5;
+    return { ok:true, dauer:dauer, alter:d.alter, satz:satz, brutto:brutto, nettoVorPkv:nettoVorPkv, pkv:d.pkv, netto:netto, nettoNom:nettoNom,
+             basis:basis, wunsch:d.wunsch, wunschNom:wunschNom, lueckeKK:lueckeKK, lueckeNom:lueckeNom,
+             inflation:d.inflation, wartezeitOk:wartezeitOk };
+  }
+
+  /* ============================================================
+     ENGINE 3 — SELBSTSTÄNDIGE (Kapitalaufbau + Entnahme)
+     ============================================================ */
+  function calcSelbst(d){
+    var dauer = Math.max(0, d.alter ? (d.renteAlter - d.alter) : 0);
+    var r = d.rendite;
+    // Kapital bei Renteneintritt: Depot verzinst + Sparrate als jährliche Annuität
+    var depotEnd = d.depot * Math.pow(1+r, dauer);
+    var jahresSpar = d.sparrate * 12;
+    var fvSpar = (r>0 && dauer>0) ? jahresSpar * ((Math.pow(1+r,dauer)-1)/r) : jahresSpar*dauer;
+    var kapital = depotEnd + fvSpar;
+    // Entnahmephase: Barwert-Annuität (monatlich) über SE_RENTENJAHRE bei Entnahmerendite
+    var im = d.entnahme/12, N = SE_RENTENJAHRE*12;
+    var pvFaktor = (im>0) ? (1-Math.pow(1+im,-N))/im : N;
+    var entnahme = pvFaktor>0 ? kapital/pvFaktor : 0;            // nachhaltige Monatsentnahme (nominal, zum Rentenbeginn)
+    var vw = d.vw ? d.vwBetrag : 0;
+    var nettoNom = entnahme + vw;
+    var nettoKK  = dauer>0 ? nettoNom/Math.pow(1+d.inflation,dauer) : nettoNom;
+    var wunschNom= d.wunsch*Math.pow(1+d.inflation,dauer);
+    var lueckeNom= Math.max(0, wunschNom - nettoNom);
+    var lueckeKK = Math.max(0, d.wunsch - nettoKK);
+    return { ok:true, dauer:dauer, alter:d.alter, kapital:kapital, depotEnd:depotEnd, fvSpar:fvSpar,
+             entnahme:entnahme, vw:vw, nettoNom:nettoNom, nettoKK:nettoKK, wunsch:d.wunsch,
+             wunschNom:wunschNom, lueckeNom:lueckeNom, lueckeKK:lueckeKK, inflation:d.inflation };
+  }
+
+  /* ============================================================
+     EINGABEN LESEN
+     ============================================================ */
+  function readAng(){
+    return {
+      alter: ageFrom(val('ang_geburt')),
+      wunschalter: num(val('ang_alter'))||67,
+      jahreGRV: num(val('ang_jahreGRV')),
+      brutto: num(val('ang_brutto')),
+      netto: num(val('ang_netto')),
+      urlaub: num(val('ang_urlaub')),
+      weihnacht: num(val('ang_weihnacht')),
+      sonstige: num(val('ang_sonstige')),
+      ep: num(val('ang_ep')),
+      rentenwert: num(val('ang_rentenwert'))||40.79,
+      wunsch: num(val('ang_wunsch')),
+      einkSteig: num(val('ang_einkSteig'))/100,
+      inflation: num(val('ang_inflation'))/100,
+      kinderlos: chk('ang_kinderlos')
+    };
+  }
+  function readBeamte(){
+    return {
+      alter: ageFrom(val('be_geburt')),
+      pensionsalter: num(val('be_alter'))||65,
+      dienst: num(val('be_dienst')),
+      grund: num(val('be_grund')),
+      fam: num(val('be_fam')),
+      pkv: num(val('be_pkv')),
+      wunsch: num(val('be_wunsch')),
+      inflation: num(val('be_inflation'))/100
+    };
+  }
+  function readSelbst(){
+    return {
+      alter: ageFrom(val('se_geburt')),
+      renteAlter: num(val('se_alter'))||67,
+      vw: chk('se_vw'),
+      vwBetrag: num(val('se_vwBetrag')),
+      netto: num(val('se_netto')),
+      depot: num(val('se_depot')),
+      rendite: num(val('se_rendite'))/100,
+      sparrate: num(val('se_sparrate')),
+      wunsch: num(val('se_wunsch')),
+      inflation: num(val('se_inflation'))/100,
+      entnahme: num(val('se_entnahme'))/100
+    };
+  }
+
+  /* ============================================================
+     RENDER
+     ============================================================ */
+  function heroCard(cls,label,value,sub){
+    return '<div class="hero '+cls+'"><div class="l">'+label+'</div><div class="v">'+value+'</div>'+(sub?'<div class="s">'+sub+'</div>':'')+'</div>';
+  }
+  function dlRow(k,v,sub){
+    return '<div class="r"><span class="k">'+k+(sub?'<small>'+sub+'</small>':'')+'</span><span class="v">'+v+'</span></div>';
+  }
+
+  // Druck-Kopfzeile (nur im Ausdruck sichtbar): Kunde, Datum, Segment
+  var SEGMENT_LABEL={ ang:'Angestellte (gesetzl. Rente)', beamte:'Beamte (Beamtenversorgung)', selbst:'Selbstständige (private Vorsorge)' };
+  function printHead(){
+    var name=val('kundeName'), datum=val('kundeDatum');
+    var dStr = datum ? datum.split('-').reverse().join('.') : '';
+    return '<div class="printonly phead"><div class="pt">Rentenlücken-Analyse</div>'+
+      '<div class="pm">'+(name?'Kunde: <b>'+esc(name)+'</b> · ':'')+'Segment: '+SEGMENT_LABEL[state.mode]+
+      (dStr?' · Datum: '+dStr:'')+' · erstellt mit dem iQuadrat Rentenlücken-Rechner</div></div>';
+  }
+
+  // Vergleichsbalken: erwartete Rente (heutige Kaufkraft) vs. Wunschrente
+  function cmpBar(ist, wunsch){
+    var base=Math.max(ist,wunsch,1), w=Math.min(100,Math.max(3,ist/base*100));
+    var luecke=Math.max(0,wunsch-ist);
+    return '<div class="cmpbar"><div class="track"><div class="fill" style="width:'+w.toFixed(1)+'%">'+
+      (w>34?'Erwartet: '+eur0.format(ist):'')+'</div>'+
+      (luecke>0?'<span class="gaptag">Lücke '+eur0.format(luecke)+'</span>':'')+'</div>'+
+      '<div class="lbls"><span>'+(w<=34?'Erwartet <b>'+eur0.format(ist)+'</b>':'erwartete Rente (heutige KK)')+'</span>'+
+      '<span>Wunsch <b>'+eur0.format(wunsch)+'</b></span></div></div>';
+  }
+
+  /* ---- Sparrechner (optional) ------------------------------------------------
+     Provisions-Versicherungsmantel, Monats-Simulation (1:1 wie Konzept-Generator/FMU):
+     α Abschluss (% der Beitragssumme, auf 5 J. verteilt, Höchstbemessung 35 J.),
+     β Verwaltung (% des lfd. Beitrags), γ (% p.a. vom Vermögen), Stückkosten (€/J fix),
+     ETF-TER (% p.a. Renditeabzug). Endwert ist affin in der Rate → exakte Rückrechnung
+     per Zwei-Punkt-Interpolation. ------------------------------------------------ */
+  function readKosten(){
+    return {
+      rendite: num(val('spar_rendite'))/100,
+      alpha:   num(val('spar_alpha'))/100,
+      beta:    num(val('spar_beta'))/100,
+      gamma:   num(val('spar_gamma'))/100,
+      stueck:  num(val('spar_stueck')),
+      etf:     num(val('spar_etf'))/100
+    };
+  }
+  // Endkapital (brutto) bei monatlicher Startrate 'rate' über 'dauer' Jahre, Dynamik 'dyn'
+  function fmuEndwert(rate, dauer, dyn, K){
+    if(dauer<=0 || rate<=0) return 0;
+    var months=Math.round(dauer*12), gM=Math.pow(1+K.rendite,1/12)-1;
+    var beitragssumme=rate*12*Math.min(dauer,35), alphaTotal=K.alpha*beitragssumme;
+    var alphaMonths=60, alphaPM=K.alpha>0?alphaTotal/alphaMonths:0;             // α auf 5 Jahre = 60 Monate
+    var bal=0;
+    for(var m=1;m<=months;m++){
+      var yIdx=Math.ceil(m/12);
+      var r=rate*Math.pow(1+dyn,yIdx-1);
+      bal += r - r*K.beta;                       // Beitrag abzgl. Verwaltung β
+      if(m<=alphaMonths) bal-=alphaPM;           // Abschluss α (erste 5 Jahre)
+      if(K.stueck>0) bal-=K.stueck/12;           // Stückkosten fix
+      bal += bal*gM;                             // Wertentwicklung
+      if(K.gamma>0) bal-=bal*(K.gamma/12);       // γ vom Vermögen
+      if(K.etf>0)   bal-=bal*(K.etf/12);         // ETF-TER vom Vermögen
+    }
+    return bal;
+  }
+  // Rückrechnung: welche Startrate erreicht das Zielkapital? (Endwert ist affin in rate)
+  function fmuSolveRate(target, dauer, dyn, K){
+    if(dauer<=0 || target<=0) return null;
+    var e1=fmuEndwert(100,dauer,dyn,K), e2=fmuEndwert(200,dauer,dyn,K);
+    var slope=(e2-e1)/100; if(slope<=0) return null;
+    var intercept=e1-slope*100;                  // Beitrag der fixen Stückkosten (negativ)
+    var m=(target-intercept)/slope;
+    return m>0? m : null;
+  }
+  // Render-Block: nur wenn Haken gesetzt
+  function sparBlock(lueckeNom, dauer, alter){
+    if(!chk('sparOn')) return '';
+    var bisAlter=num(val('spar_bisAlter'))||90;
+    var renteAlter=(alter!=null?alter:0)+dauer;
+    var bezugMonate=Math.max(0,Math.round((bisAlter-renteAlter)*12));
+    var kapitalberg=Math.max(0,lueckeNom)*bezugMonate;
+    var head='<div class="t"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 3v18h18"/><path d="M7 14l4-4 3 3 5-6"/></svg>Sparplan – so schließen Sie die Lücke</div>';
+    if(kapitalberg<=0)
+      return '<div class="solve" style="background:linear-gradient(135deg,var(--green),#1f7d4b)">'+head+'<div class="ass" style="color:#dff3e7;margin-top:8px">Nach den aktuellen Annahmen besteht keine Lücke – es ist kein zusätzlicher Sparplan nötig.</div></div>';
+    if(dauer<=0)
+      return '<div class="solve">'+head+'<div class="b" style="margin-top:10px"><div class="l">Kapitalberg bei Renteneintritt</div><div class="v">'+eur0.format(kapitalberg)+'</div></div><div class="ass">Der Renteneintritt ist bereits erreicht – es besteht keine Ansparphase mehr, um Kapital aufzubauen.</div></div>';
+    var K=readKosten(), dyn=num(val('spar_dyn'))/100;
+    var mFix=fmuSolveRate(kapitalberg, dauer, 0, K);
+    var mDyn=fmuSolveRate(kapitalberg, dauer, dyn, K);
+    function rate(v){ return v!=null?eur0.format(v):'–'; }
+    return '<div class="solve">'+head+
+      '<div class="b" style="margin-top:10px"><div class="l">Kapitalberg bei Renteneintritt</div><div class="v">'+eur0.format(kapitalberg)+'</div>'+
+        '<div class="s">Lücke '+eur0.format(lueckeNom)+'/Mt × '+bezugMonate+' Monate (Alter '+renteAlter+'–'+bisAlter+')</div></div>'+
+      '<div class="grid2" style="margin-top:12px">'+
+        '<div class="b hl"><div class="l">Fixe Sparrate</div><div class="v">'+rate(mFix)+'</div><div class="s">konstant /Monat · '+dauer+' Jahre</div></div>'+
+        '<div class="b hl"><div class="l">Sparrate mit '+pct(dyn*100,0)+' Dynamik</div><div class="v">'+rate(mDyn)+'</div><div class="s">Startbeitrag /Monat · jährlich +'+pct(dyn*100,0)+'</div></div>'+
+      '</div>'+
+      (state.mode==='selbst' ? '<div class="ass" style="margin-top:9px"><b style="color:#fff">Zusätzlich</b> zu Ihrer bereits erfassten Vorsorge (Depot + laufende Sparrate) – diese Rate schließt die danach noch verbleibende Lücke.</div>' : '')+
+      '<div class="ass">Annahmen: '+pct(K.rendite*100,1)+' Rendite p.a. · Kosten: Abschluss '+pct(K.alpha*100,1)+' (Beitragssumme, 5 J.), Verwaltung '+pct(K.beta*100,1)+' (lfd. Beitrag), Gamma '+pct(K.gamma*100,2)+' p.a., ETF-TER '+pct(K.etf*100,2)+' p.a., Stückkosten '+eur0.format(K.stueck)+'/J. Provisions-Versicherungsmantel, Wert brutto zum Renteneintritt. Für ein konkretes Angebot sprechen Sie uns an.</div>'+
+    '</div>';
+  }
+
+  function renderAng(R){
+    var s = R.sz[STD_IDX];
+    var lueckeKKcls = s.lueckeKK>0 ? 'red' : 'blue';
+    var heroes = '<div class="heroes">'+
+      heroCard('blue','Erwartete Nettorente<br>(monatlich, '+pct(SZENARIEN[STD_IDX]*100,0)+'-Szenario)', eur.format(s.netto), 'heute: '+eur.format(s.nettoKK)+' KK')+
+      heroCard(lueckeKKcls,'Rentenlücke<br>(heutige Kaufkraft)', eur.format(s.lueckeKK), s.lueckeKK>0?'so viel fehlt heute pro Monat':'kein Bedarf erkannt')+
+      heroCard('orange','Rentenlücke zum<br>Renteneintritt (nominal)', eur.format(s.lueckeNom), 'in '+R.dauer+' Jahren')+
+    '</div>';
+
+    // Szenario-Tabelle
+    function col(i,cls){ return '<th class="'+cls+'">'+pct(SZENARIEN[i]*100,0)+(i===STD_IDX?'<span class="scbadge">Standard</span>':'')+'</th>'; }
+    function cells(fn){ return R.sz.map(function(x,i){ return '<td class="'+(i===STD_IDX?'std':'')+'">'+fn(x)+'</td>'; }).join(''); }
+    var table =
+      '<table class="sctable"><thead><tr><th>je Monat</th>'+col(0,'')+col(1,'std')+col(2,'')+'</tr>'+
+      '<tr><td style="font-size:10px;color:var(--muted);font-weight:600">Rentensteigerung p.a.</td>'+
+        R.sz.map(function(x,i){return '<td class="'+(i===STD_IDX?'std':'')+'" style="font-size:10px;color:var(--muted)">'+(i===0?'pessimistisch':i===1?'moderat':'optimistisch')+'</td>';}).join('')+'</tr></thead>'+
+      '<tbody>'+
+        '<tr><td>Bruttorente bei Rente</td>'+cells(function(x){return eur.format(x.brutto);})+'</tr>'+
+        '<tr><td>Abgaben (KV + Pflege + St.)</td>'+cells(function(x){return '−'+eur.format(x.abgaben);})+'</tr>'+
+        '<tr><td>Nettorente</td>'+cells(function(x){return eur.format(x.netto);})+'</tr>'+
+        '<tr><td>Nettorente in heutiger KK</td>'+cells(function(x){return eur.format(x.nettoKK);})+'</tr>'+
+        '<tr class="gap"><td>Rentenlücke (heutige KK)</td>'+cells(function(x){return eur.format(x.lueckeKK);})+'</tr>'+
+      '</tbody></table>';
+
+    // Detailberechnung
+    var detail =
+      '<div class="dl">'+
+        dlRow('Aktuelles Alter / Jahre bis Rente', (R.alter!=null?R.alter:'–')+' J. / '+R.dauer+' J.')+
+        dlRow('Entgeltpunkte gesamt (erwartet)', fix(R.summeEP,2)+' EP', 'bisher '+fix(R.bisherEP,2)+' + künftig '+fix(R.futureEP,2))+
+        dlRow('Zugangsfaktor', fix(R.zugang,3), R.monate===0?'Regelaltersrente mit 67':(R.monate<0?Math.abs(R.monate)+' Monate früher':R.monate+' Monate später'))+
+        dlRow('Rentensteigerungsfaktor ('+pct(SZENARIEN[STD_IDX]*100,0)+')', fix(s.steigFaktor,3), 'über '+R.dauer+' Jahre')+
+        dlRow('KV-Beitrag Rentner (7,85 %)', '−'+eur.format(s.kv))+
+        dlRow('Pflegeversicherung ('+pct(R.pflegeSatz*100,2)+')', '−'+eur.format(s.pflege))+
+        dlRow('Einkommensteuer (4 %, vereinf.)', '−'+eur.format(s.steuer))+
+        dlRow('Wunschrente zum Renteneintritt', eur.format(R.wunschZuk), 'heute '+eur.format(R.wunsch)+' + Inflation')+
+      '</div>'+
+      '<p class="note">Die Steuer ist stark vereinfacht (4 % oberhalb des anteiligen Grundfreibetrags). Die tatsächliche Steuerlast hängt vom Gesamteinkommen, Besteuerungsanteil und Freibeträgen ab und kann deutlich abweichen.</p>';
+
+    var spar = sparBlock(s.lueckeNom, R.dauer, R.alter);
+    $('results').innerHTML = printHead() +
+      '<div class="block1">'+
+        '<div class="blocktitle">Hauptkennzahlen <span class="sub">'+pct(SZENARIEN[STD_IDX]*100,0)+'-Szenario (Standard)</span></div>'+ heroes +
+        cmpBar(s.nettoKK, R.wunsch) +
+        '<div class="blocktitle">Szenarien-Vergleich <span class="sub">Rentenanpassung</span></div>'+ table +
+        '<p class="note">Historie zur Einordnung: 2022–2026 lagen die Rentenanpassungen zwischen 3,7 % und 6,1 %, 2004–2010 gab es Nullrunden – daher der Szenarienansatz.</p>'+
+      '</div>'+
+      '<div class="block2'+(spar?' brk':'')+'">'+ spar +
+        '<details class="adv" open><summary>Detailberechnung</summary>'+detail+'</details>'+
+      '</div>';
+  }
+
+  function renderBeamte(R){
+    var lueckeKKcls = R.lueckeKK>0 ? 'red' : 'blue';
+    var heroes = '<div class="heroes">'+
+      heroCard('blue','Erwartete Pension<br>netto (monatlich)', eur.format(R.netto), 'brutto '+eur.format(R.brutto)+(R.pkv>0?' · nach PKV':''))+
+      heroCard(lueckeKKcls,'Pensionslücke<br>(heutige Kaufkraft)', eur.format(R.lueckeKK), R.lueckeKK>0?'so viel fehlt heute pro Monat':'kein Bedarf erkannt')+
+      heroCard('orange','Pensionslücke zum<br>Ruhestand (nominal)', eur.format(R.lueckeNom), 'in '+R.dauer+' Jahren')+
+    '</div>';
+
+    var stats = '<div class="stats">'+
+      '<div class="stat blue"><div class="l">Versorgungssatz</div><div class="v">'+pct(R.satz*100,2)+'</div><div class="s">max. 71,75 %</div></div>'+
+      '<div class="stat"><div class="l">Pension brutto</div><div class="v">'+eur0.format(R.brutto)+'</div><div class="s">/ Monat</div></div>'+
+      '<div class="stat green"><div class="l">Pension netto</div><div class="v">'+eur0.format(R.netto)+'</div><div class="s">'+(R.pkv>0?'80 % − '+eur0.format(R.pkv)+' PKV':'≈ 80 % brutto')+'</div></div>'+
+    '</div>';
+
+    var detail = '<div class="dl">'+
+      dlRow('Aktuelles Alter / Jahre bis Pension', (R.alter!=null?R.alter:'–')+' J. / '+R.dauer+' J.')+
+      dlRow('Bemessungsgrundlage', eur.format(R.basis), 'Grundgehalt + Familienzuschlag')+
+      dlRow('Versorgungssatz', pct(R.satz*100,3), 'Dienstjahre × 1,79375 %, max. 71,75 %')+
+      dlRow('Pension brutto', eur.format(R.brutto))+
+      dlRow('Pension netto vor PKV (≈ 80 %)', eur.format(R.nettoVorPkv), 'vereinfachter Steuerabzug')+
+      (R.pkv>0 ? dlRow('− PKV-Prämie im Ruhestand', '−'+eur.format(R.pkv), 'feste Prämie · Beihilfe 70 %') : '')+
+      dlRow('Verfügbare Pension netto', eur.format(R.netto))+
+      dlRow('Wunschrente zum Ruhestand', eur.format(R.wunschNom), 'heute '+eur.format(R.wunsch)+' + Inflation')+
+    '</div>'+
+      (R.wartezeitOk ? '' : '<p class="note" style="color:var(--red)">⚠ Weniger als 5 Dienstjahre – die Wartezeit für einen Ruhegehaltsanspruch ist nicht erfüllt.</p>')+
+      '<p class="note">Nettoschätzung vereinfacht – individuelle Steuerberatung empfohlen. Bundesbeamte (BeamtVG); für Landesbeamte kann das jeweilige Landesrecht abweichen. Keine GKV-Beiträge auf die Pension; stattdessen Beihilfe (im Ruhestand 70 %) + private KV als feste Prämie.</p>';
+
+    var spar = sparBlock(R.lueckeNom, R.dauer, R.alter);
+    $('results').innerHTML = printHead() +
+      '<div class="block1">'+
+        '<div class="blocktitle">Hauptkennzahlen <span class="sub">Beamtenversorgung · §14 BeamtVG</span></div>'+ heroes +
+        cmpBar(R.netto, R.wunsch) +
+        '<div class="blocktitle">Pensionsberechnung</div>'+ stats +
+      '</div>'+
+      '<div class="block2'+(spar?' brk':'')+'">'+ spar +
+        '<details class="adv" open><summary>Detailberechnung</summary>'+detail+'</details>'+
+      '</div>';
+  }
+
+  function renderSelbst(R){
+    var lueckeKKcls = R.lueckeKK>0 ? 'red' : 'blue';
+    var heroes = '<div class="heroes">'+
+      heroCard('blue','Erwartete Versorgung<br>netto (monatlich)', eur.format(R.nettoNom), 'heute: '+eur.format(R.nettoKK)+' KK')+
+      heroCard(lueckeKKcls,'Versorgungslücke<br>(heutige Kaufkraft)', eur.format(R.lueckeKK), R.lueckeKK>0?'so viel fehlt heute pro Monat':'kein Bedarf erkannt')+
+      heroCard('orange','Versorgungslücke zum<br>Renteneintritt (nominal)', eur.format(R.lueckeNom), 'in '+R.dauer+' Jahren')+
+    '</div>';
+
+    var stats = '<div class="stats">'+
+      '<div class="stat blue"><div class="l">Kapital bei Rente</div><div class="v">'+eur0.format(R.kapital)+'</div><div class="s">prognostiziert</div></div>'+
+      '<div class="stat green"><div class="l">Monatl. Entnahme</div><div class="v">'+eur0.format(R.entnahme)+'</div><div class="s">über '+SE_RENTENJAHRE+' Jahre</div></div>'+
+      '<div class="stat"><div class="l">Versorgungswerk</div><div class="v">'+eur0.format(R.vw)+'</div><div class="s">/ Monat</div></div>'+
+    '</div>';
+
+    var detail = '<div class="dl">'+
+      dlRow('Aktuelles Alter / Jahre bis Rente', (R.alter!=null?R.alter:'–')+' J. / '+R.dauer+' J.')+
+      dlRow('Bestehendes Depot bei Rente', eur.format(R.depotEnd), 'inkl. Verzinsung')+
+      dlRow('Aus künftigen Sparraten', eur.format(R.fvSpar))+
+      dlRow('Gesamtkapital bei Rente', eur.format(R.kapital))+
+      dlRow('Nachhaltige Monatsentnahme', eur.format(R.entnahme), SE_RENTENJAHRE+' Jahre Bezug')+
+      (R.vw>0 ? dlRow('Versorgungswerk-Rente', eur.format(R.vw)) : '')+
+      dlRow('Wunschrente zum Renteneintritt', eur.format(R.wunschNom), 'heute '+eur.format(R.wunsch)+' + Inflation')+
+    '</div>'+
+      '<p class="note">Gesetzliche Rente = 0 € (sofern kein Versorgungswerk). Entnahme = nachhaltige Auszahlung des Kapitals über '+SE_RENTENJAHRE+' Jahre bei der angenommenen Entnahmerendite. Bitte gesetzliche Pflichtversicherung prüfen (s. Hinweis links).</p>';
+
+    var spar = sparBlock(R.lueckeNom, R.dauer, R.alter);
+    $('results').innerHTML = printHead() +
+      '<div class="block1">'+
+        '<div class="blocktitle">Hauptkennzahlen <span class="sub">Selbstständige · private Vorsorge</span></div>'+ heroes +
+        cmpBar(R.nettoKK, R.wunsch) +
+        '<div class="blocktitle">Kapital &amp; Entnahme</div>'+ stats +
+      '</div>'+
+      '<div class="block2'+(spar?' brk':'')+'">'+ spar +
+        '<details class="adv" open><summary>Detailberechnung</summary>'+detail+'</details>'+
+      '</div>';
+  }
+
+  /* ============================================================
+     VALIDIERUNG & UPDATE
+     ============================================================ */
+  function validAng(d){ return d.alter!=null && d.brutto>0 && d.rentenwert>0 && d.wunsch>0 && d.wunschalter>0; }
+  function validBeamte(d){ return d.alter!=null && d.grund>0 && d.dienst>0 && d.wunsch>0; }
+  function validSelbst(d){ return d.alter!=null && d.wunsch>0 && (d.depot>0 || d.sparrate>0 || (d.vw&&d.vwBetrag>0)); }
+
+  function update(){
+    var ok=false;
+    if(state.mode==='ang'){
+      var d=readAng();
+      // Zugangsfaktor-Anzeige live
+      var monate=(d.wunschalter-67)*12, z = monate<0?Math.max(0.856,1+monate*0.003):(monate>0?1+monate*0.005:1.0);
+      var zv=$('ang_zugangVal'); if(zv) zv.textContent=fix(z,3);
+      // 80%-Vorschlag der Wunschrente
+      var wh=$('ang_wunschHint');
+      if(wh) wh.textContent = d.netto>0 ? ('Vorschlag '+eur0.format(Math.round(d.netto*0.8))) : '';
+      ok=validAng(d);
+      if(ok) renderAng(calcAngestellte(d));
+    } else if(state.mode==='beamte'){
+      var b=readBeamte(); ok=validBeamte(b);
+      if(ok) renderBeamte(calcBeamte(b));
+    } else {
+      var se=readSelbst(); ok=validSelbst(se);
+      if(ok) renderSelbst(calcSelbst(se));
+    }
+    $('results').classList.toggle('hideMode', !ok);
+    $('needInput').classList.toggle('hideMode', ok);
+  }
+
+  /* ============================================================
+     UI: Tabs, Methoden-Umschalter, Versorgungswerk
+     ============================================================ */
+  var FORMTITLE={ ang:'Angestellte · Gesetzliche Rentenversicherung', beamte:'Beamte · Beamtenversorgung', selbst:'Selbstständige · ohne gesetzliche Pflichtversicherung' };
+  function setMode(m){
+    state.mode=m;
+    document.querySelectorAll('.tab').forEach(function(t){ t.classList.toggle('on', t.getAttribute('data-mode')===m); });
+    document.querySelectorAll('.modepanel').forEach(function(p){ p.classList.toggle('hideMode', p.getAttribute('data-mode')!==m); });
+    $('formTitle').textContent=FORMTITLE[m];
+    update();
+  }
+  function setAngMethod(mm){
+    state.angMethod=mm;
+    document.querySelectorAll('#angMethod button').forEach(function(b){ b.classList.toggle('on', b.getAttribute('data-m')===mm); });
+    $('ocrZone').classList.toggle('hideMode', mm!=='ocr');
+  }
+
+  /* ============================================================
+     OCR — Rentenbescheid einlesen (vollständig lokal, kein Server)
+     ============================================================ */
+  function ocrShowErr(msg){ var e=$('ocrErr'); e.textContent=msg; e.style.display='block'; }
+  function ocrHideErr(){ $('ocrErr').style.display='none'; }
+
+  // PDF erste Seite -> Canvas (pdf.js)
+  function pdfToCanvas(file){
+    return new Promise(function(resolve,reject){
+      if(typeof pdfjsLib==='undefined'){ reject('pdf.js nicht geladen (Internetverbindung nötig).'); return; }
+      try{ pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js'; }catch(e){}
+      var fr=new FileReader();
+      fr.onload=function(){
+        pdfjsLib.getDocument({data:new Uint8Array(fr.result)}).promise.then(function(pdf){
+          return pdf.getPage(1);
+        }).then(function(page){
+          var vp=page.getViewport({scale:2.0});
+          var cv=document.createElement('canvas'); cv.width=vp.width; cv.height=vp.height;
+          return page.render({canvasContext:cv.getContext('2d'),viewport:vp}).promise.then(function(){ resolve(cv); });
+        }).catch(function(e){ reject('PDF konnte nicht gelesen werden.'); });
+      };
+      fr.onerror=function(){ reject('Datei konnte nicht gelesen werden.'); };
+      fr.readAsArrayBuffer(file);
+    });
+  }
+
+  // Werte aus OCR-Text per Regex auslesen
+  function parseBescheid(text){
+    var t=text.replace(/ /g,' ');
+    var out={};
+    // Entgeltpunkte
+    var mEP = t.match(/(?:entgelt-?\s*punkte|\bEP\b)[^0-9]{0,25}(\d{1,2}(?:[.,]\d{1,4}))/i)
+           || t.match(/(\d{1,2}(?:[.,]\d{2,4}))\s*(?:persönliche?\s+)?entgelt-?\s*punkte/i);
+    if(mEP){ var ep=parseFloat(mEP[1].replace('.','').replace(',','.')); if(!isNaN(ep)) out.ep={v:ep, ok:(ep>0&&ep<100)}; }
+    // Rentenanwartschaft / monatliche Rente (Plausibilität)
+    var mR = t.match(/(?:rentenanwartschaft|monatliche?\s+rente|volle\s+(?:erwerbsminderungs)?rente)[^0-9]{0,30}(\d{1,3}(?:\.\d{3})*,\d{2})/i);
+    if(mR){ var r=num(mR[1]); if(r>0) out.rente={v:r, ok:(r>50&&r<6000)}; }
+    // Geburtsdatum (bevorzugt im Kontext "geboren"/"Geburts")
+    var mGc = t.match(/(?:geboren|geburts(?:datum|tag)?)[^0-9]{0,20}(\d{2})\.(\d{2})\.(\d{4})/i);
+    var mGa = t.match(/(\d{2})\.(\d{2})\.(19\d{2}|20[0-1]\d)/);
+    var g = mGc || mGa;
+    if(g){ var dd=g[1],mm=g[2],yy=g[3]; var iso=yy+'-'+mm+'-'+dd; var dt=new Date(+yy,+mm-1,+dd);
+      var plaus = dt && +yy>=1940 && +yy<=2010 && +mm>=1 && +mm<=12 && +dd>=1 && +dd<=31;
+      out.geburt={v:iso, raw:dd+'.'+mm+'.'+yy, ok:!!(mGc&&plaus), plaus:plaus}; }
+    // Auskunftsjahr
+    var mJ = t.match(/renten(?:auskunft|information)[^0-9]{0,40}(20[0-3]\d)/i) || t.match(/\bzum\s+\d{2}\.\d{2}\.(20[0-3]\d)/);
+    if(mJ){ out.jahr={v:+mJ[1], ok:true}; }
+    return out;
+  }
+
+  function applyBescheid(p){
+    var rows=[];
+    function row(ok,label,disp){
+      var cls = ok==null?'no':(ok?'ok':'warn'); var ic= ok==null?'–':(ok?'✓':'⚠');
+      rows.push('<div class="ocrrow"><span class="mark '+cls+'">'+ic+'</span><span class="lab">'+label+'</span><span class="v">'+disp+'</span></div>');
+    }
+    if(p.ep){ setVal('ang_ep', String(p.ep.v).replace('.',',')); row(p.ep.ok,'Entgeltpunkte (EP)', fix(p.ep.v,2)); }
+    else row(null,'Entgeltpunkte (EP)','nicht erkannt');
+
+    if(p.geburt){ if(p.geburt.plaus) setVal('ang_geburt', p.geburt.v); row(p.geburt.ok,'Geburtsdatum', p.geburt.raw); }
+    else row(null,'Geburtsdatum','nicht erkannt');
+
+    if(p.rente){ row(p.rente.ok,'Rentenanwartschaft (Prüfwert)', eur.format(p.rente.v)); }
+    else row(null,'Rentenanwartschaft (Prüfwert)','nicht erkannt');
+
+    if(p.jahr){ row(p.jahr.ok,'Auskunftsjahr', String(p.jahr.v)); }
+    else row(null,'Auskunftsjahr','nicht erkannt');
+
+    var box=$('ocrRes'); box.innerHTML=rows.join(''); box.style.display='block';
+    update();
+  }
+
+  function runOCR(file){
+    ocrHideErr();
+    if(!file) return;
+    if(typeof Tesseract==='undefined'){ ocrShowErr('Texterkennung (Tesseract.js) konnte nicht geladen werden – bitte Internetverbindung prüfen. Werte können manuell eingegeben werden.'); return; }
+    $('ocrRes').style.display='none';
+    var prog=$('ocrProg'); prog.style.display='block'; $('ocrBar').style.width='0%'; $('ocrPct').textContent='0 %';
+    function setP(p){ var v=Math.round(p*100); $('ocrBar').style.width=v+'%'; $('ocrPct').textContent=v+' %'; }
+
+    var imgP;
+    if(file.type==='application/pdf' || /\.pdf$/i.test(file.name)){
+      imgP = pdfToCanvas(file);
+    } else {
+      imgP = Promise.resolve(file);
+    }
+    imgP.then(function(img){
+      return Tesseract.recognize(img,'deu',{ logger:function(m){ if(m.status==='recognizing text' && m.progress!=null) setP(m.progress); } });
+    }).then(function(res){
+      prog.style.display='none';
+      var text=(res&&res.data&&res.data.text)||'';
+      var parsed=parseBescheid(text);
+      applyBescheid(parsed);
+      if(!parsed.ep && !parsed.geburt){ ocrShowErr('Es konnten keine eindeutigen Werte erkannt werden. Bitte Foto/Scan in guter Qualität verwenden oder Felder manuell ausfüllen.'); }
+    }).catch(function(err){
+      prog.style.display='none';
+      ocrShowErr(typeof err==='string'?err:'Die Datei konnte nicht verarbeitet werden. Bitte ein anderes Format/Foto versuchen.');
+    });
+  }
+
+  /* ============================================================
+     EVENTS
+     ============================================================ */
+  $('tabs').addEventListener('click', function(e){ var b=e.target.closest('.tab'); if(b) setMode(b.getAttribute('data-mode')); });
+  $('angMethod').addEventListener('click', function(e){ var b=e.target.closest('button'); if(b) setAngMethod(b.getAttribute('data-m')); });
+
+  function syncToggles(){
+    $('se_vwBetragWrap').classList.toggle('hideMode', !chk('se_vw'));
+    $('sparOpts').classList.toggle('hideMode', !chk('sparOn'));
+    var be=$('bisAlterEcho'); if(be) be.textContent = num(val('spar_bisAlter'))||90;
+  }
+  // Reaktive Aktualisierung bei jeder Eingabe
+  $('form').addEventListener('input', function(e){
+    if(e.target.id==='ang_wunsch') state.wunschDirty=true;
+    // 80%-Auto-Vorschlag: Wunschrente folgt dem Netto, solange nicht manuell geändert
+    if(e.target.id==='ang_netto' && !state.wunschDirty){
+      var n=num(val('ang_netto')); if(n>0) setVal('ang_wunsch', String(Math.round(n*0.8)));
+    }
+    syncToggles();
+    update();
+  });
+  $('form').addEventListener('change', function(e){
+    syncToggles();
+    update();
+  });
+
+  // OCR Drag & Drop
+  var drop=$('drop');
+  ['dragenter','dragover'].forEach(function(ev){ drop.addEventListener(ev,function(e){ e.preventDefault(); drop.classList.add('drag'); }); });
+  ['dragleave','drop'].forEach(function(ev){ drop.addEventListener(ev,function(e){ e.preventDefault(); drop.classList.remove('drag'); }); });
+  drop.addEventListener('drop', function(e){ var f=e.dataTransfer&&e.dataTransfer.files&&e.dataTransfer.files[0]; if(f) runOCR(f); });
+  $('ocrFile').addEventListener('change', function(e){ var f=e.target.files&&e.target.files[0]; if(f) runOCR(f); });
+
+  $('btnPrint').addEventListener('click', function(){ window.print(); });
+
+  // Disclaimer
+  var jahr=new Date().getFullYear();
+  $('discBox').innerHTML='Diese Hochrechnung basiert auf den eingegebenen Annahmen und dient der modellhaften Orientierung. Sie ersetzt keine individuelle Steuer- oder Rechtsberatung. Berechnungen nach vereinfachten Annahmen – tatsächliche Werte können abweichen. © iQuadrat '+jahr;
+
+  /* ===== Init ===== */
+  (function(){ var n=new Date(); setVal('kundeDatum', n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0')+'-'+String(n.getDate()).padStart(2,'0')); })();
+  setAngMethod('manuell');
+  setMode('ang');
+})();
+</script>
+</body>
+</html>
