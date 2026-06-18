@@ -55,6 +55,18 @@
   .etfsum.ok{background:#eef8f0;color:var(--green)}
   .miniinfo{display:flex;gap:14px;font-size:11.5px;color:var(--muted);margin-top:8px;flex-wrap:wrap}
   .miniinfo b{color:var(--navy)}
+  .addetf{display:flex;gap:7px;margin-top:10px;align-items:center}
+  .addetf input{padding:7px 8px;font-size:12.5px}
+  .addetf input.isin{flex:1;min-width:0;text-transform:uppercase;letter-spacing:.3px}
+  .addetf input.terin{width:62px;text-align:right;text-transform:none}
+  .addetf button{flex:none;padding:7px 12px;font-size:12.5px;font-weight:600;border:1px solid var(--blue);background:var(--blue);color:#fff;border-radius:8px;cursor:pointer;white-space:nowrap}
+  .addetf button:hover{filter:brightness(1.06)}
+  .addetf button:disabled{opacity:.55;cursor:default}
+  .addmsg{font-size:11.5px;margin-top:6px;color:var(--muted);min-height:1px}
+  .addmsg.ok{color:var(--green)} .addmsg.bad{color:#b4232a}
+  .addhint{font-size:11px;color:var(--muted);margin-top:5px}
+  .etfrow .delx{flex:none;border:none;background:none;color:var(--muted);font-size:18px;line-height:1;cursor:pointer;padding:0 2px;margin-top:-1px}
+  .etfrow .delx:hover{color:#b4232a}
 
   details.adv{margin-top:6px;border-top:1px solid var(--line);padding-top:6px}
   details.adv summary{cursor:pointer;font-size:11.5px;color:var(--blue);font-weight:700;letter-spacing:.5px;text-transform:uppercase;list-style:none;padding:6px 0}
@@ -88,6 +100,11 @@
   .yc{font-size:11px;border-radius:6px;padding:3px 8px;font-weight:700;font-variant-numeric:tabular-nums;border:1px solid var(--line);background:#fff}
   .yc .y{color:var(--muted);margin-right:5px;font-weight:600}
   .yc.pos{color:var(--green)} .yc.neg{color:#b4232a}
+  .datawarn{background:#fff7ec;border:1px solid #f3e2c4;color:#8a5a12;border-radius:8px;padding:8px 11px;font-size:12px;margin:0 0 12px;font-weight:600;line-height:1.4}
+  .costbreak{font-size:11.5px;color:var(--muted);margin-top:9px;line-height:1.5}
+  .costbreak b{color:var(--navy);font-variant-numeric:tabular-nums}
+  .cmprow{background:#f3f9fd;border:1px solid #cfe0f0;border-radius:8px;padding:9px 12px;font-size:12px;color:var(--ink);margin-top:9px;line-height:1.45}
+  .cmprow b{color:var(--navy)}
 
   .bar{display:flex;height:16px;border-radius:8px;overflow:hidden;margin:10px 0 8px;border:1px solid var(--line)}
   .bar .b1{background:var(--blue)} .bar .b2{background:var(--green)}
@@ -149,6 +166,11 @@
         <input type="number" id="endalter" value="67" min="55" max="80" step="1">
         <small id="laufzeitInfo">Laufzeit –</small>
       </div>
+      <div class="field">
+        <label for="vertragswert">Aktueller Vertragswert <span style="font-weight:400;color:var(--muted)">lt. Standmitteilung · optional</span></label>
+        <input type="number" id="vertragswert" value="" min="0" step="500" placeholder="z. B. 16.500">
+        <small>Bei Bestandskunden: verankert „heute" am <b>echten</b> Wert und rechnet von dort hoch. Leer = reine Modellschätzung.</small>
+      </div>
 
       <div class="sec">Beiträge</div>
       <div class="row2">
@@ -168,6 +190,13 @@
         <span>Ø Fondskosten (TER): <b id="terInfo">–</b></span>
         <span>Ø Rendite seit Beginn: <b id="histInfo">–</b></span>
       </div>
+      <div class="addetf">
+        <input type="text" class="isin" id="addIsin" placeholder="ISIN eingeben, z. B. IE00B4L5Y983" maxlength="12" autocomplete="off">
+        <input type="number" class="terin" id="addTer" placeholder="TER %" step="0.01" min="0">
+        <button type="button" id="addBtn">+ ETF</button>
+      </div>
+      <div class="addmsg" id="addMsg"></div>
+      <div class="addhint" id="addHint"></div>
 
       <div class="sec">Annahmen</div>
       <div class="field">
@@ -182,17 +211,20 @@
 
       <details class="adv">
         <summary>Kosten &amp; Steuer (für Berater)</summary>
-        <div class="row2">
-          <div class="field"><label for="alpha">Abschlusskosten %</label><input type="number" id="alpha" value="0" min="0" step="0.1"><small>der Beitragssumme</small></div>
-          <div class="field"><label for="alphaJahre">verteilt über</label><input type="number" id="alphaJahre" value="5" min="1" step="1"><small>Jahre</small></div>
-        </div>
+        <div class="field" style="margin-bottom:8px"><small style="color:var(--ink)">Kosten aus Vertrag/Standmitteilung eintragen. Voreingestellt ein typischer Brutto-Tarif – bei Netto-Tarifen Abschluss (α) auf 0 setzen.</small></div>
         <div class="row3">
-          <div class="field"><label for="beta">Verwaltung %</label><input type="number" id="beta" value="2.5" min="0" step="0.1"><small>je Beitrag</small></div>
-          <div class="field"><label for="gamma">Gamma % p.a.</label><input type="number" id="gamma" value="0.2" min="0" step="0.05"><small>auf Guthaben</small></div>
-          <div class="field"><label for="stueck">Stückk. €/J.</label><input type="number" id="stueck" value="24" min="0" step="6"><small>fix</small></div>
+          <div class="field"><label for="alpha">Abschluss (α) %</label><input type="number" id="alpha" value="2.5" min="0" step="0.1"><small>% der Beitragssumme</small></div>
+          <div class="field"><label for="beitragsdauer">Beitragsdauer J.</label><input type="number" id="beitragsdauer" value="35" min="1" step="1"><small>Basis α · gedeckelt</small></div>
+          <div class="field"><label for="alphaJahre">gezillmert über</label><input type="number" id="alphaJahre" value="5" min="1" step="1"><small>Jahre ab Beginn</small></div>
+        </div>
+        <div class="field" style="margin-top:-2px"><small>Grund-α auf Beitrag × 12 × Beitragsdauer (gedeckelt auf die Laufzeit, <b>ohne</b> Dynamik). Jede Dynamik-Erhöhung löst <b>zusätzlich</b> α auf ihren Erhöhungsbetrag × Restlaufzeit aus – wie in der Police.</small></div>
+        <div class="row3">
+          <div class="field"><label for="beta">Verwaltung (β) %</label><input type="number" id="beta" value="1" min="0" step="0.1"><small>je Beitrag</small></div>
+          <div class="field"><label for="gamma">Fonds (γ) % p.a.</label><input type="number" id="gamma" value="0.3" min="0" step="0.05"><small>auf Guthaben</small></div>
+          <div class="field"><label for="stueck">Stück €/J.</label><input type="number" id="stueck" value="24" min="0" step="6"><small>fix p.a.</small></div>
         </div>
         <div class="field"><label for="steuersatz">Persönlicher Steuersatz % <span class="val" id="steuersatzVal">30 %</span></label><input type="range" id="steuersatz" min="0" max="45" value="30" step="1"><small>Für den Steuervergleich gegen ein Depot.</small></div>
-        <div class="field"><label style="font-weight:600">Fondskosten (TER) werden bereits in den echten Kursen berücksichtigt – Gamma/Verwaltung sind die zusätzlichen Mantelkosten.</label></div>
+        <div class="field"><label style="font-weight:600;font-size:11.5px">Fondskosten (TER) stecken bereits in den echten Kursen – α (Abschluss), β (Verwaltung je Beitrag), γ (Guthaben p.a.) &amp; Stück sind die zusätzlichen Versicherungs-Mantelkosten.</label></div>
       </details>
     </div>
 
@@ -202,23 +234,22 @@
 
       <div class="blocktitle"><span>Stand heute · seit Vertragsbeginn</span><span class="asof" id="asof"></span></div>
 
-      <div class="realperf">
-        <div>
-          <div class="l">Wertentwicklung deiner ETF-Auswahl</div>
-          <div class="s" id="realperfSub">seit Vertragsbeginn</div>
-        </div>
-        <div style="text-align:right">
-          <div class="v" id="realperfV">–</div>
-          <div class="s" id="realperfCagr"></div>
-        </div>
-      </div>
+      <div id="dataWarn" class="datawarn" style="display:none"></div>
 
-      <div class="stats" style="margin-top:10px">
+      <div class="stats">
         <div class="stat blue"><div class="l">Eingezahlt bis heute</div><div class="v" id="paidNow">–</div></div>
-        <div class="stat gain"><div class="l">Vertragswert heute</div><div class="v" id="valNow">–</div><div class="s">nach Kosten</div></div>
-        <div class="stat"><div class="l">Im Vertrag vs. eingezahlt</div><div class="v" id="perfNow">–</div></div>
+        <div class="stat gain"><div class="l">Vertragswert heute</div><div class="v" id="valNow">–</div><div class="s" id="valNowLbl">Modellschätzung</div></div>
+        <div class="stat"><div class="l">Wertzuwachs</div><div class="v" id="gainNow">–</div><div class="s" id="gainNowPct"></div></div>
       </div>
+      <div class="stats" style="margin-top:10px">
+        <div class="stat"><div class="l">Vertragsrendite p.a.</div><div class="v" id="irrNow">–</div><div class="s">geldgewichtet · nach Kosten</div></div>
+        <div class="stat"><div class="l">Kosten bisher</div><div class="v" id="costNow">–</div><div class="s" id="costNowSub">seit Beginn</div></div>
+        <div class="stat blue"><div class="l">Fondsrendite Ø p.a.</div><div class="v" id="fundCagr">–</div><div class="s">Markt · vor Mantelkosten</div></div>
+      </div>
+      <div id="costBreak" class="costbreak" style="display:none"></div>
+      <div id="cmpRow" class="cmprow" style="display:none"></div>
 
+      <div class="blocktitle" style="margin:16px 0 6px"><span>Wertentwicklung der Fondsauswahl je Jahr</span><span class="asof" style="font-weight:600">Markt, vor Kosten</span></div>
       <div class="years" id="yearStrip"></div>
 
       <div class="chartwrap" id="chartwrap">
@@ -231,7 +262,7 @@
         <span><i class="dot" style="background:var(--navy)"></i>Vertragswert (echte Kurse → Prognose)</span>
         <span><i class="dot" style="background:rgba(47,158,99,.35)"></i>Bandbreite</span>
       </div>
-      <p class="chartnote">Die durchgezogene Linie bis <b id="heuteJahr">heute</b> beruht auf <b>echten Monats­schlusskursen</b> deiner ETFs. Ab heute folgt eine Prognose mit der erwarteten Rendite (grün = Bandbreite ± 2 %). Fahre mit der Maus über das Diagramm.</p>
+      <p class="chartnote">Die durchgezogene Linie bis <b id="heuteJahr">heute</b> bildet die <b>echte Wertentwicklung deiner Fonds</b> ab (bei eingetragenem Vertragswert an diesen angepasst). Ab heute folgt eine Prognose mit der erwarteten Rendite; das grüne Band sind illustrative Szenarien (± 2 %), keine Wahrscheinlichkeitsaussage. Fahre mit der Maus über das Diagramm.</p>
 
       <div class="blocktitle"><span>Hochrechnung bis zur Rente (Alter <span id="endeJahr">67</span>)</span></div>
       <div class="hero">
@@ -268,7 +299,7 @@
   </div>
 
   <p class="disc">
-    <b>Wichtiger Hinweis:</b> Unverbindliche Beispiel-/Modellrechnung, keine Anlage-, Steuer- oder Rechtsberatung. Die Wertentwicklung „seit Vertragsbeginn" basiert auf echten Monats­schlusskursen der gewählten ETFs (Quelle: Yahoo Finance, Datenstand siehe oben) und ist eine modellhafte Näherung des Portfolioverlaufs – sie entspricht <b>nicht</b> deinem tatsächlichen Vertrags-/Depotauszug (maßgeblich ist allein dieser). Vergangene Wertentwicklung ist keine Garantie für die Zukunft; Kapitalanlagen sind mit Risiken bis zum Verlust verbunden. Die Prognose ab heute beruht auf einer angenommenen Rendite. Der „Steuervorteil" ist eine vereinfachte Schätzung (Halbeinkünfte 12/62 mit persönlichem Steuersatz vs. Abgeltungssteuer 26,375 % im Depot, jeweils inkl. Teilfreistellung). Die „mögliche Rente" unterstellt eine modellhafte Auszahlung über 25 Jahre bei 3 % Rendite (vor Steuern). TER-Angaben sind vor Einsatz zu prüfen.
+    <b>Wichtiger Hinweis:</b> Unverbindliche Beispiel-/Modellrechnung, keine Anlage-, Steuer- oder Rechtsberatung. Die <b>Fondsrendite</b> basiert auf echten Monats­schlusskursen der gewählten ETFs (Quelle: Yahoo Finance, Datenstand siehe oben) und ist die Marktentwicklung der Fonds <b>vor</b> Versicherungs-Mantelkosten. Der „Vertragswert heute" ist – sofern kein tatsächlicher Wert aus der Standmitteilung eingetragen wird – eine <b>Modellschätzung nach Kosten</b> und kann vom echten Vertrags-/Depotauszug abweichen (maßgeblich ist allein dieser); die Mantelkosten (α/β/γ/Stück) sind die vom Berater eingetragenen Annahmen und vor Einsatz mit dem Produkt abzugleichen. Vergangene Wertentwicklung ist keine Garantie für die Zukunft; Kapitalanlagen sind mit Risiken bis zum Verlust verbunden. Die Prognose ab heute beruht auf einer angenommenen Rendite; das Band sind illustrative Szenarien. Der „Steuervorteil" ist eine vereinfachte Schätzung (Halbeinkünfte 12/62 – nur bei Endalter ≥ 62 und ≥ 12 Jahren Laufzeit – mit persönlichem Steuersatz vs. Abgeltungssteuer 26,375 % im Depot, jeweils inkl. Teilfreistellung; Vorabpauschale/Sparerpauschbetrag bleiben vereinfachend unberücksichtigt). Die „mögliche Rente" unterstellt eine modellhafte Auszahlung über 25 Jahre bei 3 % Rendite (vor Steuern). TER-Angaben sind vor Einsatz zu prüfen.
   </p>
 
   <footer>
@@ -293,7 +324,7 @@
     datenschutzUrl:'#datenschutz',
     // dataProxy: Basis-URL eures eigenen Kurs-Proxys (Cloudflare Worker) für ECHTE LIVE-Daten.
     // Leer = eingebettete Kursdaten (Snapshot, siehe DATA_ASOF). Anleitung: LIVE-DATEN-EINRICHTEN.md
-    dataProxy:''
+    dataProxy:'https://krus-proxy.daniel-weisbrod.workers.dev'
   };
 
   // ETF-Stammdaten: TER illustrativ (vor Einsatz prüfen). Renditen kommen aus echten Kursen (ETFDATA).
@@ -302,11 +333,15 @@
     {id:'msci_world',   name:'iShares Core MSCI World',     isin:'IE00B4L5Y983', ter:0.20},
     {id:'em',           name:'iShares Core MSCI EM IMI',    isin:'IE00BKM4GZ66', ter:0.18},
     {id:'sp500',        name:'iShares Core S&P 500',        isin:'IE00B5BMR087', ter:0.07},
-    {id:'ubs_world',    name:'UBS MSCI World',              isin:'IE00B7KQ7B66', ter:0.10},
+    {id:'ubs_world',    name:'UBS Core MSCI World',         isin:'IE00B7KQ7B66', ter:0.10},
     {id:'pacific',      name:'iShares Pacific ex Japan',    isin:'IE00B52MJY50', ter:0.20},
     {id:'nikkei',       name:'iShares Nikkei 225',          isin:'IE00B52MJD48', ter:0.48},
     {id:'europe',       name:'iShares Core MSCI Europe',    isin:'IE00B1YZSC51', ter:0.12},
-    {id:'stoxx600',     name:'iShares STOXX Europe 600',    isin:'DE0002635307', ter:0.20}
+    {id:'stoxx600',     name:'iShares STOXX Europe 600',    isin:'DE0002635307', ter:0.20},
+    {id:'emkt',         name:'iShares MSCI EM',             isin:'IE00B0M63177', ter:0.18},
+    {id:'namerica',     name:'Vanguard FTSE North America', isin:'IE00BK5BQW10', ter:0.10},
+    {id:'amundi600',    name:'Amundi Core STOXX Europe 600',isin:'LU0908500753', ter:0.07},
+    {id:'japan',        name:'iShares Core MSCI Japan IMI', isin:'IE00B4L5YX21', ter:0.15}
   ];
   var DEFAULT_ALLOC={msci_world:70, em:30};
 
@@ -321,7 +356,11 @@
     pacific:{sym:"SXR1.DE",start:"2010-05",c:[81.63,88.67,88.13,98.39,101.29,76.01,80.56,76.99,77.77,77.3,77.67,77.45,75.79,77.1,70.34,64.99,71.6,71.95,71.49,77.17,78.71,77.31,78.77,74.29,77.6,84.59,83.55,83.73,84.57,86.17,87.12,89.05,94.28,96.28,96.83,89.39,83.8,85.05,84.69,89.19,92.41,90.0,87.04,84.04,88.02,90.12,91.59,94.59,94.38,99.33,102.27,96.21,101.79,98.61,98.41,105.57,111.58,114.88,114.29,113.38,107.18,107.62,93.1,90.56,98.1,101.51,100.73,92.13,92.29,97.64,98.42,99.28,100.97,107.16,105.4,108.55,108.03,112.06,111.59,114.82,121.0,123.33,121.17,116.25,116.89,118.06,117.52,117.4,120.94,120.28,123.6,123.52,121.82,116.28,121.64,126.14,124.72,126.44,124.92,123.84,116.28,119.88,115.94,124.56,129.8,133.04,135.66,131.92,137.44,139.56,132.54,136.06,136.34,139.0,141.14,137.3,128.08,105.78,114.82,112.76,121.44,117.36,122.44,119.14,118.74,132.66,136.94,138.14,143.08,149.38,150.92,151.6,153.84,152.26,153.2,149.5,156.86,149.2,154.98,147.66,152.18,162.86,161.86,157.86,148.68,158.96,156.78,145.84,144.22,158.2,153.64,164.32,156.6,154.58,152.54,147.36,150.86,155.72,148.16,147.42,141.4,145.54,157.02,154.34,155.5,158.6,157.02,160.38,163.56,164.68,167.16,178.04,171.92,183.48,175.72,181.5,178.72,169.08,167.2,176.62,177.36,183.68,186.56,186.12,188.48,185.1,188.02,196.78,208.55,196.78,205.65,206.6,205.65,206.75]},
     nikkei:{sym:"SXRZ.DE",start:"2010-03",c:[74.64,72.59,72.75,71.23,70.15,70.17,69.74,77.4,81.53,77.86,80.42,70.73,70.71,71.08,72.62,75.99,70.18,71.83,70.53,71.27,72.53,75.95,77.81,80.0,77.54,76.02,77.8,78.16,78.56,77.22,75.49,77.39,79.99,78.17,83.25,90.24,94.99,91.9,93.66,92.11,90.34,96.29,95.49,99.63,99.49,94.26,93.97,92.82,89.52,94.36,97.19,100.37,100.28,104.33,107.66,105.73,106.38,118.22,125.2,133.76,130.56,134.35,133.3,134.76,124.66,117.43,127.95,137.07,130.05,122.02,118.39,118.71,117.6,125.61,124.27,129.77,132.56,132.66,137.92,140.42,141.36,141.34,146.41,145.85,145.06,144.67,143.29,140.36,136.35,140.99,153.15,157.23,155.59,157.7,155.56,148.48,158.68,161.44,160.1,160.48,163.96,170.66,159.26,161.8,147.5,155.58,158.2,160.1,168.28,159.36,163.34,167.6,166.4,175.02,178.18,183.08,183.36,179.54,164.58,151.88,162.74,173.24,175.78,167.06,173.74,180.32,181.68,202.65,208.0,209.9,217.8,217.6,211.25,207.75,210.0,203.6,208.35,220.15,212.25,207.9,214.3,202.3,200.75,200.3,193.58,191.88,180.58,199.08,194.86,181.28,183.68,191.3,180.58,189.9,186.24,192.8,190.34,203.45,209.95,210.15,203.15,200.75,193.74,205.8,212.55,224.7,240.15,246.55,227.6,224.65,231.2,238.0,240.35,239.0,232.1,242.7,241.95,247.6,240.0,223.85,224.6,232.8,240.35,239.7,248.0,261.85,298.95,281.35,279.95,296.45,324.15,289.0,330.8,363.8,381.05,381.9]},
     europe:{sym:"IMEU.AS",start:"2008-01",c:[14.059,13.5288,14.2888,14.3757,12.9725,12.4992,12.7274,11.3389,9.8489,9.1683,8.8237,8.4612,7.5978,7.8361,8.9792,9.3798,9.2244,9.9116,10.4124,10.6852,10.44,10.5816,11.2274,10.8441,10.8165,11.6177,11.4243,10.8786,10.6749,11.2274,11.0651,11.4312,11.6695,11.4968,12.0287,12.2773,12.5571,12.1633,12.4638,12.412,12.0943,11.6281,10.4469,10.0014,10.706,10.592,10.7474,11.186,11.6177,11.6073,11.3103,10.6196,11.2447,11.4588,11.6868,11.7973,11.8111,12.077,12.2082,12.5536,12.7028,12.9176,13.0527,13.3698,12.6937,13.1712,13.3131,13.8752,14.3206,14.4916,14.6832,14.3107,15.0404,14.9515,15.1435,15.6646,15.5967,15.1424,15.6425,15.715,15.3488,15.9159,15.6393,16.7455,17.9642,18.285,18.1064,18.5453,17.6903,18.193,16.8026,16.0855,17.4566,17.8319,16.941,15.8892,15.4715,15.7305,16.0149,16.1945,15.7037,16.2756,16.2074,16.3861,16.2713,16.3938,17.3672,17.3134,17.798,18.4601,18.7261,18.8533,18.5502,18.4996,18.1454,19.0772,19.4589,18.9317,19.1101,19.4655,18.6678,18.3694,19.1929,19.0028,19.1452,19.7175,19.0852,19.368,18.3324,18.1383,17.2726,18.2155,18.8942,19.4147,20.1776,18.9578,20.0432,20.0928,19.5807,20.5577,20.725,21.1682,21.6894,21.4415,19.5503,16.823,17.8805,18.1628,18.9422,18.6913,19.0911,18.9578,18.0497,20.4569,20.9906,20.8531,21.356,22.8153,23.2763,23.6166,24.3,24.7396,25.0485,24.4876,25.6574,24.8513,26.3908,25.5543,24.7133,25.0,24.8588,24.4263,22.7931,24.5434,23.0566,21.8529,23.2286,24.7125,23.9753,25.5927,25.9143,26.0747,26.7065,25.7475,26.656,27.1755,26.2422,26.1034,25.174,26.689,27.7453,28.2587,28.6881,29.9624,29.6862,30.3228,30.3983,30.7535,30.9571,31.1651,30.1035,30.3139,30.2345,32.2748,33.3405,32.0725,31.8607,32.9873,32.9473,33.2247,33.2345,34.0933,35.0324,35.2045,36.2476,37.3575,38.7733,35.8678,37.7618,38.5382,39.615,39.775]},
-    stoxx600:{sym:"EXSA.DE",start:"2008-01",c:[21.6039,20.628,21.9181,22.0785,19.612,19.2577,19.5986,17.2791,15.0198,14.0105,13.3888,12.941,11.7779,11.9316,13.7097,14.2645,13.9436,15.1936,15.9957,16.4302,16.0893,16.2631,17.0051,16.6241,16.5773,17.8473,17.6134,16.8112,16.4703,17.3126,17.0051,17.6,18.0345,17.8206,18.723,18.9235,19.3179,18.6829,19.3246,19.2845,18.4289,17.9543,16.1495,15.334,16.457,16.2163,16.5572,17.2524,17.9676,17.7671,17.493,16.4703,17.0519,17.727,18.0478,18.1214,18.2684,18.6762,18.9168,19.4583,19.6454,19.8326,20.3337,20.805,19.4045,20.7579,20.6418,21.3863,22.4682,22.6752,22.7028,22.4725,23.6027,23.3253,23.8098,24.5125,24.0533,23.9827,24.4267,24.2435,24.1399,24.9591,24.3964,26.4536,28.242,28.6282,28.7431,29.2093,27.61,29.116,26.6788,25.3224,27.7289,28.4472,27.0472,25.2507,24.7203,24.956,25.4813,26.1908,24.5502,25.8584,26.0008,25.7086,25.771,26.0521,27.4501,27.437,28.2468,29.2019,29.5319,30.3335,29.2031,29.5004,29.2888,29.9393,30.8212,30.2964,30.4236,31.0404,29.83,29.2786,30.5612,30.6451,30.1377,31.469,30.7659,30.5598,29.1348,28.8654,27.0695,29.0053,30.1739,30.7561,32.0361,30.4977,31.4973,31.936,31.5446,32.3067,33.0187,33.9446,34.7611,34.3067,31.5077,26.8145,28.6023,29.5735,30.197,30.1812,31.1263,30.4805,29.1259,33.1356,34.1724,33.7072,34.6008,36.7679,37.611,38.7226,38.9475,40.0046,40.9565,39.3191,41.3558,40.3328,42.4359,41.0011,39.5515,39.9669,39.7244,39.4276,35.8002,39.0986,37.05,34.32,36.8563,39.4456,38.1464,40.7374,41.4556,41.1692,42.3976,41.2716,41.8369,43.2261,42.1103,40.9991,39.9428,42.5778,44.0628,44.8757,45.6933,47.4967,47.1895,48.8009,47.658,48.8688,49.6651,49.0205,47.876,48.3735,47.8042,51.2907,53.0769,50.8394,50.7277,53.2795,51.941,53.1031,53.59,53.8236,55.8186,56.2807,57.6179,59.7275,62.0262,57.1426,60.3768,62.2162,62.3844,63.36]}
+    stoxx600:{sym:"EXSA.DE",start:"2008-01",c:[21.6039,20.628,21.9181,22.0785,19.612,19.2577,19.5986,17.2791,15.0198,14.0105,13.3888,12.941,11.7779,11.9316,13.7097,14.2645,13.9436,15.1936,15.9957,16.4302,16.0893,16.2631,17.0051,16.6241,16.5773,17.8473,17.6134,16.8112,16.4703,17.3126,17.0051,17.6,18.0345,17.8206,18.723,18.9235,19.3179,18.6829,19.3246,19.2845,18.4289,17.9543,16.1495,15.334,16.457,16.2163,16.5572,17.2524,17.9676,17.7671,17.493,16.4703,17.0519,17.727,18.0478,18.1214,18.2684,18.6762,18.9168,19.4583,19.6454,19.8326,20.3337,20.805,19.4045,20.7579,20.6418,21.3863,22.4682,22.6752,22.7028,22.4725,23.6027,23.3253,23.8098,24.5125,24.0533,23.9827,24.4267,24.2435,24.1399,24.9591,24.3964,26.4536,28.242,28.6282,28.7431,29.2093,27.61,29.116,26.6788,25.3224,27.7289,28.4472,27.0472,25.2507,24.7203,24.956,25.4813,26.1908,24.5502,25.8584,26.0008,25.7086,25.771,26.0521,27.4501,27.437,28.2468,29.2019,29.5319,30.3335,29.2031,29.5004,29.2888,29.9393,30.8212,30.2964,30.4236,31.0404,29.83,29.2786,30.5612,30.6451,30.1377,31.469,30.7659,30.5598,29.1348,28.8654,27.0695,29.0053,30.1739,30.7561,32.0361,30.4977,31.4973,31.936,31.5446,32.3067,33.0187,33.9446,34.7611,34.3067,31.5077,26.8145,28.6023,29.5735,30.197,30.1812,31.1263,30.4805,29.1259,33.1356,34.1724,33.7072,34.6008,36.7679,37.611,38.7226,38.9475,40.0046,40.9565,39.3191,41.3558,40.3328,42.4359,41.0011,39.5515,39.9669,39.7244,39.4276,35.8002,39.0986,37.05,34.32,36.8563,39.4456,38.1464,40.7374,41.4556,41.1692,42.3976,41.2716,41.8369,43.2261,42.1103,40.9991,39.9428,42.5778,44.0628,44.8757,45.6933,47.4967,47.1895,48.8009,47.658,48.8688,49.6651,49.0205,47.876,48.3735,47.8042,51.2907,53.0769,50.8394,50.7277,53.2795,51.941,53.1031,53.59,53.8236,55.8186,56.2807,57.6179,59.7275,62.0262,57.1426,60.3768,62.2162,62.3844,63.36]},
+    emkt:{sym:"IEMM.AS",start:"2007-12",c:[32.8265,35.0239,33.2928,36.0079,36.7113,33.1944,31.6883,29.0556,24.0689,17.7321,16.2236,17.5447,12.723,11.963,13.1617,15.8097,17.0005,16.5618,18.3637,17.9014,19.1706,18.7162,19.4135,21.2859,20.5886,20.9803,22.8449,23.5265,22.9937,23.0055,23.4599,23.3345,24.212,24.4588,25.4106,26.6524,25.1482,24.6742,25.4185,25.0973,25.0816,24.6037,24.5528,21.8186,20.0872,21.8147,21.7638,21.7559,23.9182,24.7134,24.0475,23.7811,22.4219,22.9232,24.0083,23.1935,23.8007,23.4638,23.6362,24.5136,24.0083,24.4705,24.4588,23.9417,23.5226,21.7951,21.6658,21.1213,22.1711,23.0956,22.7313,22.2573,20.8158,21.1919,22.0431,21.8979,22.9532,23.5121,24.3679,25.3104,24.5416,24.9595,24.8162,24.4709,26.2243,27.4864,28.1143,29.0349,28.2864,26.9971,25.6165,22.5745,22.3535,24.1258,24.4632,22.8454,21.5398,21.7357,23.3113,23.114,22.9503,23.916,25.1841,25.5905,25.7301,26.4914,26.1681,26.1142,27.2035,28.2956,28.9309,28.9398,28.865,28.6528,29.3601,29.8108,29.6939,31.3426,30.7698,31.4816,32.9384,31.9014,31.2944,31.5306,31.3447,29.938,30.7561,29.7895,29.5648,27.889,29.1269,28.2488,30.635,30.5405,31.1672,31.8543,29.8018,30.8431,31.1554,29.9459,30.5593,31.2267,31.6895,33.2962,31.8034,30.386,26.2739,28.4684,28.1001,30.0164,30.9439,31.3754,31.5296,32.646,34.8135,36.3902,38.058,38.4275,38.9928,38.7287,39.0233,40.117,37.7782,38.5541,37.711,38.2105,37.4239,38.0568,38.2034,36.8374,36.0659,35.9672,35.2203,33.8496,35.0028,35.2045,31.6923,30.8936,33.9639,32.0502,34.6297,32.9605,33.1796,32.3871,32.5975,33.2757,35.1222,33.372,32.8356,31.7625,33.3373,34.0748,33.593,34.9153,35.8844,36.3428,36.1321,37.827,37.934,37.3701,39.1631,38.7923,39.0162,38.8994,40.2145,40.0729,38.8226,37.3054,38.8835,39.9225,41.8837,41.8443,44.3362,47.1213,46.1269,46.5247,49.9849,52.9163,47.6217,53.86,58.85,59.77,61.04]},
+    namerica:{sym:"VNRA.L",start:"2019-07",c:[61.8325,62.1601,61.4506,64.0863,66.8784,67.6915,68.9674,62.1849,53.713,60.1575,67.3945,62.3302,64.7956,68.1951,68.7561,66.9277,74.2224,73.3136,74.3719,76.6134,79.813,82.8379,85.7592,88.5337,90.3033,94.6766,90.6122,96.3727,96.8704,101.4302,96.5355,92.4242,103.5814,94.3051,94.0594,89.058,98.8123,98.1428,88.7594,90.3968,94.7165,86.2006,93.3028,91.8369,88.9434,93.0861,95.3991,97.6573,100.4889,103.64,99.0388,100.3106,102.0258,106.0436,111.5333,115.4923,118.779,115.6763,119.0125,125.4614,117.6285,123.1354,129.2915,130.5624,141.0278,140.7629,145.7112,140.2197,112.9836,124.3972,125.5686,136.3332,133.2325,138.0734,145.9499,147.9028,147.781,146.3146,146.5328,146.3183,141.5526,156.1861,162.1712,164.372]},
+    amundi600:{sym:"MEUD.PA",start:"2024-02",c:[226.43,231.37,232.63,240.09,240.01,231.38,244.21,241.68,238.13,238.29,237.76,252.31,261.04,233.52,254.12,262.05,258.92,255.12,263.59,273.96,274.89,278.62,287.33,294.6,305.73,289.62,298.1,305.55,312.75]},
+    japan:{sym:"IJPA.L",start:"2009-09",c:[15.9099,15.9099,15.5928,16.9121,17.4979,18.1039,14.5961,15.0049,15.4252,18.3895,18.6011,18.0583,18.0939,18.0939,19.4293,20.4868,20.3127,20.8309,17.6819,17.9929,18.2541,18.9332,17.3316,17.7979,16.9695,16.9695,17.8474,17.3047,18.5699,19.1201,18.8536,18.3843,19.1039,19.0711,18.8195,18.4195,18.0481,18.0481,18.5185,19.0245,19.1954,20.3027,23.3471,21.9412,22.7387,22.2203,21.6462,23.1263,22.8541,22.8541,23.378,23.2657,22.2144,22.4039,21.1421,22.4613,23.5811,23.9959,24.0472,24.7265,25.3263,25.3263,24.8393,25.0205,27.5116,29.5277,31.149,31.7189,30.8876,31.8623,29.3382,27.5321,30.4206,30.4206,31.7962,30.5515,28.9445,27.7601,27.6678,29.3809,28.9314,30.2872,30.5292,31.3648,32.2222,32.2222,32.7464,32.9373,33.277,34.438,33.8391,33.9877,33.5092,33.3779,33.035,34.0923,36.0903,36.0903,36.3989,36.3332,36.762,36.4177,36.5426,37.301,36.3863,36.6691,36.4048,37.8214,35.1831,35.1831,35.426,32.7187,34.6894,35.2015,36.3695,34.8122,35.4404,36.288,36.2241,38.2081,38.8274,38.8274,39.9819,39.5812,39.2325,35.2402,35.5972,37.1377,37.0225,34.5427,36.6413,38.0853,37.6902,37.6902,40.5715,41.4475,41.6344,42.6053,42.1371,42.551,43.1359,43.1925,44.2913,46.0885,44.9428,44.9428,43.9636,45.086,43.4257,43.5022,41.8251,40.9707,39.1802,42.3583,41.8651,39.2388,39.116,39.116,41.4354,39.9032,42.025,41.3337,41.1469,42.7557,44.4331,45.1096,44.1343,44.7315,43.4855,43.4855,44.634,46.2109,48.4442,49.9409,49.7401,49.7997,50.543,52.0244,51.6636,51.3706,49.6907,49.6907,52.3491,52.344,53.7833,53.4385,50.9427,53.0714,52.7736,53.4763,55.5264,56.3699,58.9935,58.9935,58.9899,59.0179,61.8201,67.5081,64.9653,68.3764,69.8797,71.8877]}
   };
   // ============================================================================
 
@@ -341,6 +380,14 @@
   function parseDate(s){ if(!s) return null; var d=new Date(s+'T00:00:00'); return isNaN(d.getTime())?null:d; }
   function monthsBetween(a,b){ return (b.getFullYear()-a.getFullYear())*12 + (b.getMonth()-a.getMonth()) + (b.getDate()-a.getDate())/30.4; }
   function annuity(K,years,rate){ var im=Math.pow(1+rate,1/12)-1,N=years*12; return im<=0? K/N : K*im/(1-Math.pow(1+im,-N)); }
+  // geldgewichtete Rendite (interner Zinsfuss) aus monatlichen Cashflows
+  function irrMonthly(cf){
+    function npv(r){ var v=0; for(var t=0;t<cf.length;t++){ v+=cf[t]/Math.pow(1+r,t); } return v; }
+    var lo=-0.95, hi=1.0, flo=npv(lo), fhi=npv(hi);
+    if(!isFinite(flo)||!isFinite(fhi)||(flo>0)===(fhi>0)) return null;
+    for(var i=0;i<200;i++){ var mid=(lo+hi)/2, fm=npv(mid); if(fm===0) return mid; if((fm>0)===(flo>0)){ lo=mid; flo=fm; } else { hi=mid; } }
+    return (lo+hi)/2;
+  }
   function niceMax(v){ if(v<=0)return 1; var p=Math.pow(10,Math.floor(Math.log10(v))),n=v/p,m; if(n<=1)m=1;else if(n<=2)m=2;else if(n<=2.5)m=2.5;else if(n<=5)m=5;else m=10; return m*p; }
   function asOfDate(){ var p=DATA_ASOF.split('-'); return new Date(+p[0], +p[1]-1, 28); }
   var MON=['Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'];
@@ -364,17 +411,18 @@
 
   var store={};
 
+  function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+  function etfRowHtml(e,a,on){
+    return '<div class="etfrow '+(on?'on':'off')+'" data-id="'+e.id+'">'+
+      '<input type="checkbox" data-cb="'+e.id+'"'+(on?' checked':'')+'>'+
+      '<div class="nm"><b>'+esc(e.name)+'</b><s>'+esc(e.isin)+(e.custom?' · eigener':'')+'</s></div>'+
+      '<span class="ter">TER '+pct(e.ter,2)+'</span>'+
+      '<div class="pct"><input type="number" data-pct="'+e.id+'" value="'+a+'" min="0" max="100" step="5"'+(on?'':' disabled')+'></div>'+
+      (e.custom?'<button type="button" class="delx" data-del="'+e.id+'" title="Eigenen ETF entfernen">×</button>':'')+
+      '</div>';
+  }
   function buildEtfList(){
-    var html='';
-    ETFS.forEach(function(e){
-      var a=DEFAULT_ALLOC[e.id]||0, on=a>0;
-      html+='<div class="etfrow '+(on?'on':'off')+'" data-id="'+e.id+'">'+
-        '<input type="checkbox" data-cb="'+e.id+'"'+(on?' checked':'')+'>'+
-        '<div class="nm"><b>'+e.name+'</b><s>'+e.isin+'</s></div>'+
-        '<span class="ter">TER '+pct(e.ter,2)+'</span>'+
-        '<div class="pct"><input type="number" data-pct="'+e.id+'" value="'+a+'" min="0" max="100" step="5"'+(on?'':' disabled')+'></div>'+
-        '</div>';
-    });
+    var html=''; ETFS.forEach(function(e){ var a=DEFAULT_ALLOC[e.id]||0; html+=etfRowHtml(e,a,a>0); });
     $('etfList').innerHTML=html;
   }
 
@@ -420,6 +468,7 @@
     var alpha=Math.max(0,num('alpha')), alphaJ=Math.max(1,num('alphaJahre')||5);
     var beta=Math.max(0,num('beta')), gamma=Math.max(0,num('gamma')), stueck=Math.max(0,num('stueck'));
     var infl=num('inflation'), persRate=clampNum('steuersatz',0,45,30), expRet=num('rendite');
+    var realVal=Math.max(0,num('vertragswert'));
 
     setText('dynamikVal',pct(dyn)); setText('renditeVal',pct(expRet));
     setText('inflationVal',pct(infl)); setText('steuersatzVal',Math.round(persRate)+' %');
@@ -435,93 +484,125 @@
 
     if(!birth||!start){ return; }
     var endDate=new Date(birth.getFullYear()+Math.round(endAlter),birth.getMonth(),birth.getDate());
-    var totalM=Math.round(monthsBetween(start,endDate));
-    var asof=asOfDate();
+    var totalM=(endDate.getFullYear()-start.getFullYear())*12+(endDate.getMonth()-start.getMonth());
+    var asY=+DATA_ASOF.slice(0,4), asM=+DATA_ASOF.slice(5,7);
     var ageNow=Math.floor(monthsBetween(birth,new Date())/12);
     setText('endeInfo', endDate.getFullYear()+''); setText('endeJahr', Math.round(endAlter)+'');
     setText('laufzeitInfo','Laufzeit '+(totalM>0?(totalM/12).toFixed(0):'0')+' Jahre · aktuell '+ageNow+' Jahre alt');
     if(totalM<=0){ setText('endwert','Vertragsende liegt vor Vertragsbeginn'); return; }
+    var elapsed=Math.max(0,Math.min(totalM,(asY-start.getFullYear())*12+(asM-(start.getMonth()+1))));
 
-    var elapsed=Math.max(0,Math.min(totalM,Math.round(monthsBetween(start,asof))));
-
-    // Echte Renditen + CAGR seit Beginn
+    // ---- Echte Fonds-Monatsrenditen (Vergangenheit) ----
     var aR=actualReturns(start, elapsed, sel);
     var PI=1, nEff=0, firstEff=null;
     for(var k=1;k<=elapsed;k++){ if(aR[k]!=null){ PI*=(1+aR[k]); nEff++; if(firstEff==null) firstEff=k; } }
-    var realCum=PI-1, realCAGR=nEff>0? Math.pow(PI,12/nEff)-1 : 0;
+    var realCAGR=nEff>0? Math.pow(PI,12/nEff)-1 : 0;
     setText('histInfo', nEff>0? spct(realCAGR*100) : '–');
+    setText('fundCagr', nEff>0? spct(realCAGR*100) : '–');
+    setText('renditeHint', nEff>11? ('Fonds bisher real: '+spct(realCAGR*100)+'/Jahr · Prognose konservativ (Default max. 8 %).') : 'Annahme für die Zukunft, keine Zusage.');
 
-    if(nEff>0){
-      $('realperfV').innerHTML='<span class="pill '+(realCum>=0?'up':'down')+'" style="font-size:22px;padding:4px 12px">'+spct(realCum*100)+'</span>';
-      setText('realperfCagr','Ø '+spct(realCAGR*100)+' pro Jahr');
-      var cov=calMonth(start, firstEff-1);
-      setText('realperfSub','seit '+MON[cov.m-1]+' '+cov.y+(firstEff>1?' (Datenbeginn)':''));
-      // Prognose-Hinweis: bisherige Entwicklung anbieten
-      setText('renditeHint','Bisher real: '+spct(realCAGR*100)+'/Jahr. Für die Prognose meist konservativer rechnen.');
-    } else {
-      $('realperfV').textContent='–'; setText('realperfCagr',''); setText('realperfSub','noch keine Kursdaten im Zeitraum');
-      setText('renditeHint','Annahme für die Zukunft, keine Zusage.');
-    }
+    var dw=$('dataWarn');
+    if(nEff>0 && firstEff>1){ var cov=calMonth(start, firstEff-1); dw.style.display=''; dw.textContent='⚠ Für die ersten '+(firstEff-1)+' Vertragsmonate liegen keine Kursdaten vor – die echte Wertentwicklung wird erst ab '+MON[cov.m-1]+' '+cov.y+' berücksichtigt.'; }
+    else dw.style.display='none';
 
-    // Jahresrenditen
+    // Jahresrenditen (Fonds, Markt)
     var yby={};
-    for(k=1;k<=elapsed;k++){ if(aR[k]!=null){ var y=calMonth(start,k).y; yby[y]=(yby[y]==null?1:yby[y])*(1+aR[k]); } }
-    var ys=Object.keys(yby).sort(); if(ys.length>9) ys=ys.slice(ys.length-9);
-    var ystr='';
-    ys.forEach(function(y){ var r=(yby[y]-1)*100; ystr+='<span class="yc '+(r>=0?'pos':'neg')+'"><span class="y">'+y+'</span>'+spct(r)+'</span>'; });
-    $('yearStrip').innerHTML=ystr;
+    for(k=1;k<=elapsed;k++){ if(aR[k]!=null){ var yy=calMonth(start,k).y; yby[yy]=(yby[yy]==null?1:yby[yy])*(1+aR[k]); } }
+    var ys=Object.keys(yby).sort(); if(ys.length>10) ys=ys.slice(ys.length-10);
+    var ystr=''; ys.forEach(function(y){ var r=(yby[y]-1)*100; ystr+='<span class="yc '+(r>=0?'pos':'neg')+'"><span class="y">'+y+'</span>'+spct(r)+'</span>'; });
+    $('yearStrip').innerHTML=ystr || '<span style="font-size:11.5px;color:var(--muted)">Noch keine vollen Kalenderjahre erfasst.</span>';
 
-    // Monatsfaktoren Prognose
-    var gM=1-gamma/100/12;
+    // ---- Kosten-Setup ----
+    var gMon=gamma/100/12;
     function mf(annual){ return Math.pow(1+annual/100,1/12)-1; }
     var expM=mf(expRet), optM=mf(expRet+2), pessM=mf(Math.max(0,expRet-2));
-
-    // Beitragssumme (für Abschlusskosten) inkl. Dynamik
-    var bs=startkap, cc=rate; for(k=1;k<=totalM;k++){ if(dyn&&k>1&&(k-1)%12===0) cc*=(1+dyn/100); bs+=cc; }
+    var bdMax=Math.max(1,num('beitragsdauer')||35);
+    var bsYears=Math.min(bdMax, totalM/12);          // Beitragsdauer auf tatsächliche Laufzeit deckeln
+    var bs=rate*12*bsYears;                           // Beitragssumme = Beitrag × 12 × Beitragsdauer (ohne Dynamik, ohne Startkapital) – wie in der Police
     var alphaPM=(alpha/100*bs)/(alphaJ*12);
 
-    // Simulation: Vergangenheit = echte Renditen, Zukunft = Prognose
-    var balE=startkap,balO=startkap,balP=startkap,paid=startkap,c=rate;
-    var arr=[{paid:paid,e:balE,o:balO,p:balP}];
-    for(var m=1;m<=totalM;m++){
-      if(dyn&&m>1&&(m-1)%12===0) c*=(1+dyn/100);
-      paid+=c;
-      var net=c*(1-beta/100);
-      var ded=(m<=alphaJ*12?alphaPM:0)+stueck/12;
-      var fE,fO,fP;
-      if(m<=elapsed){ var rg=(aR[m]!=null?aR[m]:expM); fE=fO=fP=1+rg; }
-      else { fE=1+expM; fO=1+optM; fP=1+pessM; }
-      balE=Math.max(0,balE+net-ded)*fE*gM;
-      balO=Math.max(0,balO+net-ded)*fO*gM;
-      balP=Math.max(0,balP+net-ded)*fP*gM;
-      arr.push({paid:paid,e:balE,o:balO,p:balP});
+    // ---- Vergangenheit: Modell-Simulation + Kostenakkumulation + Cashflows ----
+    var bal=startkap, paid=startkap, c=rate, cAlpha=0,cBeta=0,cGamma=0,cStueck=0;
+    var pastArr=[{paid:startkap,e:startkap}], cf=[-startkap];
+    var dynAlphaM=0;                                    // Dynamik-Abschlusskosten je Monat, gilt für das laufende Dynamik-Jahr
+    for(var m=1;m<=elapsed;m++){
+      if(dyn&&m>1&&(m-1)%12===0){
+        var cPrev=c; c*=(1+dyn/100);
+        var remCap=Math.max(0, bsYears-(m-1)/12);       // verbleibende (gedeckelte) Beitragsjahre für diese Erhöhung
+        dynAlphaM=(alpha/100*((c-cPrev)*12*remCap))/12; // α auf den Erhöhungsbetrag, verteilt auf dieses eine Jahr
+      }
+      paid+=c; cf.push(-c);
+      var bC=c*beta/100; cBeta+=bC;
+      var aC=(m<=alphaJ*12?alphaPM:0)+dynAlphaM; cAlpha+=aC;
+      var sC=stueck/12; cStueck+=sC;
+      var before=Math.max(0, bal+(c-bC)-aC-sC);
+      var grown=before*(1+(aR[m]!=null?aR[m]:expM));
+      var gC=grown*gMon; cGamma+=gC;
+      bal=grown-gC;
+      pastArr.push({paid:paid,e:bal});
     }
+    var modeledValNow=bal, paidNow=paid, costNowTotal=cAlpha+cBeta+cGamma+cStueck;
 
-    var paidNow=arr[elapsed].paid, valNow=arr[elapsed].e;
-    var endVal=arr[totalM].e, endO=arr[totalM].o, endP=arr[totalM].p, paidEnd=arr[totalM].paid;
-    var gainEnd=Math.max(0,endVal-paidEnd);
+    // ---- Anker an echten Vertragswert (Bestandskunde) ----
+    var valNow=realVal>0? realVal : modeledValNow;
+    var anchorF=(realVal>0 && modeledValNow>0)? realVal/modeledValNow : 1;
 
+    // ---- Zukunft ab valNow (e/o/p) + voller Chart-Array ----
+    var arr=[]; for(var i=0;i<=elapsed;i++){ var ev=pastArr[i].e*anchorF; arr.push({paid:pastArr[i].paid,e:ev,o:ev,p:ev}); }
+    var fE=valNow,fO=valNow,fP=valNow,futPaid=paidNow,fc=c;
+    var fDynAlphaM=dynAlphaM;                           // laufende Dynamik-α aus dem letzten Jahr fortführen
+    for(m=elapsed+1;m<=totalM;m++){
+      if(dyn&&m>1&&(m-1)%12===0){
+        var fcPrev=fc; fc*=(1+dyn/100);
+        var fRemCap=Math.max(0, bsYears-(m-1)/12);
+        fDynAlphaM=(alpha/100*((fc-fcPrev)*12*fRemCap))/12;
+      }
+      futPaid+=fc;
+      var base=(fc-fc*beta/100)-((m<=alphaJ*12?alphaPM:0)+fDynAlphaM)-stueck/12;
+      fE=Math.max(0,fE+base)*(1+expM)*(1-gMon);
+      fO=Math.max(0,fO+base)*(1+optM)*(1-gMon);
+      fP=Math.max(0,fP+base)*(1+pessM)*(1-gMon);
+      arr.push({paid:futPaid,e:fE,o:fO,p:fP});
+    }
+    var endVal=fE,endO=fO,endP=fP,paidEnd=futPaid;
+    var gainNow=valNow-paidNow, gainEnd=Math.max(0,endVal-paidEnd);
+
+    // ---- Vertragsrendite p.a. (geldgewichtet / IRR) ----
+    var irrA=null;
+    if(elapsed>=3 && valNow>0){ var cf2=cf.slice(); cf2[cf2.length-1]+=valNow; var rm=irrMonthly(cf2); if(rm!=null) irrA=Math.pow(1+rm,12)-1; }
+
+    // ---- Stand heute ----
     setText('paidNow',eur0.format(paidNow));
     setText('valNow',eur0.format(valNow));
-    var perf=paidNow>0?(valNow/paidNow-1)*100:0;
-    $('perfNow').innerHTML= elapsed>0? '<span class="pill '+(perf>=0?'up':'down')+'">'+spct(perf)+'</span>' : '<span class="pill">startet '+start.getFullYear()+'</span>';
-    setText('heuteJahr','heute ('+MON[+DATA_ASOF.slice(5,7)-1]+' '+DATA_ASOF.slice(0,4)+')');
+    setText('valNowLbl', realVal>0? 'echt · lt. Standmitteilung' : 'Modellschätzung (nach Kosten)');
+    setText('gainNow',(gainNow>=0?'+':'−')+eur0.format(Math.abs(gainNow)));
+    setText('gainNowPct', spct(paidNow>0?gainNow/paidNow*100:0));
+    setText('irrNow', irrA!=null? spct(irrA*100) : '–');
+    setText('costNow', eur0.format(costNowTotal));
+    setText('costNowSub', realVal>0? 'geschätzt (Modell)' : 'seit Beginn');
+    var cb=$('costBreak'); cb.style.display=''; cb.innerHTML='Kosten bisher (Modell): Abschluss <b>'+eur0.format(cAlpha)+'</b> · Verwaltung <b>'+eur0.format(cBeta)+'</b> · Fondsmantel <b>'+eur0.format(cGamma)+'</b> · Stück <b>'+eur0.format(cStueck)+'</b>';
 
+    var cmp=$('cmpRow');
+    if(realVal>0 && modeledValNow>0){ var dev=(realVal/modeledValNow-1)*100; cmp.style.display=''; cmp.innerHTML='Modellwert nach euren Kostenannahmen: <b>'+eur0.format(modeledValNow)+'</b> · Abweichung zum echten Wert: <b>'+spct(dev)+'</b>. '+(Math.abs(dev)>8?'→ Kostenannahmen ans Produkt anpassen, bis Modell ≈ echter Wert.':'Kostenannahmen passen gut zum tatsächlichen Verlauf.'); }
+    else cmp.style.display='none';
+
+    // ---- Hochrechnung bis Rente ----
     setText('endwert',eur0.format(endVal));
-    var real=endVal/Math.pow(1+infl/100,totalM/12);
-    setText('real', infl>0? '≈ '+eur0.format(real)+' in heutiger Kaufkraft' : '');
+    setText('real', infl>0? '≈ '+eur0.format(endVal/Math.pow(1+infl/100,totalM/12))+' in heutiger Kaufkraft' : '');
     setText('eingezahlt',eur0.format(paidEnd));
     setText('gewinn',eur0.format(gainEnd));
     setText('spanne',eur0.format(endP)+' – '+eur0.format(endO));
     setText('rente',eur0.format(annuity(endVal,25,0.03)));
     var tot=Math.max(1,endVal);
-    $('bar1').style.width=(paidEnd/tot*100)+'%'; $('bar2').style.width=(gainEnd/tot*100)+'%';
+    $('bar1').style.width=(Math.min(1,paidEnd/tot)*100)+'%'; $('bar2').style.width=(Math.max(0,gainEnd)/tot*100)+'%';
+    setText('heuteJahr','heute ('+MON[asM-1]+' '+asY+')');
 
+    // ---- Steuervorteil (12/62 geprüft) ----
+    var qual=(Math.round(endAlter)>=62 && totalM/12>=12);
     var steuerDepot=Math.max(0,gainEnd*(1-0.30)*0.26375);
-    var steuerPolice=Math.max(0,gainEnd*0.5*(1-0.15)*persRate/100);
-    var ersparnis=Math.max(0,steuerDepot-steuerPolice);
-    setText('taxSave','≈ '+eur0.format(ersparnis)+' weniger Steuern');
-    setText('taxCompare','Beispiel: Auf einen Wertzuwachs von '+eur0.format(gainEnd)+' fielen im Depot ca. '+eur0.format(steuerDepot)+' Abgeltungssteuer an – im Vorsorge-Mantel nur ca. '+eur0.format(steuerPolice)+' (bei '+Math.round(persRate)+' % persönl. Steuersatz).');
+    var steuerPolice= qual? Math.max(0,gainEnd*0.5*(1-0.15)*persRate/100) : Math.max(0,gainEnd*(1-0.15)*0.26375);
+    setText('taxSave','≈ '+eur0.format(Math.max(0,steuerDepot-steuerPolice))+' weniger Steuern');
+    setText('taxCompare','Beispiel: Auf den Wertzuwachs von '+eur0.format(gainEnd)+' fielen im Depot ca. '+eur0.format(steuerDepot)+' Abgeltungssteuer an – im Vorsorge-Mantel '+(qual? 'nur ca. '+eur0.format(steuerPolice)+' (Halbeinkünfte 12/62, '+Math.round(persRate)+' % Satz).' : 'ca. '+eur0.format(steuerPolice)+' – 12/62 NICHT erfüllt (nötig: Endalter ≥ 62 und ≥ 12 Jahre Laufzeit).')+' Vereinfachtes Beispiel, keine Steuerberatung.');
 
     store={arr:arr,totalM:totalM,elapsed:elapsed,start:start,endDate:endDate};
     drawChart();
@@ -587,42 +668,128 @@
     var birth=parseDate(val('geburt')), start=parseDate(val('beginn'));
     if(!start) return;
     var al=getAlloc(); if(!al.sel.length) return;
-    var asof=asOfDate(), elapsed=Math.max(0,Math.round(monthsBetween(start,asof)));
+    var asY=+DATA_ASOF.slice(0,4), asM=+DATA_ASOF.slice(5,7);
+    var elapsed=Math.max(0,(asY-start.getFullYear())*12+(asM-(start.getMonth()+1)));
     var aR=actualReturns(start, elapsed, al.sel), PI=1, n=0;
     for(var k=1;k<=elapsed;k++){ if(aR[k]!=null){ PI*=(1+aR[k]); n++; } }
     if(n>11){ var cagr=Math.pow(PI,12/n)-1; $('rendite').value=Math.max(0,Math.min(8,Math.round(cagr*100))); }
   }
 
+  // ---- Kurs-Helfer (geteilt von Live-Update und Eigene-ETFs) ----
+  function proxyBase(){ return (CONFIG.dataProxy||'').replace(/\/+$/,''); }
+  function fetchJson(url){ return fetch(url).then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); }); }
+  function fetchChart(sym){ return fetchJson(proxyBase()+'/v8/finance/chart/'+encodeURIComponent(sym)+'?range=max&interval=1mo'); }
+  function ymKey(t){ var d=new Date(t*1000); return d.getUTCFullYear()+'-'+String(d.getUTCMonth()+1).padStart(2,'0'); }
+  function chartToMonthly(json){ // -> {bym:{'YYYY-MM':close}, cur}
+    var r=json.chart.result[0], ts=r.timestamp||[], q=(r.indicators.quote[0]||{}).close||[];
+    var adj=(r.indicators.adjclose&&r.indicators.adjclose[0].adjclose)||q;
+    var cur=(r.meta&&r.meta.currency)||'EUR', bym={};
+    for(var i=0;i<ts.length;i++){ var v=adj[i]!=null?adj[i]:q[i]; if(v==null) continue; bym[ymKey(ts[i])]=v; }
+    return {bym:bym, cur:cur};
+  }
+  // Beliebige Währung -> EUR (über Yahoo-FX EUR{CUR}=X), GBp (Pence) wird /100 gerechnet
+  function toEurBym(data){
+    if(data.cur==='EUR') return Promise.resolve(data.bym);
+    var div=1, fxCur=data.cur; if(data.cur==='GBp'||data.cur==='GBX'){ div=100; fxCur='GBP'; }
+    return fetchChart('EUR'+fxCur+'=X').then(function(j){
+      var fx=chartToMonthly(j).bym, out={}, lastFx=null;
+      Object.keys(data.bym).sort().forEach(function(k){ if(fx[k]!=null) lastFx=fx[k]; if(lastFx) out[k]=(data.bym[k]/div)/lastFx; });
+      return out;
+    });
+  }
+  function fillSeries(bym){ // lückenlose, vorwärts-gefüllte Monatsreihe
+    var ms=Object.keys(bym).sort(); if(!ms.length) return null;
+    var ey=+ms[ms.length-1].slice(0,4), em=+ms[ms.length-1].slice(5,7);
+    var arr=[],last=null,cy=+ms[0].slice(0,4),cm=+ms[0].slice(5,7);
+    while(cy<ey||(cy===ey&&cm<=em)){ var ym=cy+'-'+String(cm).padStart(2,'0'); if(bym[ym]!=null)last=bym[ym]; arr.push(last==null?null:Math.round(last*1e4)/1e4); cm++; if(cm>12){cm=1;cy++;} }
+    return {start:ms[0], end:ms[ms.length-1], arr:arr};
+  }
+
   // ---- Optionales LIVE-Update über euren Proxy (CONFIG.dataProxy) ----
   function refreshLive(){
     if(!CONFIG.dataProxy) return;
-    var base=CONFIG.dataProxy.replace(/\/+$/,'');
     var jobs=ETFS.map(function(e){
       var sym=ETFDATA[e.id]?ETFDATA[e.id].sym:null; if(!sym) return Promise.resolve();
-      var url=base+'/v8/finance/chart/'+sym+'?range=max&interval=1mo';
-      return fetch(url).then(function(r){return r.json();}).then(function(d){
-        var r=d.chart.result[0], ts=r.timestamp, q=r.indicators.quote[0].close;
-        var adj=(r.indicators.adjclose&&r.indicators.adjclose[0].adjclose)||q;
-        var bym={};
-        for(var i=0;i<ts.length;i++){ var v=adj[i]!=null?adj[i]:q[i]; if(v==null) continue;
-          var dt=new Date(ts[i]*1000); bym[dt.getUTCFullYear()+'-'+String(dt.getUTCMonth()+1).padStart(2,'0')]=Math.round(v*1e4)/1e4; }
-        var ms=Object.keys(bym).sort(); if(!ms.length) return;
-        var sy=+ms[0].slice(0,4), sm=+ms[0].slice(5,7), ey=+ms[ms.length-1].slice(0,4), em=+ms[ms.length-1].slice(5,7);
-        var arr=[],last=null,cy=sy,cm=sm;
-        while(cy<ey||(cy===ey&&cm<=em)){ var ym=cy+'-'+String(cm).padStart(2,'0'); if(bym[ym]!=null)last=bym[ym]; arr.push(last); cm++; if(cm>12){cm=1;cy++;} }
-        ETFDATA[e.id]={sym:sym,start:ms[0],c:arr};
-        if(ms[ms.length-1]>DATA_ASOF) DATA_ASOF=ms[ms.length-1];
+      return fetchChart(sym).then(function(cj){
+        var data=chartToMonthly(cj);
+        return toEurBym(data).then(function(eurBym){
+          var ser=fillSeries(eurBym); if(!ser) return;
+          ETFDATA[e.id]={sym:sym,start:ser.start,c:ser.arr,cur:data.cur};
+          if(ser.end>DATA_ASOF) DATA_ASOF=ser.end;
+        });
       }).catch(function(){});
     });
-    Promise.all(jobs).then(function(){ recalc(); });
+    Promise.all(jobs).then(function(){ saveCustomEtfs(); recalc(); });
+  }
+
+  // ---- Eigene ETFs (Selbstbedienung per ISIN, via Proxy) ----
+  var CUSTOM_KEY='iq_vr_custom_etfs';
+  function loadCustomEtfs(){
+    try{ var a=JSON.parse(localStorage.getItem(CUSTOM_KEY)||'[]'); if(!Array.isArray(a)) return;
+      a.forEach(function(e){
+        if(!e||!e.id||ETFS.some(function(x){return x.id===e.id;})) return;
+        ETFS.push({id:e.id,name:e.name,isin:e.isin,ter:+e.ter||0,custom:true});
+        ETFDATA[e.id]={sym:e.sym,start:e.start,c:e.c||[],cur:e.cur||'EUR'};
+      });
+    }catch(_){ }
+  }
+  function saveCustomEtfs(){
+    try{
+      var a=ETFS.filter(function(e){return e.custom;}).map(function(e){ var d=ETFDATA[e.id]||{};
+        return {id:e.id,name:e.name,isin:e.isin,ter:e.ter,sym:d.sym,start:d.start,c:d.c,cur:d.cur}; });
+      localStorage.setItem(CUSTOM_KEY, JSON.stringify(a));
+    }catch(_){ }
+  }
+  function setAddMsg(t,cls){ var m=$('addMsg'); if(m){ m.textContent=t||''; m.className='addmsg'+(cls?' '+cls:''); } }
+  function updateAddHint(){ var h=$('addHint'); if(h) h.textContent=CONFIG.dataProxy?'':'Hinweis: Eigene ETFs per ISIN funktionieren, sobald der Live-Proxy aktiv ist.'; }
+  function removeCustomEtf(id){
+    var i=ETFS.findIndex(function(e){return e.id===id;}); if(i<0) return;
+    ETFS.splice(i,1); delete ETFDATA[id]; saveCustomEtfs();
+    var row=document.querySelector('.etfrow[data-id="'+id+'"]'); if(row) row.remove();
+    setRenditeFromHistory(); recalc();
+  }
+  function addCustomEtf(){
+    var isin=(val('addIsin')||'').trim().toUpperCase();
+    if(!/^[A-Z]{2}[A-Z0-9]{9}[0-9]$/.test(isin)){ setAddMsg('Bitte eine gültige ISIN eingeben (12 Zeichen, z. B. IE00B4L5Y983).','bad'); return; }
+    if(!CONFIG.dataProxy){ setAddMsg('Selbstbedienung braucht den Live-Proxy. Sobald er eingerichtet ist, funktioniert das automatisch.','bad'); return; }
+    var exist=ETFS.filter(function(e){return (e.isin||'').toUpperCase()===isin;})[0];
+    if(exist){ var cb0=document.querySelector('[data-cb="'+exist.id+'"]'); if(cb0&&!cb0.checked){ cb0.checked=true; syncEtfRows(); setRenditeFromHistory(); recalc(); } setAddMsg('Schon in der Liste: '+exist.name+' (markiert).',''); return; }
+    var terIn=parseFloat(val('addTer')), ter=(isFinite(terIn)&&terIn>=0)?terIn:0.20;
+    var btn=$('addBtn'); btn.disabled=true; setAddMsg('Suche ISIN …','');
+    fetchJson(proxyBase()+'/v1/finance/search?q='+encodeURIComponent(isin)).then(function(s){
+      var qs=(s.quotes||[]).filter(function(q){return q.symbol;}); if(!qs.length) throw new Error('ISIN nicht gefunden');
+      var q0=qs[0], sym=q0.symbol, name=q0.longname||q0.shortname||sym;
+      setAddMsg('Lade Kurse für '+name+' …','');
+      return fetchChart(sym).then(function(cj){
+        var data=chartToMonthly(cj);
+        return toEurBym(data).then(function(eurBym){
+          var ser=fillSeries(eurBym); if(!ser||ser.arr.length<6) throw new Error('zu wenig Kursdaten');
+          var id='custom_'+isin;
+          ETFS.push({id:id,name:name,isin:isin,ter:ter,custom:true});
+          ETFDATA[id]={sym:sym,start:ser.start,c:ser.arr,cur:data.cur};
+          if(ser.end>DATA_ASOF) DATA_ASOF=ser.end;
+          saveCustomEtfs();
+          $('etfList').insertAdjacentHTML('beforeend', etfRowHtml(ETFS[ETFS.length-1],10,true));
+          syncEtfRows(); setRenditeFromHistory(); recalc();
+          $('addIsin').value=''; $('addTer').value='';
+          setAddMsg('✓ '+name+' hinzugefügt'+(data.cur!=='EUR'?' (aus '+data.cur+' in EUR umgerechnet)':'')+'.','ok');
+        });
+      });
+    }).catch(function(err){ setAddMsg('Konnte „'+isin+'" nicht laden: '+((err&&err.message)||'Fehler')+'. Sag mir die ISIN, dann ergänze ich sie fest in der Liste.','bad'); })
+      .then(function(){ btn.disabled=false; });
   }
 
   // ---- Init ----
+  loadCustomEtfs();
   buildEtfList();
+  updateAddHint();
   document.querySelector('.card').addEventListener('input',function(e){
     if(e.target.matches('[data-cb]')||e.target.matches('[data-pct]')){ syncEtfRows(); setRenditeFromHistory(); }
     recalc();
   });
+  $('addBtn').addEventListener('click',addCustomEtf);
+  $('addIsin').addEventListener('keydown',function(e){ if(e.key==='Enter'){ e.preventDefault(); addCustomEtf(); } });
+  $('etfList').addEventListener('click',function(e){ var b=e.target.closest&&e.target.closest('[data-del]'); if(b) removeCustomEtf(b.getAttribute('data-del')); });
   $('chartwrap').addEventListener('mousemove',onMove);
   $('chartwrap').addEventListener('mouseleave',onLeave);
   window.addEventListener('resize',function(){ if(store.arr) drawChart(); });
@@ -638,7 +805,7 @@
   // Prefill per URL
   try{
     var qs=new URLSearchParams(location.search);
-    ['name','geburt','beginn','endalter','startkapital','sparrate','dynamik','inflation','alpha','alphaJahre','beta','gamma','stueck','steuersatz','rendite'].forEach(function(k){
+    ['name','geburt','beginn','endalter','vertragswert','startkapital','sparrate','dynamik','inflation','alpha','beitragsdauer','alphaJahre','beta','gamma','stueck','steuersatz','rendite'].forEach(function(k){
       if(qs.has(k)){ var el=$(k); if(el) el.value=qs.get(k); }
     });
     if(qs.has('etf')){

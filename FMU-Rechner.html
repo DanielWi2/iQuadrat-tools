@@ -440,12 +440,28 @@ function computeProduct(p){
   const ratePa=Math.max(v.rendite, v.garantie)/100;
   const gM=Math.pow(1+ratePa,1/12)-1;
 
-  // Zillmer / Abschlusskosten
+  // ===== Zillmer / Abschlusskosten (alpha) – Dynamik erhöht die Abschlusskosten =====
+  // Jede Dynamik-Erhöhung wird wie ein neuer Beitrags-"Layer" behandelt und ab IHREM Startjahr
+  // über die Verteilungsdauer (alphaJahre) verteilt gezillmert. Für Dynamik=0 identisch zur Basis.
   const bewJahre=Math.min(v.zahldauer, v.zillmerMax||v.zahldauer);
-  const beitragssumme=(v.rate*12)*bewJahre + (v.einmal||0);
-  const alphaTotal=(v.alpha/100)*beitragssumme;
   const alphaMonths=Math.max(1,Math.round((v.alphaJahre||0)*12));
-  const alphaPM=(v.alphaJahre>0)?alphaTotal/alphaMonths:0;
+  const alphaByMonth=new Array(months+1).fill(0);
+  let beitragssumme=0;
+  if(v.alpha>0 && v.alphaJahre>0){
+    const P0=v.rate*12, d=v.dynamik/100;
+    for(let y=1;y<=v.zahldauer;y++){
+      // Beitrags-Zuwachs dieses Jahres (Jahr 1 = voller Grundbeitrag, ab Jahr 2 nur die Erhöhung)
+      const increment=(y===1)?P0:P0*(Math.pow(1+d,y-1)-Math.pow(1+d,y-2));
+      const remaining=Math.max(0, bewJahre-(y-1));   // Restjahre im Zillmer-Bewertungsfenster
+      let layerSumme=increment*remaining;
+      if(y===1) layerSumme+=(v.einmal||0);            // Abschlusskosten auch auf den Einmalbeitrag
+      if(layerSumme<=0) continue;
+      beitragssumme+=layerSumme;
+      const perMonth=(v.alpha/100)*layerSumme/alphaMonths;
+      const start=(y-1)*12+1, end=Math.min(months,(y-1)*12+alphaMonths);
+      for(let mm=start;mm<=end;mm++) alphaByMonth[mm]+=perMonth;
+    }
+  }
 
   let bal=0, basis=0, cumContrib=0;
   let costVers=0, costFonds=0, taxDuring=0;
@@ -474,7 +490,7 @@ function computeProduct(p){
     bal+=net; basis+=Math.max(0,net);
 
     // alpha / Zillmer
-    if(m<=alphaMonths && alphaPM>0){ const a=Math.min(alphaPM,Math.max(0,bal)); bal-=a; costVers+=a; yV+=a; }
+    if(alphaByMonth[m]>0){ const a=Math.min(alphaByMonth[m],Math.max(0,bal)); bal-=a; costVers+=a; yV+=a; }
     // Stückkosten / Depotgebühr
     if(v.stueck>0){ const s=v.stueck/12; bal-=s; costVers+=s; yV+=s; }
     // Wachstum
