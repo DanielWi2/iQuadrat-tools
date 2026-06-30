@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rentenlückenanalyse · Steffen & Juliane Groß · iQuadrat</title>
+<style>
+  :root {
+    --navy: #0b2a4a;
+    --blue: #1d6fa5;
+    --green: #2f9e63;
+    --green-dk: #246f49;
+    --green-bg: #eaf7f0;
+    --green-border: #b0dfc5;
+    --green-text: #1a6b45;
+    --red: #b4232a;
+    --orange: #e08e2c;
+    --ink: #3a4a5a;
+    --muted: #8295a6;
+    --bg: #f4f8fb;
+    --line: #dde6ee;
+    --card: #ffffff;
+    --line2: #eef3f8;
+    --success-bg: #eaf7f0;
+    --success-border: #b0dfc5;
+    --success-text: #1a6b45;
+    --warn-bg: #fff7ec;
+    --warn-border: #f3e2c4;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Helvetica Neue', Arial, sans-serif; background: var(--bg); color: var(--navy); line-height: 1.45; font-size: 14px; }
+  .wrap { max-width: 900px; margin: 0 auto; padding: 28px 20px 60px; }
+
+  /* Header */
+  .hdr { margin-bottom: 22px; }
+  .kicker { font-size: 10.5px; letter-spacing: 2px; text-transform: uppercase; color: var(--blue); font-weight: 700; }
+  .htitle { font-size: 26px; font-weight: 800; margin: 4px 0 2px; }
+  .hsub { font-size: 13px; color: var(--muted); }
+
+  /* Pension cards */
+  .pgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+  @media(max-width:520px){ .pgrid { grid-template-columns: 1fr; } }
+  .pcard { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; }
+  .pc-lbl { font-size: 10.5px; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 5px; font-weight: 700; }
+  .pc-val { font-size: 24px; font-weight: 800; color: var(--navy); }
+  .pc-sub { font-size: 11.5px; color: var(--muted); margin-top: 3px; }
+  .totalbar {
+    display: flex; justify-content: space-between; align-items: center;
+    background: var(--success-bg); border: 1px solid var(--success-border);
+    border-radius: 10px; padding: 11px 16px; margin-bottom: 20px;
+  }
+  .totalbar span { font-size: 13px; color: var(--success-text); }
+  .totalbar strong { font-size: 20px; font-weight: 800; color: var(--success-text); }
+
+  /* Cards */
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 18px 20px; margin-bottom: 14px; }
+  .sec-lbl {
+    font-size: 10.5px; color: var(--blue); text-transform: uppercase;
+    letter-spacing: 1px; font-weight: 700; margin-bottom: 14px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .sec-lbl::after { content: ""; flex: 1; height: 1px; background: var(--line2); }
+
+  /* Controls */
+  .ctrl-row { margin-bottom: 16px; }
+  .ctrl-row:last-child { margin-bottom: 0; }
+  .cr-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 7px; }
+  .cr-top label { font-size: 13px; color: var(--ink); font-weight: 600; }
+  .cr-val { font-size: 16px; font-weight: 800; color: var(--blue); font-variant-numeric: tabular-nums; }
+  input[type=range] {
+    width: 100%; height: 6px; accent-color: var(--blue); cursor: pointer;
+    -webkit-appearance: none; appearance: none; background: var(--line); border-radius: 3px; outline: none;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none; width: 20px; height: 20px;
+    border-radius: 50%; background: var(--blue); cursor: pointer; box-shadow: 0 1px 4px rgba(11,42,74,.2);
+  }
+  .cr-range { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); margin-top: 5px; }
+
+  /* Inflation arrow display */
+  .inf-arrow-row {
+    display: flex; align-items: center; gap: 12px; margin-bottom: 16px;
+  }
+  .inf-box {
+    flex: 1; border-radius: 10px; padding: 14px 16px; text-align: center;
+  }
+  .inf-box-light { background: var(--line2); border: 1px solid var(--line); }
+  .inf-box-dark  { background: var(--navy); }
+  .inf-box-lbl { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 4px; }
+  .inf-box-light .inf-box-lbl { color: var(--muted); }
+  .inf-box-dark  .inf-box-lbl { color: rgba(255,255,255,.5); }
+  .inf-box-val { font-size: 20px; font-weight: 800; font-variant-numeric: tabular-nums; }
+  .inf-box-light .inf-box-val { color: var(--navy); }
+  .inf-box-dark  .inf-box-val { color: #fff; }
+  .inf-box-sub { font-size: 11px; margin-top: 3px; }
+  .inf-box-light .inf-box-sub { color: var(--muted); }
+  .inf-box-dark  .inf-box-sub { color: rgba(255,255,255,.4); }
+  .inf-arrow { font-size: 22px; color: var(--muted); flex-shrink: 0; }
+
+  /* Inflation year table */
+  .inf-tbl { width: 100%; border-collapse: collapse; font-size: 12.5px; font-variant-numeric: tabular-nums; }
+  .inf-tbl th { text-align: left; padding: 5px 0; font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); border-bottom: 2px solid var(--line); }
+  .inf-tbl th.r { text-align: right; }
+  .inf-tbl td { padding: 8px 0; border-bottom: 1px solid var(--line2); color: var(--ink); vertical-align: middle; }
+  .inf-tbl tr:last-child td { border-bottom: none; }
+  .inf-tbl td.r { text-align: right; }
+  .inf-yr-badge {
+    display: inline-block; font-size: 9.5px; font-weight: 700; text-transform: uppercase;
+    background: var(--navy); color: #fff; padding: 1px 7px; border-radius: 4px; margin-left: 6px; vertical-align: middle;
+  }
+  .inf-hint { background: var(--warn-bg); border: 1px solid var(--warn-border); border-radius: 8px; padding: 9px 12px; font-size: 12px; color: var(--ink); line-height: 1.55; margin-top: 12px; }
+
+  /* Gap bar */
+  .gapbar-wrap { border: 1px solid var(--line); border-radius: 10px; overflow: hidden; margin: 4px 0 0; }
+  .gapbar-track { position: relative; height: 44px; background: var(--line2); }
+  .gapbar-fill {
+    position: absolute; left: 0; top: 0; bottom: 0;
+    background: linear-gradient(135deg, var(--blue), #155a84);
+    display: flex; align-items: center; padding: 0 12px; overflow: hidden; min-width: 2px;
+  }
+  .gapbar-fill span { color: #fff; font-size: 13px; font-weight: 700; white-space: nowrap; }
+  .gapbar-gap { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); font-size: 13px; font-weight: 800; color: var(--red); font-variant-numeric: tabular-nums; }
+  .gapbar-lbls { display: flex; justify-content: space-between; padding: 6px 12px; font-size: 11.5px; color: var(--muted); background: var(--card); }
+  .gapbar-lbls b { color: var(--navy); font-variant-numeric: tabular-nums; }
+
+  /* Calc table */
+  .calc-tbl { width: 100%; border-collapse: collapse; font-size: 13px; font-variant-numeric: tabular-nums; }
+  .calc-tbl td { padding: 9px 0; border-bottom: 1px solid var(--line2); vertical-align: top; }
+  .calc-tbl tr:last-child td { border-bottom: none; }
+  .ct-lbl { color: var(--ink); }
+  .ct-sub { display: block; font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .ct-val { text-align: right; font-weight: 800; color: var(--navy); padding-left: 12px; white-space: nowrap; }
+
+  /* Rate grid */
+  .rgrid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+  .rgrid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+  @media(max-width:520px){ .rgrid-3, .rgrid-2 { grid-template-columns: 1fr; } }
+  .rcard { border-radius: 10px; padding: 14px; }
+  .rcard-dark    { background: var(--navy); }
+  .rcard-blue    { background: var(--blue); }
+  .rcard-green   { background: var(--green); }
+  .rcard-green-dk { background: var(--green-dk); }
+  .rcard-neutral { background: var(--line2); border: 1px solid var(--line); }
+  .rc-lbl { font-size: 10.5px; font-weight: 700; margin-bottom: 5px; }
+  .rcard-dark .rc-lbl, .rcard-blue .rc-lbl, .rcard-green .rc-lbl, .rcard-green-dk .rc-lbl { color: rgba(255,255,255,.55); }
+  .rcard-neutral .rc-lbl { color: var(--muted); }
+  .rc-val { font-size: 22px; font-weight: 800; font-variant-numeric: tabular-nums; }
+  .rcard-dark .rc-val, .rcard-blue .rc-val, .rcard-green .rc-val, .rcard-green-dk .rc-val { color: #fff; }
+  .rcard-neutral .rc-val { color: var(--navy); }
+  .rc-sub { font-size: 11px; margin-top: 3px; }
+  .rcard-dark .rc-sub, .rcard-blue .rc-sub, .rcard-green .rc-sub, .rcard-green-dk .rc-sub { color: rgba(255,255,255,.4); }
+  .rcard-neutral .rc-sub { color: var(--muted); }
+
+  /* Kosten box */
+  .kosten-box { background: var(--line2); border-radius: 10px; padding: 12px 14px; }
+  .kosten-tbl { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  .kosten-tbl td { padding: 5px 0; }
+  .kt-k { font-weight: 700; color: var(--navy); width: 34%; vertical-align: top; }
+  .kt-v { color: var(--muted); }
+  .kt-v b { color: var(--ink); font-weight: 600; }
+  .kostendiff { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--line); margin-top: 8px; padding-top: 9px; font-size: 13px; }
+  .kd-lbl { color: var(--ink); font-weight: 600; }
+  .kd-v-red   { font-weight: 800; color: var(--red); font-variant-numeric: tabular-nums; }
+  .kd-v-green { font-weight: 800; color: var(--green-dk); font-variant-numeric: tabular-nums; }
+
+  /* Tabs */
+  .tabs { display: flex; gap: 4px; flex-wrap: wrap; }
+  .tab {
+    border: 1px solid var(--line); background: var(--card);
+    font-family: inherit; font-size: 13px; font-weight: 700;
+    color: var(--muted); padding: 9px 20px;
+    border-radius: 8px 8px 0 0; border-bottom: none;
+    cursor: pointer; transition: background .1s, color .1s;
+  }
+  .tab:hover { color: var(--navy); background: var(--line2); }
+  .tab.on-navy  { background: var(--navy);  color: #fff; border-color: var(--navy); }
+  .tab.on-green { background: var(--green); color: #fff; border-color: var(--green); }
+  .tab.on-split { background: var(--ink);   color: #fff; border-color: var(--ink); }
+  .tab-body { background: var(--card); border: 1px solid var(--line); border-radius: 0 12px 12px 12px; padding: 20px 20px 18px; margin-bottom: 14px; }
+
+  /* Comparison */
+  .cmp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media(max-width:600px){ .cmp-grid { grid-template-columns: 1fr; } }
+  .cmp-head { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .6px; text-align: center; padding: 7px 12px; border-radius: 6px; margin-bottom: 10px; }
+  .cmp-head-navy  { background: var(--navy);  color: #fff; }
+  .cmp-head-green { background: var(--green); color: #fff; }
+  .cmp-tbl { width: 100%; border-collapse: collapse; font-size: 12.5px; margin-top: 14px; }
+  .cmp-tbl td { padding: 8px 0; border-bottom: 1px solid var(--line2); vertical-align: top; }
+  .cmp-tbl tr:last-child td { border-bottom: none; }
+  .cmp-tbl .ctl { color: var(--muted); font-size: 11.5px; width: 34%; }
+  .cmp-tbl .cv1 { font-weight: 600; color: var(--navy); text-align: right; padding-left: 8px; }
+  .cmp-tbl .cv2 { font-weight: 600; color: var(--green-dk); text-align: right; padding-left: 8px; }
+  .winner-badge { display: inline-block; font-size: 9px; font-weight: 800; letter-spacing: .4px; text-transform: uppercase; padding: 2px 7px; border-radius: 4px; background: #fff; color: var(--green-dk); margin-left: 6px; vertical-align: middle; }
+  .infobox { background: var(--warn-bg); border: 1px solid var(--warn-border); border-radius: 8px; padding: 10px 13px; font-size: 12px; color: var(--ink); line-height: 1.55; margin-top: 12px; }
+
+  /* No-gap / disclaimer */
+  .nolag { background: var(--success-bg); border: 1px solid var(--success-border); border-radius: 10px; padding: 14px 16px; color: var(--success-text); font-size: 13.5px; line-height: 1.5; }
+  .disc { font-size: 11px; color: var(--muted); line-height: 1.6; border-top: 1px solid var(--line); padding-top: 14px; margin-top: 4px; }
+
+  /* Step markers */
+  .step-wrap { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+  .step-num { display: flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 50%; background: var(--blue); color: #fff; font-size: 11px; font-weight: 800; flex-shrink: 0; }
+  .step-lbl { font-size: 12px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .5px; }
+  .step-connector { width: 2px; background: var(--line); margin: 0 11px 4px; height: 12px; }
+
+  @media print {
+    body { background: #fff; }
+    .wrap { padding: 16px; }
+    input[type=range] { display: none; }
+    .tabs { display: none; }
+    .tab-body { border: none; padding: 0; }
+    .step-connector { display: none; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="hdr">
+    <div class="kicker">iQuadrat Investment und Immobilien GmbH · Vertraulich</div>
+    <div class="htitle">Rentenlückenanalyse</div>
+    <div class="hsub">Steffen &amp; Juliane Groß · Stand Juni 2026 · Basis: Pensionsanalyse Mai 2026</div>
+  </div>
+
+  <!-- SCHRITT 1 -->
+  <div class="step-wrap"><div class="step-num">1</div><div class="step-lbl">Aktueller Pensionsanspruch</div></div>
+
+  <div class="pgrid">
+    <div class="pcard">
+      <div class="pc-lbl">Steffen · Pfarrer A14/8 · Renteneintritt 2040</div>
+      <div class="pc-val">3.517 €</div>
+      <div class="pc-sub">netto / Monat · Ruhegehaltssatz 67,6 % · 4.340 € brutto</div>
+    </div>
+    <div class="pcard">
+      <div class="pc-lbl">Juliane · Lehrerin A13/9 · Renteneintritt 2041</div>
+      <div class="pc-val">3.029 €</div>
+      <div class="pc-sub">netto / Monat · Ruhegehaltssatz 64,4 % · 3.690 € brutto</div>
+    </div>
+  </div>
+  <div class="totalbar">
+    <span>Haushalt gesamt netto (lt. Pensionsanalyse · vor PKV-Eigenanteil)</span>
+    <strong>6.546 €/Monat</strong>
+  </div>
+
+  <div class="step-connector"></div>
+
+  <!-- SCHRITT 2 -->
+  <div class="step-wrap"><div class="step-num">2</div><div class="step-lbl">Rentenwunsch &amp; Annahmen festlegen</div></div>
+
+  <div class="card">
+    <div class="sec-lbl">Eingaben</div>
+    <div class="ctrl-row">
+      <div class="cr-top">
+        <label for="wunschSlider">Wunschrente Haushalt netto / Monat (heutige Kaufkraft)</label>
+        <span class="cr-val" id="wunschVal">8.000 €</span>
+      </div>
+      <input type="range" id="wunschSlider" min="6500" max="10000" step="50" value="8000">
+      <div class="cr-range"><span>6.500 €</span><span>10.000 €</span></div>
+    </div>
+    <div class="ctrl-row">
+      <div class="cr-top">
+        <label for="pkvSlider">PKV-Eigenanteil im Ruhestand (kombiniert, geschätzt)</label>
+        <span class="cr-val" id="pkvVal">0 €</span>
+      </div>
+      <input type="range" id="pkvSlider" min="0" max="1000" step="50" value="0">
+      <div class="cr-range"><span>0 € (kein Abzug)</span><span>1.000 €/Monat</span></div>
+    </div>
+    <div class="ctrl-row">
+      <div class="cr-top">
+        <label for="infSlider">Inflationsrate (Annahme p.a.)</label>
+        <span class="cr-val" id="infVal">2,0 %</span>
+      </div>
+      <input type="range" id="infSlider" min="1.0" max="4.0" step="0.1" value="2.0">
+      <div class="cr-range"><span>1,0 %</span><span>4,0 %</span></div>
+    </div>
+  </div>
+
+  <div class="step-connector"></div>
+
+  <!-- SCHRITT 3 -->
+  <div class="step-wrap"><div class="step-num">3</div><div class="step-lbl">Inflationsrechner · Was kostet der Wunsch in 14 Jahren?</div></div>
+
+  <div id="infSection"></div>
+
+  <div class="step-connector"></div>
+
+  <!-- SCHRITT 4 -->
+  <div class="step-wrap"><div class="step-num">4</div><div class="step-lbl">Pensionslücke ermitteln</div></div>
+
+  <div id="gapSection"></div>
+
+  <div class="step-connector" id="connKap" style="display:none"></div>
+
+  <!-- SCHRITT 5 -->
+  <div class="step-wrap" id="step5wrap" style="display:none"><div class="step-num">5</div><div class="step-lbl">Kapitalbedarf berechnen</div></div>
+
+  <div id="kapSection"></div>
+
+  <div id="step6wrap" style="display:none">
+    <div class="step-connector"></div>
+    <div class="step-wrap"><div class="step-num">6</div><div class="step-lbl">Sparrate ermitteln · Produkt wählen</div></div>
+  </div>
+
+  <div id="tabsWrap" style="display:none">
+    <div class="tabs">
+      <button class="tab on-navy"  data-tab="vers"  onclick="setTab('vers')">Versicherungsmantel</button>
+      <button class="tab"          data-tab="depot" onclick="setTab('depot')">Depot ETF</button>
+      <button class="tab"          data-tab="vergl" onclick="setTab('vergl')">Gegenüberstellung</button>
+    </div>
+  </div>
+  <div id="tabContent" class="tab-body" style="display:none"></div>
+
+  <p class="disc" id="discText"></p>
+</div>
+
+<script>
+/* ─── FMU (Versicherungsmantel) ───────────────────────────────── */
+function fmuEndwert(rate, dauer, dyn, K) {
+  if (dauer <= 0 || rate <= 0) return 0;
+  var months = Math.round(dauer * 12);
+  var gM = Math.pow(1 + K.rendite, 1/12) - 1;
+  var bs = rate * 12 * Math.min(dauer, 35);
+  var apm = K.alpha > 0 ? (K.alpha * bs) / 60 : 0;
+  var bal = 0;
+  for (var m = 1; m <= months; m++) {
+    var r = rate * Math.pow(1 + dyn, Math.ceil(m/12) - 1);
+    bal += r - r * K.beta;
+    if (m <= 60) bal -= apm;
+    if (K.stueck > 0) bal -= K.stueck / 12;
+    bal += bal * gM;
+    if (K.gamma > 0) bal -= bal * (K.gamma / 12);
+  }
+  return bal;
+}
+function fmuSolve(target, dauer, dyn, K) {
+  if (dauer <= 0 || target <= 0) return null;
+  var e1 = fmuEndwert(100, dauer, dyn, K);
+  var e2 = fmuEndwert(200, dauer, dyn, K);
+  var slope = (e2 - e1) / 100;
+  if (slope <= 0) return null;
+  var m = (target - (e1 - slope * 100)) / slope;
+  return m > 0 ? m : null;
+}
+
+/* ─── Depot ETF ───────────────────────────────────────────────── */
+function depotEndwert(rate, dauer, Kd) {
+  if (dauer <= 0 || rate <= 0) return 0;
+  var months = Math.round(dauer * 12);
+  var gM_gross = Math.pow(1 + Kd.rendite, 1/12) - 1;
+  var gM = (1 + gM_gross) * (1 - Kd.ter / 12) - 1;
+  var bal = 0, basis = 0;
+  for (var m = 1; m <= months; m++) {
+    var beitrag = rate * (1 - Kd.ausgabeaufschlag);
+    bal += beitrag; basis += beitrag;
+    bal += bal * gM;
+    if (m % 12 === 0 && Kd.umschichtung > 0) {
+      var sold = Kd.umschichtung * bal;
+      var gain = sold - Kd.umschichtung * basis;
+      if (gain > 0) {
+        var tax = gain * Kd.tax_rate;
+        basis = (1 - Kd.umschichtung) * basis + (sold - tax);
+        bal -= tax;
+      }
+    }
+  }
+  return bal;
+}
+function depotSolve(target, dauer, Kd) {
+  if (dauer <= 0 || target <= 0) return null;
+  var e1 = depotEndwert(100, dauer, Kd);
+  var e2 = depotEndwert(200, dauer, Kd);
+  var slope = (e2 - e1) / 100;
+  if (slope <= 0) return null;
+  var m = (target - (e1 - slope * 100)) / slope;
+  return m > 0 ? m : null;
+}
+
+/* ─── Kostenparameter ─────────────────────────────────────────── */
+var K  = { rendite: 0.06, alpha: 0.025, beta: 0.06, gamma: 0.003, stueck: 36 };
+var K0 = { rendite: 0.06, alpha: 0,     beta: 0,    gamma: 0,     stueck: 0  };
+var K0d = { rendite: 0.06, ausgabeaufschlag: 0, ter: 0, umschichtung: 0, tax_rate: 0 };
+
+var KIST       = 0.08;
+var SOLI       = 0.055;
+var TEILFREI   = 0.30;
+var kapest_adj = 0.25 / (1 + KIST * 0.25);
+var steuer_ges = kapest_adj * (1 + SOLI + KIST);
+var EFF_STEUER = steuer_ges * (1 - TEILFREI);
+
+var Kd = { rendite: 0.06, ausgabeaufschlag: 0.01, ter: 0.004, umschichtung: 0.25, tax_rate: EFF_STEUER };
+
+var PENSION = 6546;
+var DAUER   = 14;
+var BEZUG   = 276;
+
+/* ─── Globaler Zustand ────────────────────────────────────────── */
+var _luecke = 0, _lnom = 0, _kb = 0, _peff = 0, _wunsch = 0, _inf = 0.02;
+var _activeTab = 'vers';
+
+/* ─── Formatter ───────────────────────────────────────────────── */
+function de(n)  { return Math.round(n).toLocaleString('de-DE') + ' €'; }
+function eur(n) { return Math.round(n).toLocaleString('de-DE'); }
+function pct(n) { return n.toFixed(2).replace('.', ',') + ' %'; }
+function p1(n)  { return n.toFixed(1).replace('.', ',') + ' %'; }
+
+/* ─── Tabs ────────────────────────────────────────────────────── */
+function setTab(t) {
+  _activeTab = t;
+  var cls = { vers: 'on-navy', depot: 'on-green', vergl: 'on-split' };
+  document.querySelectorAll('.tab').forEach(function(b) {
+    b.className = 'tab';
+    if (b.getAttribute('data-tab') === t) b.classList.add(cls[t]);
+  });
+  renderTabContent();
+}
+
+/* ─── HTML-Bausteine ──────────────────────────────────────────── */
+function rcard(cls, lbl, val, sub) {
+  return '<div class="rcard ' + cls + '">'
+    + '<div class="rc-lbl">' + lbl + '</div>'
+    + '<div class="rc-val">' + (val != null ? de(val) : '–') + '</div>'
+    + '<div class="rc-sub">' + sub + '</div>'
+    + '</div>';
+}
+function krow(k, v) { return '<tr><td class="kt-k">' + k + '</td><td class="kt-v">' + v + '</td></tr>'; }
+
+/* ─── Inflationsrechner ───────────────────────────────────────── */
+function renderInflation(wunsch, inf) {
+  var nom2040  = wunsch * Math.pow(1 + inf, DAUER);
+  var kauf_eur = (Math.pow(1 / (1 + inf), DAUER) * 100).toFixed(1).replace('.', ',');
+  var steigerung = ((Math.pow(1 + inf, DAUER) - 1) * 100).toFixed(1).replace('.', ',');
+
+  // Jahrestabelle
+  var milestones = [
+    { yr: 2026, lbl: 'Heute' },
+    { yr: 2030, lbl: '' },
+    { yr: 2033, lbl: '' },
+    { yr: 2036, lbl: '' },
+    { yr: 2040, lbl: 'Renteneintritt Steffen' }
+  ];
+  var tRows = milestones.map(function(m) {
+    var n = m.yr - 2026;
+    var factor = Math.pow(1 + inf, n);
+    var nom    = Math.round(wunsch * factor);
+    var isLast = m.yr === 2040;
+    var style  = isLast ? ' style="font-weight:800;background:var(--line2)"' : '';
+    return '<tr' + style + '>'
+      + '<td style="padding:8px 0"><b>' + m.yr + '</b>'
+      + (m.lbl ? '<span class="inf-yr-badge">' + m.lbl + '</span>' : '')
+      + '</td>'
+      + '<td class="r" style="color:var(--muted)">' + (n > 0 ? '+' + n + ' J.' : '–') + '</td>'
+      + '<td class="r">' + p1(factor * 100) + '</td>'
+      + '<td class="r"><b>' + nom.toLocaleString('de-DE') + ' €</b></td>'
+      + '</tr>';
+  }).join('');
+
+  return '<div class="card">'
+    + '<div class="sec-lbl">Inflationsrechner · Kaufkraftentwicklung des Rentenwunsches</div>'
+    + '<div class="inf-arrow-row">'
+    + '<div class="inf-box inf-box-light">'
+    + '<div class="inf-box-lbl">Rentenwunsch heute · 2026</div>'
+    + '<div class="inf-box-val">' + de(wunsch) + ' / Mt.</div>'
+    + '<div class="inf-box-sub">heutige Kaufkraft · Basis</div>'
+    + '</div>'
+    + '<div class="inf-arrow">→</div>'
+    + '<div class="inf-box inf-box-dark">'
+    + '<div class="inf-box-lbl">Nominalbedarf 2040</div>'
+    + '<div class="inf-box-val">' + de(nom2040) + ' / Mt.</div>'
+    + '<div class="inf-box-sub">bei ' + p1(inf * 100) + ' p.a. · +' + steigerung + ' %</div>'
+    + '</div>'
+    + '</div>'
+    + '<table class="inf-tbl">'
+    + '<tr><th>Jahr</th><th class="r">Laufzeit</th><th class="r">Kaufkraft&shy;index</th><th class="r">Wunschrente nominal</th></tr>'
+    + tRows
+    + '</table>'
+    + '<div class="inf-hint">1 Euro hat in 14 Jahren bei ' + p1(inf * 100) + ' p.a. Inflation nur noch <b>' + kauf_eur + ' Cent</b> Kaufkraft.'
+    + ' Der nominale Mehrbedarf gegenüber heute beträgt <b>' + de(nom2040 - wunsch) + ' / Monat</b>.'
+    + ' Aus diesem Grund wird die Rentenlücke in den Schritten 4 und 5 ebenfalls auf 2040 hochgerechnet.</div>'
+    + '</div>';
+}
+
+/* ─── Versicherungsmantel-Tab ─────────────────────────────────── */
+function renderVers() {
+  var rFix = fmuSolve(_kb, DAUER, 0,    K);
+  var rDyn = fmuSolve(_kb, DAUER, 0.02, K);
+  var rRef = fmuSolve(_kb, DAUER, 0,    K0);
+  var kdiff = (rFix && rRef) ? Math.round(rFix - rRef) : null;
+  return '<div class="sec-lbl">Versicherungsmantel (FMU) – monatliche Sparrate</div>'
+    + '<div class="rgrid-3">'
+    + rcard('rcard-dark',    'Fixe Sparrate',          rFix, 'konstant / Monat · 14 Jahre')
+    + rcard('rcard-blue',    'Mit 2 % Dynamik',        rDyn, 'Startrate · +2 % jährlich')
+    + rcard('rcard-neutral', 'Ohne Kosten (Referenz)', rRef, 'reine 6 % Brutto-Rendite')
+    + '</div>'
+    + '<div class="kosten-box">'
+    + '<div class="sec-lbl" style="margin-bottom:10px">Kostenstruktur Versicherungsmantel</div>'
+    + '<table class="kosten-tbl">'
+    + krow('Abschluss (α)', '2,5 % der Beitragssumme · auf 60 Monate verteilt')
+    + krow('Verwaltung (β)', '6,0 % je Monatsbeitrag · laufend')
+    + krow('Gamma (γ)',      '0,30 % p.a. auf das Vermögen')
+    + krow('Stückkosten',   '36 € / Jahr · fix')
+    + krow('Steuer im Mantel', '<b>Keine</b> – steuerfreies Wachstum; Versteuerung erst bei Auszahlung')
+    + '</table>'
+    + (kdiff ? '<div class="kostendiff"><span class="kd-lbl">Mehrrate gegenüber kostenfreier Anlage</span><span class="kd-v-red">+ ' + eur(kdiff) + ' € / Monat</span></div>' : '')
+    + '</div>';
+}
+
+/* ─── Depot-Tab ───────────────────────────────────────────────── */
+function renderDepot() {
+  var dFix = depotSolve(_kb, DAUER, Kd);
+  var dRef = depotSolve(_kb, DAUER, K0d);
+  var kdiff = (dFix && dRef) ? Math.round(dFix - dRef) : null;
+  var kap_p = pct(kapest_adj * 100);
+  var sol_p = pct(kapest_adj * SOLI * 100);
+  var kis_p = pct(kapest_adj * KIST * 100);
+  var ges_p = pct(steuer_ges * 100);
+  var eff_p = pct(EFF_STEUER * 100);
+  return '<div class="sec-lbl">Depot ETF – monatliche Sparrate</div>'
+    + '<div class="rgrid-2">'
+    + rcard('rcard-green',   'Fixe Sparrate',               dFix, 'konstant / Monat · 14 Jahre')
+    + rcard('rcard-neutral', 'Ohne Kosten/Steuer (Ref.)', dRef, 'reine 6 % Brutto-Rendite')
+    + '</div>'
+    + '<div class="kosten-box">'
+    + '<div class="sec-lbl" style="margin-bottom:10px">Kostenstruktur Depot ETF</div>'
+    + '<table class="kosten-tbl">'
+    + krow('Ausgabeaufschlag', '1,0 % je Einzahlung · Beitrag vermindert auf 99 %')
+    + krow('TER',              '0,40 % p.a. auf Fondsvolumen · reduziert Monatsrendite')
+    + krow('Umschichtung',     '25 % p.a. des Portfolios → Abgeltungsteuer auf den Gewinn')
+    + krow('Steuer auf Gewinn','KapESt ' + kap_p + ' + Soli ' + sol_p + ' + KiSt BW 8 % ' + kis_p
+        + ' = ' + ges_p + ' (brutto)<br><b>Eff. ' + eff_p + ' nach Teilfreistellung 30 % (Aktienfonds)</b>')
+    + krow('Steuer Auszahlung','Abgeltungsteuer auf nicht realisierte Restgewinne')
+    + '</table>'
+    + (kdiff ? '<div class="kostendiff"><span class="kd-lbl">Mehrrate gegenüber kostenfreier Anlage</span><span class="kd-v-red">+ ' + eur(kdiff) + ' € / Monat</span></div>' : '')
+    + '</div>'
+    + '<div class="infobox"><b>Hinweis:</b> Thesaurierende ETFs unterliegen zusätzlich der Vorabpauschale (§ 18 InvStG). Sie ist hier nicht separat modelliert; die 25 %-Umschichtung dient als vereinfachte Näherung der jährlichen Steuerbelastung.</div>';
+}
+
+/* ─── Gegenüberstellung-Tab ───────────────────────────────────── */
+function renderVergl() {
+  var vFix = fmuSolve(_kb, DAUER, 0,    K);
+  var vDyn = fmuSolve(_kb, DAUER, 0.02, K);
+  var dFix = depotSolve(_kb, DAUER, Kd);
+  var diff = (vFix && dFix) ? Math.round(vFix - dFix) : null;
+  var vers_win  = diff !== null && diff < 0;
+  var depot_win = diff !== null && diff > 0;
+
+  var vHead = '<div class="cmp-head cmp-head-navy">Versicherungsmantel'
+    + (vers_win  ? '<span class="winner-badge">günstiger</span>' : '') + '</div>';
+  var dHead = '<div class="cmp-head cmp-head-green">Depot ETF'
+    + (depot_win ? '<span class="winner-badge">günstiger</span>' : '') + '</div>';
+
+  var html = '<div class="sec-lbl">Direkter Vergleich · Kapitalbedarf ' + de(_kb) + '</div>'
+    + '<div class="cmp-grid">'
+    + '<div>' + vHead
+    + '<div class="rgrid-2" style="margin-bottom:8px">'
+    + rcard('rcard-dark', 'Fixe Sparrate',   vFix, 'konstant / Monat')
+    + rcard('rcard-blue', 'Mit 2 % Dynamik', vDyn, 'Startbeitrag') + '</div></div>'
+    + '<div>' + dHead
+    + '<div class="rgrid-2" style="margin-bottom:8px">'
+    + rcard('rcard-green',   'Fixe Sparrate', dFix, 'konstant / Monat')
+    + rcard('rcard-neutral', '2 % Dynamik',   null, 'nicht modelliert') + '</div></div>'
+    + '</div>';
+
+  html += '<div class="kosten-box" style="margin-top:6px">'
+    + '<div class="sec-lbl" style="margin-bottom:10px">Kostenvergleich auf einen Blick</div>'
+    + '<table class="cmp-tbl">'
+    + '<tr><td class="ctl" style="font-size:10px;text-transform:uppercase;letter-spacing:.5px">Kostenart</td><td class="cv1" style="font-size:10px;text-transform:uppercase">Versicherung</td><td class="cv2" style="font-size:10px;text-transform:uppercase">Depot ETF</td></tr>'
+    + '<tr><td class="ctl">Einmalig / Abschluss</td><td class="cv1" style="font-weight:400;color:var(--ink)">α 2,5 % Beitragssumme</td><td class="cv2" style="font-weight:400;color:var(--ink)">Ausgabeaufschlag 1 %</td></tr>'
+    + '<tr><td class="ctl">Laufend auf Beitrag</td><td class="cv1" style="font-weight:400;color:var(--ink)">β 6,0 % je Monatsbeitrag</td><td class="cv2" style="font-weight:400;color:var(--ink)">— (keine)</td></tr>'
+    + '<tr><td class="ctl">Laufend auf Vermögen</td><td class="cv1" style="font-weight:400;color:var(--ink)">γ 0,30 % p.a. + 36 €/J.</td><td class="cv2" style="font-weight:400;color:var(--ink)">TER 0,40 % p.a.</td></tr>'
+    + '<tr><td class="ctl">Steuer im Sparzeitraum</td><td class="cv1" style="font-weight:400;color:var(--ink)">Steuerfrei (Mantel)</td><td class="cv2" style="font-weight:400;color:var(--ink)">~' + pct(EFF_STEUER * 100) + ' auf 25 % Umschichtungsgewinn/J.</td></tr>'
+    + '<tr><td class="ctl">Steuer bei Auszahlung</td><td class="cv1" style="font-weight:400;color:var(--ink)">Halbeinkünfte (50 %-Methode) möglich</td><td class="cv2" style="font-weight:400;color:var(--ink)">Abgeltungsteuer auf Restgewinn</td></tr>'
+    + '</table></div>';
+
+  if (diff !== null) {
+    var abs = eur(Math.abs(diff));
+    var msg = diff > 0
+      ? 'Das <b>Depot ETF</b> erfordert bei diesen Parametern <b>' + abs + ' €/Mt. weniger</b> als der Versicherungsmantel.'
+      : diff < 0
+        ? 'Der <b>Versicherungsmantel</b> erfordert bei diesen Parametern <b>' + abs + ' €/Mt. weniger</b> als das Depot.'
+        : 'Beide Varianten liegen nahezu gleichauf.';
+    html += '<div class="infobox">' + msg
+      + ' Die Entscheidung hängt auch von weiteren Faktoren ab: steuerfreies Wachstum im Mantel, günstige Auszahlungsbesteuerung (Halbeinkünfteverfahren ab 12 J./62+), Flexibilität und Liquidierbarkeit des Depots sowie individuelle Produktkonditionen.</div>';
+  }
+  return html;
+}
+
+/* ─── Tab-Dispatch ────────────────────────────────────────────── */
+function renderTabContent() {
+  var el = document.getElementById('tabContent');
+  if (_luecke <= 0) { el.innerHTML = ''; return; }
+  if (_activeTab === 'vers')  el.innerHTML = renderVers();
+  if (_activeTab === 'depot') el.innerHTML = renderDepot();
+  if (_activeTab === 'vergl') el.innerHTML = renderVergl();
+}
+
+/* ─── Hauptfunktion ───────────────────────────────────────────── */
+function update() {
+  var w   = +document.getElementById('wunschSlider').value;
+  var pkv = +document.getElementById('pkvSlider').value;
+  var inf = +document.getElementById('infSlider').value / 100;
+
+  document.getElementById('wunschVal').textContent = w.toLocaleString('de-DE') + ' €';
+  document.getElementById('pkvVal').textContent    = pkv.toLocaleString('de-DE') + ' €';
+  document.getElementById('infVal').textContent    = p1(inf * 100);
+
+  _wunsch = w;
+  _inf    = inf;
+  _peff   = PENSION - pkv;
+  _luecke = Math.max(0, w - _peff);
+  _lnom   = _luecke * Math.pow(1 + inf, DAUER);
+  _kb     = _lnom * BEZUG;
+
+  // Inflationsrechner immer anzeigen
+  document.getElementById('infSection').innerHTML = renderInflation(w, inf);
+
+  var gs = document.getElementById('gapSection');
+  var ks = document.getElementById('kapSection');
+  var tw = document.getElementById('tabsWrap');
+  var tc = document.getElementById('tabContent');
+  var s5 = document.getElementById('step5wrap');
+  var s6 = document.getElementById('step6wrap');
+  var ck = document.getElementById('connKap');
+
+  if (_luecke <= 0) {
+    gs.innerHTML = '<div class="nolag" style="margin-bottom:14px"><b>Keine Lücke erkannt.</b> '
+      + 'Die erwartete Pension von ' + de(_peff) + ' / Monat übersteigt die Wunschrente. '
+      + 'Ein Sparplan ist auf Basis dieser Annahmen nicht erforderlich.</div>';
+    ks.innerHTML = '';
+    tw.style.display = s5.style.display = s6.style.display = ck.style.display = 'none';
+    tc.style.display = 'none';
+    document.getElementById('discText').textContent = '';
+    return;
+  }
+
+  // Gap-Balken
+  var fp = Math.min(100, _peff / w * 100);
+  gs.innerHTML = '<div class="card" style="padding-bottom:0;margin-bottom:0">'
+    + '<div class="sec-lbl">Pensionslücke (heutige Kaufkraft)</div>'
+    + '<div class="gapbar-wrap">'
+    + '<div class="gapbar-track">'
+    + '<div class="gapbar-fill" style="width:' + fp.toFixed(1) + '%">'
+    + '<span>' + (fp > 28 ? de(_peff) + ' Pension' : '') + '</span></div>'
+    + '<div class="gapbar-gap">Lücke ' + de(_luecke) + ' / Mt.</div>'
+    + '</div>'
+    + '<div class="gapbar-lbls">'
+    + '<span>Effektive Pension: <b>' + de(_peff) + '</b>'
+    + (pkv > 0 ? ' (nach PKV − ' + de(pkv) + ')' : '') + '</span>'
+    + '<span>Wunschrente: <b>' + de(w) + '</b></span>'
+    + '</div></div></div><div style="height:14px"></div>';
+
+  // Kapitalberg
+  s5.style.display = ck.style.display = '';
+  ks.innerHTML = '<div class="card">'
+    + '<div class="sec-lbl">Berechnungsweg · Kapitalberg</div>'
+    + '<table class="calc-tbl">'
+    + '<tr><td class="ct-lbl">Lücke heute (heutige Kaufkraft)'
+    + '<span class="ct-sub">Wunsch ' + de(w) + ' − effektive Pension ' + de(_peff) + (pkv > 0 ? ' (nach PKV)' : '') + '</span></td>'
+    + '<td class="ct-val">' + de(_luecke) + ' / Mt.</td></tr>'
+    + '<tr><td class="ct-lbl">Lücke nominal bei Renteneintritt 2040'
+    + '<span class="ct-sub">' + de(_luecke) + ' × (1,' + p1(inf * 100).replace(' %','').replace(',','') + ')¹⁴ · Inflation ' + p1(inf * 100) + ' p.a.</span></td>'
+    + '<td class="ct-val">' + de(_lnom) + ' / Mt.</td></tr>'
+    + '<tr><td class="ct-lbl">Kapitalberg bei Renteneintritt'
+    + '<span class="ct-sub">' + de(_lnom) + ' / Mt. × 276 Monate (Alter 67–90)</span></td>'
+    + '<td class="ct-val">' + de(_kb) + '</td></tr>'
+    + '</table></div>';
+
+  // Tabs
+  s6.style.display = tw.style.display = tc.style.display = '';
+  renderTabContent();
+
+  // Disclaimer
+  document.getElementById('discText').innerHTML =
+    '<b>Versicherungsmantel:</b> FMU-Formel · α 2,5 % Beitragssumme (60 Mt.) · β 6,0 % je Beitrag · γ 0,30 % p.a. · Stückkosten 36 €/J. &ensp;|&ensp;'
+    + '<b>Depot ETF:</b> Ausgabeaufschlag 1 % · TER 0,4 % p.a. · Umschichtung 25 % p.a. · eff. Steuer '
+    + pct(EFF_STEUER * 100) + ' (KapESt ' + pct(kapest_adj * 100) + ' + Soli '
+    + pct(kapest_adj * SOLI * 100) + ' + KiSt BW 8 %, Teilfreistellung 30 % Aktienfonds) &ensp;|&ensp;'
+    + 'Rendite 6,0 % p.a. · Inflation ' + p1(inf * 100) + ' p.a. · Ansparzeit 14 J. · Bezug 276 Monate. Alle Angaben ohne Gewähr.';
+}
+
+document.getElementById('wunschSlider').addEventListener('input', update);
+document.getElementById('pkvSlider').addEventListener('input',   update);
+document.getElementById('infSlider').addEventListener('input',   update);
+update();
+</script>
+</body>
+</html>
