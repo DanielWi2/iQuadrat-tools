@@ -209,6 +209,23 @@
     }
     .hint-line strong { color: var(--navy); }
 
+    /* Drag & Drop + lokale Änderungen */
+    .idea-card { cursor: grab; }
+    .idea-card:active { cursor: grabbing; }
+    .kb-cards.dragover { outline: 2px dashed var(--blue); outline-offset: -3px; border-radius: 8px; background: rgba(29,111,165,0.06); }
+    #ov-banner {
+      display: none; margin-top: 14px; background: #fdf3e5; border: 1px solid #f0d9b5;
+      border-radius: 12px; padding: 12px 16px; font-size: 0.8rem; color: #7a5416;
+      align-items: center; gap: 12px; flex-wrap: wrap;
+    }
+    #ov-banner .btn { padding: 7px 13px; font-size: 0.76rem; }
+    .prog-edit { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+    .prog-edit input[type="range"] { flex: 1; accent-color: var(--green); }
+    .prog-edit select {
+      font-family: inherit; font-size: 0.8rem; color: var(--navy);
+      border: 1px solid var(--line); border-radius: 8px; padding: 7px 9px; background: #fff;
+    }
+
     footer {
       border-top: 1px solid var(--line); background: #fff; padding: 22px 32px;
       font-size: 0.78rem; color: var(--muted); text-align: center;
@@ -290,6 +307,13 @@
       <button class="reset-link" onclick="resetFilter()">Filter zurücksetzen</button>
     </div>
 
+    <!-- Banner: lokale Änderungen (Drag & Drop / Fortschritt) -->
+    <div id="ov-banner">
+      <span id="ov-text"></span>
+      <button class="btn btn-navy" onclick="copyOverrides()">📋 Für Claude kopieren</button>
+      <button class="btn btn-outline" onclick="clearOverrides()">Änderungen verwerfen</button>
+    </div>
+
     <!-- Kanban -->
     <div id="kanban"></div>
 
@@ -316,7 +340,10 @@
     <div class="hint-line">
       <strong>So läuft's:</strong> Diese Ansicht ist read-only. Vorschläge und Ergänzungen gehen per Klick auf
       <strong>„💡 Neue Idee einreichen"</strong> (oben) oder <strong>„Ergänzung / Feedback"</strong> (in jeder Idee)
-      als vorbereitete E-Mail an Daniel — er pflegt sie zentral ein. Nur <strong>Mehrumsatz</strong> und
+      als vorbereitete E-Mail an Daniel — er pflegt sie zentral ein.
+      <strong>Karten lassen sich per Drag &amp; Drop verschieben</strong>, Status und Fortschritt auch in der
+      Detail-Ansicht ändern — solche Änderungen gelten zunächst nur in deinem Browser und werden über
+      <strong>„Für Claude kopieren"</strong> dauerhaft übernommen. Nur <strong>Mehrumsatz</strong> und
       <strong>Kostenersparnis</strong> zählen auf das 1.000-€-Ziel; <strong>Enabler</strong> (grau) sparen Zeit,
       zählen aber erst, wenn daraus echter Umsatz oder echte Ersparnis wird.
     </div>
@@ -328,7 +355,7 @@
   <footer>
     © iQuadrat Investment und Immobilien GmbH &nbsp;·&nbsp; KI-Ideen-Dashboard &nbsp;·&nbsp;
     Stand: <span id="stand-datum"></span> &nbsp;·&nbsp;
-    Fragen: <a href="mailto:daniel.weisbrod@iquadrat.de">daniel.weisbrod@iquadrat.de</a>
+    Fragen: <a href="mailto:daniel.weisbrod@i2.de">daniel.weisbrod@i2.de</a>
   </footer>
 
 </div>
@@ -514,10 +541,10 @@ const IDEEN = [
   notizen:"Fertig gebaut. Offen: Buchungslink, Impressum/Datenschutz, optional Lead-Brücke zu Pipedrive (B4.1). Evergreen-Baustein für D9." },
 { id:"B1.1", titel:"Beitragsänderungs-/Auftrags-Generator", kategorie:"Dokumente & Vorlagen",
   beschreibung:"Formular ausfüllen → unterschriftsreifes DOCX/PDF aus geprüfter Vorlage (Beitrag ändern, Dynamik, Freistellung, Zuzahlung, Kündigung …). v1 bewusst deterministisch.",
-  status:"In Umsetzung", aufwand:"S", wow:3, impact_eur_monat:0, realisiert_eur_monat:0, impact_typ:"Enabler", typ:"intern",
-  fortschritt_prozent:60, quelle:"Backlog", ideengeber:"Backlog (Pain 2)", tool_link:"beitragsaenderung-generator.html", wartet_auf:"Je Vorgangsart 1 Beispiel-DOCX/Wortlaut",
+  status:"Live", aufwand:"S", wow:3, impact_eur_monat:0, realisiert_eur_monat:0, impact_typ:"Enabler", typ:"intern",
+  fortschritt_prozent:100, quelle:"Backlog", ideengeber:"Backlog (Pain 2)", tool_link:"beitragsaenderung-generator.html", wartet_auf:"",
   letzte_aktualisierung:"2026-07-03",
-  notizen:"Roadmap-Empfehlung Nr. 1 — täglicher Zeitfresser, schneller sichtbarer Win. Basis-Tool existiert." },
+  notizen:"Fertig und im Einsatz (bestätigt von Daniel, 03.07.2026). War Roadmap-Empfehlung Nr. 1 — täglicher Zeitfresser, jetzt gelöst." },
 { id:"B1.2", titel:"Konzept-/Report-Generator", kategorie:"Dokumente & Vorlagen",
   beschreibung:"Aus der Datenaufnahme (7 Blöcke + Bischoff-Ziele) auf 1 Klick ein mehrseitiges Konzept als PDF/PPTX — statt 3–5 Tage Handarbeit.",
   status:"In Umsetzung", aufwand:"L", wow:3, impact_eur_monat:0, realisiert_eur_monat:0, impact_typ:"Enabler", typ:"intern",
@@ -639,9 +666,71 @@ const IDEEN = [
   notizen:"Gebaut am 03.07.2026. Offen: Kollegen-Feedback einsammeln, ggf. Formular-Embed (Tally/Formspree) nachrüsten, dann auf Live setzen." }
 ];
 
+/* ── Lokale Änderungen (Drag & Drop / Fortschritt) ────
+   Werden im Browser gespeichert (localStorage) und über
+   „Für Claude kopieren" exportiert → Claude schreibt sie
+   dann fest in diese Datei (Single Source of Truth).   */
+const OV_KEY = "iq_ideen_overrides";
+let overrides = {};
+try { overrides = JSON.parse(localStorage.getItem(OV_KEY) || "{}"); } catch (e) { overrides = {}; }
+
+function applyOverrides() {
+  IDEEN.forEach(i => {
+    const o = overrides[i.id];
+    if (!o) return;
+    if (o.status) i.status = o.status;
+    if (o.fortschritt_prozent != null) i.fortschritt_prozent = o.fortschritt_prozent;
+    if (o.datum) i.letzte_aktualisierung = o.datum;
+  });
+}
+function saveOverride(id, patch) {
+  overrides[id] = Object.assign({}, overrides[id], patch, { datum: new Date().toISOString().slice(0, 10) });
+  try { localStorage.setItem(OV_KEY, JSON.stringify(overrides)); } catch (e) {}
+  applyOverrides();
+  render();
+  renderOvBanner();
+}
+function renderOvBanner() {
+  const n = Object.keys(overrides).length;
+  const b = $("ov-banner");
+  b.style.display = n ? "flex" : "none";
+  if (n) $("ov-text").innerHTML = `<strong>${n} lokale Änderung${n > 1 ? "en" : ""}</strong> (nur in diesem Browser gespeichert). Damit sie dauerhaft für alle gelten: kopieren und Claude in einer Session geben.`;
+}
+function copyOverrides() {
+  const zeilen = Object.entries(overrides).map(([id, o]) => {
+    const i = IDEEN.find(x => x.id === id);
+    const teile = [];
+    if (o.status) teile.push(`Status → ${o.status}`);
+    if (o.fortschritt_prozent != null) teile.push(`Fortschritt → ${o.fortschritt_prozent} %`);
+    return `${id} · ${i ? i.titel : "?"}: ${teile.join(", ")} (${o.datum})`;
+  });
+  const text = "Bitte im Ideen-Dashboard (tools/ideen-dashboard.html) fest übernehmen:\n" + zeilen.join("\n");
+  const done = () => alert("Kopiert! Einfach in einer Claude-Session einfügen.");
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done, () => prompt("Manuell kopieren:", text));
+  else prompt("Manuell kopieren:", text);
+}
+function clearOverrides() {
+  if (!confirm("Alle lokalen Änderungen verwerfen und auf den Stand der Datei zurücksetzen?")) return;
+  overrides = {};
+  try { localStorage.removeItem(OV_KEY); } catch (e) {}
+  location.reload();
+}
+let dragId = null;
+function onDragStart(ev, id) { dragId = id; ev.dataTransfer.effectAllowed = "move"; try { ev.dataTransfer.setData("text/plain", id); } catch (e) {} }
+function onDrop(ev, status) {
+  ev.preventDefault();
+  document.querySelectorAll(".kb-cards.dragover").forEach(el => el.classList.remove("dragover"));
+  const id = dragId || ev.dataTransfer.getData("text/plain");
+  if (!id) return;
+  const i = IDEEN.find(x => x.id === id);
+  if (!i || i.status === status) return;
+  saveOverride(id, { status });
+  dragId = null;
+}
+
 /* ── Rendering ──────────────────────────────────────── */
 const SPALTEN = ["Ideen", "Priorisiert", "In Umsetzung", "Test", "Live"];
-const MAIL_TO = "daniel.weisbrod@iquadrat.de";
+const MAIL_TO = "daniel.weisbrod@i2.de";
 let view = "kanban";
 let sortKey = "impact_eur_monat", sortDir = -1;
 
@@ -677,7 +766,7 @@ function gefiltert() {
 }
 
 function cardHTML(i) {
-  return `<div class="idea-card" onclick="openModal('${i.id}')">
+  return `<div class="idea-card" draggable="true" ondragstart="onDragStart(event,'${i.id}')" onclick="openModal('${i.id}')">
     <div class="idea-title">${esc(i.titel)}</div>
     <div class="badges">${katBadge(i)}${quelleBadge(i)}${impactBadge(i)}
       ${i.wartet_auf ? `<span class="badge b-wartet">⏳ Wartet: ${esc(i.wartet_auf)}</span>` : ""}</div>
@@ -694,7 +783,10 @@ function renderKanban(liste) {
       .sort((a, b) => b.impact_eur_monat - a.impact_eur_monat || a.titel.localeCompare(b.titel, "de"));
     return `<div class="kb-col">
       <div class="kb-col-head"><span>${sp}</span><span class="kb-count">${items.length}</span></div>
-      <div class="kb-cards">${items.map(cardHTML).join("") || '<div style="font-size:0.75rem;color:var(--muted);padding:8px 6px;">— leer —</div>'}</div>
+      <div class="kb-cards" data-status="${sp}"
+        ondragover="event.preventDefault(); this.classList.add('dragover')"
+        ondragleave="this.classList.remove('dragover')"
+        ondrop="onDrop(event,'${sp}')">${items.map(cardHTML).join("") || '<div style="font-size:0.75rem;color:var(--muted);padding:8px 6px;">— leer — (Karte hierher ziehen)</div>'}</div>
     </div>`;
   }).join("");
 }
@@ -758,9 +850,14 @@ function openModal(id) {
       <div><div class="lbl">Ideengeber</div>${esc(i.ideengeber)}</div>
       <div><div class="lbl">Letzte Aktualisierung</div>${esc(i.letzte_aktualisierung)}</div>
     </div>
-    <div class="progress-wrap" style="margin-bottom:14px;">
-      <div class="progress" style="height:10px;"><div class="progress-fill" style="width:${i.fortschritt_prozent}%"></div></div>
-      <span class="progress-pct">${i.fortschritt_prozent} %</span>
+    <div class="prog-edit">
+      <select onchange="saveOverride('${i.id}', {status: this.value}); openModal('${i.id}')">
+        ${SPALTEN.map(s => `<option value="${s}"${s === i.status ? " selected" : ""}>${s}</option>`).join("")}
+      </select>
+      <input type="range" min="0" max="100" step="5" value="${i.fortschritt_prozent}"
+        oninput="this.nextElementSibling.textContent = this.value + ' %'"
+        onchange="saveOverride('${i.id}', {fortschritt_prozent: +this.value}); openModal('${i.id}')">
+      <span class="progress-pct" style="min-width:44px;">${i.fortschritt_prozent} %</span>
     </div>
     ${i.wartet_auf ? `<div class="modal-notes">⏳ <strong>Wartet auf:</strong> ${esc(i.wartet_auf)}</div>` : ""}
     ${i.notizen ? `<div class="modal-notes">${esc(i.notizen)}</div>` : ""}
@@ -811,6 +908,8 @@ document.querySelectorAll("th[data-sort]").forEach(th => th.addEventListener("cl
 
 const stände = IDEEN.map(i => i.letzte_aktualisierung).sort();
 $("stand-datum").textContent = stände[stände.length - 1] || "—";
+applyOverrides();
+renderOvBanner();
 render();
 </script>
 
