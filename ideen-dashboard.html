@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>iQuadrat · KI-Ideen-Dashboard</title>
+  <style>
+    :root {
+      --navy:   #0b2a4a;
+      --blue:   #1d6fa5;
+      --green:  #2f9e63;
+      --orange: #e08e2c;
+      --muted:  #8295a6;
+      --line:   #dde6ee;
+      --bg:     #f0f4f8;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      min-height: 100vh;
+      color: var(--navy);
+    }
+
+    /* ─── LOGIN (identisch zum Portal) ───────────── */
+    #login-screen {
+      display: flex; align-items: center; justify-content: center;
+      min-height: 100vh; background: var(--navy);
+    }
+    .login-card {
+      background: #fff; border-radius: 16px; padding: 48px 40px 40px;
+      width: 100%; max-width: 400px;
+      box-shadow: 0 24px 64px rgba(0,0,0,0.35); text-align: center;
+    }
+    .login-logo-fallback {
+      font-size: 1.3rem; font-weight: 800; color: var(--navy);
+      margin-bottom: 28px; letter-spacing: -0.01em;
+    }
+    .login-title { font-size: 1.35rem; font-weight: 700; margin-bottom: 6px; }
+    .login-subtitle { font-size: 0.875rem; color: var(--muted); margin-bottom: 32px; }
+    .login-input {
+      width: 100%; padding: 13px 16px; border: 2px solid var(--line);
+      border-radius: 8px; font-size: 1rem; outline: none;
+      transition: border-color 0.2s; margin-bottom: 14px; color: var(--navy);
+    }
+    .login-input:focus { border-color: var(--blue); }
+    .login-btn {
+      width: 100%; padding: 13px; background: var(--blue); color: #fff;
+      border: none; border-radius: 8px; font-size: 1rem; font-weight: 600;
+      cursor: pointer; transition: background 0.2s;
+    }
+    .login-btn:hover { background: var(--navy); }
+    .login-error { color: #c0392b; font-size: 0.83rem; margin-top: 12px; min-height: 20px; }
+
+    /* ─── DASHBOARD ──────────────────────────────── */
+    #app { display: none; }
+
+    header {
+      background: var(--navy); padding: 0 24px; min-height: 64px;
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 12px; flex-wrap: wrap;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      position: sticky; top: 0; z-index: 50;
+    }
+    .header-left { display: flex; align-items: center; gap: 14px; padding: 10px 0; }
+    .header-logo-text { color: #fff; font-weight: 800; font-size: 1.05rem; letter-spacing: -0.01em; }
+    .header-badge {
+      background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.75);
+      font-size: 0.75rem; padding: 4px 14px; border-radius: 20px; letter-spacing: 0.04em;
+    }
+    .header-right { display: flex; align-items: center; gap: 10px; padding: 10px 0; }
+    .btn {
+      display: inline-block; border: none; cursor: pointer; text-decoration: none;
+      font-family: inherit; font-size: 0.82rem; font-weight: 600;
+      padding: 9px 16px; border-radius: 8px; transition: background 0.2s, color 0.2s;
+      text-align: center;
+    }
+    .btn-orange { background: var(--orange); color: #fff; }
+    .btn-orange:hover { background: #c97c1f; }
+    .btn-ghost { background: rgba(255,255,255,0.12); color: #fff; }
+    .btn-ghost:hover { background: rgba(255,255,255,0.25); }
+
+    main { max-width: 1400px; margin: 0 auto; padding: 28px 20px 64px; }
+
+    .section-label {
+      font-size: 0.7rem; font-weight: 700; color: var(--muted);
+      letter-spacing: 0.12em; text-transform: uppercase; margin: 26px 0 14px;
+    }
+
+    /* KPI-Kacheln */
+    .kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; }
+    .kpi-card {
+      background: #fff; border: 1px solid var(--line); border-radius: 12px;
+      padding: 20px 24px; box-shadow: 0 2px 8px rgba(11,42,74,0.07);
+    }
+    .kpi-title { font-size: 0.72rem; font-weight: 700; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 10px; }
+    .kpi-value { font-size: 1.7rem; font-weight: 800; margin-bottom: 10px; }
+    .kpi-value small { font-size: 0.95rem; font-weight: 600; color: var(--muted); }
+    .kpi-bar { height: 12px; background: var(--bg); border-radius: 6px; overflow: hidden; display: flex; }
+    .kpi-bar-fill { height: 100%; border-radius: 6px 0 0 6px; }
+    .kpi-sub { font-size: 0.78rem; color: var(--muted); margin-top: 10px; line-height: 1.5; }
+    .kpi-sub strong { color: var(--navy); }
+
+    /* Toolbar */
+    .toolbar {
+      display: flex; flex-wrap: wrap; gap: 10px; align-items: center;
+      background: #fff; border: 1px solid var(--line); border-radius: 12px;
+      padding: 14px 16px; margin-top: 22px;
+    }
+    .toolbar select, .toolbar input[type="search"] {
+      font-family: inherit; font-size: 0.82rem; color: var(--navy);
+      border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px;
+      background: #fff; outline: none;
+    }
+    .toolbar select:focus, .toolbar input[type="search"]:focus { border-color: var(--blue); }
+    .toolbar input[type="search"] { flex: 1; min-width: 160px; }
+    .view-toggle { display: flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+    .view-toggle button {
+      font-family: inherit; font-size: 0.82rem; font-weight: 600; border: none;
+      background: #fff; color: var(--muted); padding: 8px 16px; cursor: pointer;
+    }
+    .view-toggle button.active { background: var(--navy); color: #fff; }
+    .reset-link { font-size: 0.78rem; color: var(--blue); cursor: pointer; background: none; border: none; font-family: inherit; text-decoration: underline; }
+
+    /* Kanban */
+    #kanban { display: flex; gap: 14px; overflow-x: auto; padding: 18px 2px 8px; align-items: flex-start; }
+    .kb-col {
+      flex: 0 0 292px; background: #e7edf4; border-radius: 12px; padding: 12px;
+      max-height: 74vh; display: flex; flex-direction: column;
+    }
+    .kb-col-head {
+      display: flex; justify-content: space-between; align-items: center;
+      font-size: 0.78rem; font-weight: 800; letter-spacing: 0.06em;
+      text-transform: uppercase; padding: 2px 6px 10px;
+    }
+    .kb-count { background: #fff; border-radius: 10px; padding: 1px 9px; font-size: 0.72rem; color: var(--muted); }
+    .kb-cards { overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding-right: 2px; }
+
+    .idea-card {
+      background: #fff; border: 1px solid var(--line); border-radius: 10px;
+      padding: 13px 14px; cursor: pointer; transition: box-shadow 0.15s, transform 0.15s;
+    }
+    .idea-card:hover { box-shadow: 0 6px 18px rgba(11,42,74,0.13); transform: translateY(-2px); }
+    .idea-title { font-size: 0.86rem; font-weight: 700; line-height: 1.35; margin-bottom: 8px; }
+    .badges { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 9px; }
+    .badge {
+      font-size: 0.62rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;
+      padding: 2px 7px; border-radius: 4px; white-space: nowrap;
+    }
+    .b-kat    { background: #eef4fb; color: var(--blue); }
+    .b-mu     { background: #e8f5ee; color: var(--green); }
+    .b-ke     { background: #fdf3e5; color: var(--orange); }
+    .b-en     { background: #eef1f4; color: var(--muted); }
+    .b-quelle { background: #f3eefb; color: #6b4fa5; }
+    .b-wartet { background: #fdeaea; color: #c0392b; text-transform: none; letter-spacing: 0; }
+    .meta-row { display: flex; align-items: center; gap: 10px; font-size: 0.72rem; color: var(--muted); margin-bottom: 8px; }
+    .stars { color: var(--orange); letter-spacing: 1px; }
+    .progress-wrap { display: flex; align-items: center; gap: 8px; }
+    .progress { flex: 1; height: 7px; background: var(--bg); border-radius: 4px; overflow: hidden; }
+    .progress-fill { height: 100%; background: var(--green); border-radius: 4px; }
+    .progress-pct { font-size: 0.7rem; font-weight: 700; color: var(--muted); min-width: 32px; text-align: right; }
+
+    /* Tabelle */
+    #tabelle { display: none; margin-top: 18px; background: #fff; border: 1px solid var(--line); border-radius: 12px; overflow: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.82rem; min-width: 900px; }
+    th {
+      text-align: left; font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.08em;
+      color: var(--muted); padding: 12px 14px; border-bottom: 2px solid var(--line);
+      cursor: pointer; user-select: none; white-space: nowrap; background: #f7fafc;
+      position: sticky; top: 0;
+    }
+    th:hover { color: var(--navy); }
+    td { padding: 11px 14px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+    tbody tr { cursor: pointer; }
+    tbody tr:hover { background: #f7fafc; }
+    td .progress { min-width: 70px; }
+
+    /* Modal */
+    #modal-overlay {
+      display: none; position: fixed; inset: 0; background: rgba(11,42,74,0.55);
+      z-index: 100; align-items: flex-start; justify-content: center; padding: 40px 16px; overflow-y: auto;
+    }
+    .modal {
+      background: #fff; border-radius: 14px; max-width: 620px; width: 100%;
+      padding: 28px; box-shadow: 0 24px 64px rgba(0,0,0,0.35); position: relative;
+    }
+    .modal-close {
+      position: absolute; top: 14px; right: 16px; border: none; background: none;
+      font-size: 1.4rem; color: var(--muted); cursor: pointer; line-height: 1;
+    }
+    .modal h2 { font-size: 1.15rem; margin: 0 44px 12px 0; line-height: 1.35; }
+    .modal .badges { margin-bottom: 14px; }
+    .modal-desc { font-size: 0.88rem; line-height: 1.6; color: #33475b; margin-bottom: 14px; }
+    .modal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 18px; font-size: 0.82rem; margin-bottom: 14px; }
+    .modal-grid .lbl { color: var(--muted); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.07em; font-weight: 700; }
+    .modal-notes {
+      background: #f7fafc; border: 1px solid var(--line); border-radius: 8px;
+      padding: 12px 14px; font-size: 0.8rem; line-height: 1.55; color: #33475b; margin-bottom: 16px;
+    }
+    .modal-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+    .btn-navy { background: var(--navy); color: #fff; }
+    .btn-navy:hover { background: var(--blue); }
+    .btn-outline { background: #fff; color: var(--navy); border: 1px solid var(--line) !important; border-style: solid; }
+    .btn-outline:hover { background: var(--bg); }
+
+    .hint-line {
+      font-size: 0.78rem; color: var(--muted); margin-top: 18px; line-height: 1.6;
+      background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 14px 18px;
+    }
+    .hint-line strong { color: var(--navy); }
+
+    footer {
+      border-top: 1px solid var(--line); background: #fff; padding: 22px 32px;
+      font-size: 0.78rem; color: var(--muted); text-align: center;
+    }
+    footer a { color: var(--blue); text-decoration: none; }
+
+    @media (max-width: 640px) {
+      .kb-col { flex: 0 0 260px; }
+      .kpi-value { font-size: 1.4rem; }
+      main { padding: 20px 12px 48px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════ LOGIN (gleicher Gate wie Portal) ══════════════ -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-logo-fallback">iQuadrat</div>
+    <div class="login-title">KI-Ideen-Dashboard</div>
+    <div class="login-subtitle">Bitte Passwort eingeben (identisch zum Tool-Portal)</div>
+    <input type="password" id="pw-input" class="login-input" placeholder="Passwort eingeben" autocomplete="current-password">
+    <button class="login-btn" onclick="checkPassword()">Anmelden</button>
+    <div class="login-error" id="pw-error"></div>
+  </div>
+</div>
+
+<!-- ══════════════ DASHBOARD ══════════════ -->
+<div id="app">
+
+  <header>
+    <div class="header-left">
+      <span class="header-logo-text">iQuadrat</span>
+      <span class="header-badge">KI-Ideen-Dashboard · Intern</span>
+    </div>
+    <div class="header-right">
+      <a class="btn btn-ghost" href="index.html">← Zurück zum Portal</a>
+      <a class="btn btn-orange" id="btn-neue-idee" href="#">💡 Neue Idee einreichen</a>
+    </div>
+  </header>
+
+  <main>
+
+    <p class="section-label">Ziel-Kennzahlen · Q3 2026</p>
+    <div class="kpi-row">
+      <div class="kpi-card">
+        <div class="kpi-title">ROI-Ziel: 1.000 € / Monat bis 30.09.2026</div>
+        <div class="kpi-value" id="kpi-roi-val">0 € <small>/ 1.000 € realisiert</small></div>
+        <div class="kpi-bar" id="kpi-roi-bar">
+          <div class="kpi-bar-fill" id="roi-fill-real" style="background:var(--green); width:0%;" title="Realisiert"></div>
+          <div class="kpi-bar-fill" id="roi-fill-pipe" style="background:repeating-linear-gradient(45deg,#bfe3cf,#bfe3cf 6px,#d9efe3 6px,#d9efe3 12px); width:0%; border-radius:0;" title="Geschätzt (aktive Projekte)"></div>
+        </div>
+        <div class="kpi-sub" id="kpi-roi-sub"></div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-title">Ø Gesamt-Fortschritt (aktive Projekte)</div>
+        <div class="kpi-value" id="kpi-prog-val">0 %</div>
+        <div class="kpi-bar"><div class="kpi-bar-fill" id="prog-fill" style="background:var(--blue); width:0%;"></div></div>
+        <div class="kpi-sub" id="kpi-prog-sub"></div>
+      </div>
+    </div>
+
+    <!-- Toolbar: Ansicht, Filter, Suche -->
+    <div class="toolbar">
+      <div class="view-toggle">
+        <button id="vt-kanban" class="active" onclick="setView('kanban')">Kanban</button>
+        <button id="vt-tabelle" onclick="setView('tabelle')">Tabelle</button>
+      </div>
+      <select id="f-kategorie"><option value="">Alle Kategorien</option></select>
+      <select id="f-status"><option value="">Alle Status</option></select>
+      <select id="f-quelle"><option value="">Alle Quellen</option></select>
+      <select id="f-impact"><option value="">Alle Impact-Typen</option></select>
+      <select id="f-typ">
+        <option value="">Intern + Extern</option>
+        <option value="intern">Intern</option>
+        <option value="extern">Extern (Kunde sieht es)</option>
+      </select>
+      <input type="search" id="f-suche" placeholder="Suche in Titel, Beschreibung, Notizen, Ideengeber …">
+      <button class="reset-link" onclick="resetFilter()">Filter zurücksetzen</button>
+    </div>
+
+    <!-- Kanban -->
+    <div id="kanban"></div>
+
+    <!-- Tabelle -->
+    <div id="tabelle">
+      <table>
+        <thead>
+          <tr>
+            <th data-sort="titel">Idee</th>
+            <th data-sort="kategorie">Kategorie</th>
+            <th data-sort="status">Status</th>
+            <th data-sort="impact_eur_monat">€ / Monat</th>
+            <th data-sort="impact_typ">Impact-Typ</th>
+            <th data-sort="aufwand">Aufwand</th>
+            <th data-sort="wow">Wow</th>
+            <th data-sort="fortschritt_prozent">Fortschritt</th>
+            <th data-sort="quelle">Quelle</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+
+    <div class="hint-line">
+      <strong>So läuft's:</strong> Diese Ansicht ist read-only. Vorschläge und Ergänzungen gehen per Klick auf
+      <strong>„💡 Neue Idee einreichen"</strong> (oben) oder <strong>„Ergänzung / Feedback"</strong> (in jeder Idee)
+      als vorbereitete E-Mail an Daniel — er pflegt sie zentral ein. Nur <strong>Mehrumsatz</strong> und
+      <strong>Kostenersparnis</strong> zählen auf das 1.000-€-Ziel; <strong>Enabler</strong> (grau) sparen Zeit,
+      zählen aber erst, wenn daraus echter Umsatz oder echte Ersparnis wird.
+    </div>
+
+    <!-- FORM-EMBED: optionales Tally/Formspree-iframe später hier -->
+
+  </main>
+
+  <footer>
+    © iQuadrat Investment und Immobilien GmbH &nbsp;·&nbsp; KI-Ideen-Dashboard &nbsp;·&nbsp;
+    Stand: <span id="stand-datum"></span> &nbsp;·&nbsp;
+    Fragen: <a href="mailto:daniel.weisbrod@iquadrat.de">daniel.weisbrod@iquadrat.de</a>
+  </footer>
+
+</div>
+
+<!-- Modal -->
+<div id="modal-overlay" onclick="if(event.target===this) closeModal()">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">×</button>
+    <div id="modal-content"></div>
+  </div>
+</div>
+
+<script>
+/* ╔══════════════════════════════════════════════════════╗
+   ║  PASSWORT: identisch zum Tool-Portal (iQuadrat2026). ║
+   ║  Gleicher sessionStorage-Key → wer im Portal einge-  ║
+   ║  loggt ist, muss hier nicht erneut eingeben.         ║
+   ╚══════════════════════════════════════════════════════╝ */
+const PW_HASH = "8f7f42d14877c3b8392ef9c60518d5207107e6fd448b44ed907cc76ca1f915c5";
+if (sessionStorage.getItem("iq_portal_auth") === PW_HASH) showApp();
+document.getElementById("pw-input").addEventListener("keydown", e => { if (e.key === "Enter") checkPassword(); });
+async function checkPassword() {
+  const val = document.getElementById("pw-input").value;
+  if (!val) return;
+  const hash = await sha256(val);
+  if (hash === PW_HASH) { sessionStorage.setItem("iq_portal_auth", hash); showApp(); }
+  else {
+    document.getElementById("pw-error").textContent = "Falsches Passwort – bitte nochmal versuchen.";
+    document.getElementById("pw-input").value = ""; document.getElementById("pw-input").focus();
+  }
+}
+function showApp() {
+  document.getElementById("login-screen").style.display = "none";
+  document.getElementById("app").style.display = "block";
+}
+async function sha256(msg) {
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(msg));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, "0")).join("");
+}
+
+/* ╔══════════════════════════════════════════════════════╗
+   ║  DATEN — Single Source of Truth.                     ║
+   ║  Pflege: Werte hier ändern (Claude macht das nach    ║
+   ║  jeder Bau-Session, Daniel bestätigt).               ║
+   ║  status: Ideen | Priorisiert | In Umsetzung | Test | Live
+   ║  impact_typ: Mehrumsatz | Kostenersparnis | Enabler  ║
+   ║  Nur Mehrumsatz+Kostenersparnis zählen aufs Ziel.    ║
+   ║  realisiert_eur_monat: erst füllen, wenn Geld real   ║
+   ║  fließt/gespart ist (Beleg!).                        ║
+   ╚══════════════════════════════════════════════════════╝ */
+const ZIEL_EUR = 1000;
+const IDEEN = [
+/* ── Quelle: Daniel (03.07.2026) ─────────────────────── */
+{ id:"D1", titel:"BWA-Prüfung durch KI", kategorie:"Backoffice & Finanzen",
+  beschreibung:"Monatliche BWA vom Steuerberater automatisch prüfen: Plausibilität, Abweichungen zu Vormonat/Vorjahr, Kostentreiber, konkrete Verbesserungsvorschläge.",
+  status:"Ideen", aufwand:"S", wow:1, impact_eur_monat:100, realisiert_eur_monat:0, impact_typ:"Kostenersparnis", typ:"intern",
+  fortschritt_prozent:0, quelle:"Daniel", ideengeber:"Daniel Weisbrod", tool_link:"", wartet_auf:"",
+  letzte_aktualisierung:"2026-07-03",
+  notizen:"Sofort startbar (BWA einfach in die Session geben). Zählt, sobald eine identifizierte Einsparung real umgesetzt ist. Nur Firmendaten — unkritisch. Liefert die Ausgabenliste für F5." },
+{ id:"D2", titel:"Forderungs-/Verbindlichkeiten-Steuerung + Pipedrive-Sync", kategorie:"Backoffice & Finanzen",
+  beschreibung:"Excel für offene Forderungen/Verbindlichkeiten intelligent machen (Priorisierung Eintreibung/Zahlung, Skonto/Liquidität). PD-Phase 'Einreichung' → Forderung anlegen; 'Auszahlung' (policiert) → Forderung ausbuchen.",
+  status:"Ideen", aufwand:"M", wow:2, impact_eur_monat:0, realisiert_eur_monat:0, impact_typ:"Enabler", typ:"intern",
+  fortschritt_prozent:0, quelle:"Daniel", ideengeber:"Daniel Weisbrod", tool_link:"", wartet_auf:"",
+  letzte_aktualisierung:"2026-07-03",
+  notizen:"Pipedrive wird nur GELESEN (Phase), geschrieben wird nur in die Excel → regelkonform. v1 als Sync auf Knopfdruck. Ausnahme: nachweislich gerettete Forderungen/Skonto dürfen als Mehrumsatz/Kostenersparnis verbucht werden." },
+{ id:"D3", titel:"KI-Avatar-Content auf neuem Insta-Account", kategorie:"Content & Marketing",
+  beschreibung:"Fotorealistischer KI-Content (z. B. Higgsfield) über einen neuen Account als zusätzlicher Lead-Kanal — Start bei null.",
+  status:"Ideen", aufwand:"L", wow:2, impact_eur_monat:50, realisiert_eur_monat:0, impact_typ:"Mehrumsatz", typ:"extern",
+  fortschritt_prozent:0, quelle:"Daniel", ideengeber:"Daniel Weisbrod", tool_link:"", wartet_auf:"",
+  letzte_aktualisierung:"2026-07-03",
+  notizen:"Als Q3-ROI-Träger ungeeignet: Reichweite ab null dauert Monate, KI-Personen sind in der Finanzberatung ein Vertrauensrisiko, Kennzeichnungspflicht (EU AI Act). Empfehlung: klein testen, Avatar-Hebel primär in D9 stecken." },
+{ id:"D4", titel:"Individuelle Pre-T1-Webseite mit Begrüßungsvideo", kategorie:"Vertrieb & CRM",
+  beschreibung:"24 h vor dem T1 bekommt jeder Kunde eine personalisierte Mini-Webseite: Begrüßungsvideo, Ablauf, individuell aus Pipedrive-Notizen (Vorname, Thema, Anliegen).",
+  status:"Ideen", aufwand:"M", wow:3, impact_eur_monat:300, realisiert_eur_monat:0, impact_typ:"Mehrumsatz", typ:"extern",
+  fortschritt_prozent:0, quelle:"Daniel", ideengeber:"Daniel Weisbrod", tool_link:"", wartet_auf:"",
+  letzte_aktualisierung:"2026-07-03",
+  notizen:"Hebel: Show-up-Rate + T1→49€-Conversion. Tokenisierte URL (nicht erratbar), Minimal-Daten, Löschung nach T1. PD-Lesen je konkretem Kunden = regelkonform." },
+{ id:"D5", titel:"Vertriebscheck-Tool (Call-Analyse)", kategorie:"Vertrieb & CRM",
+  beschreibung:"Berater laden aufgezeichnete Calls (Video/Transkript) hoch → KI analysiert Redeanteile, Einwände + Behandlung, Muster über viele Calls, konkrete Trainingsempfehlungen je Berater.",
+  status:"Ideen", aufwand:"M", wow:3, impact_eur_monat:400, realisiert_eur_monat:0, impact_typ:"Mehrumsatz", typ:"intern",
+  fortschritt_prozent:0, quelle:"Daniel", ideengeber:"Daniel Weisbrod", tool_link:"", wartet_auf:"Einwilligungs-Textbaustein für Aufzeichnungen",
+  letzte_aktualisierung:"2026-07-03",
+  notizen:"Direkter Hebel auf Close Rate (37 % → Ziel ≥ 40 %). Synergie mit Backlog 2.5 (gleiche Datenbasis). Compliance: Einwilligung zwingend, Transkripte pseudonymisieren, EU-Hosting/AVV." },
+{ id:"D6", titel:"After-Sales-Mail-Kampagnen nach Unterschrift", kategorie:"After-Sales & Storno",
+  beschreibung:"Automatisierte Mail-Strecke ab Unterschrift: Willkommen, die 'stille Phase' (~2 Wochen) füllen, Vertrag policiert, Check-ins in den ersten Monaten.",
+  status:"Ideen", aufwand:"S", wow:2, impact_eur_monat:200, realisiert_eur_monat:0, impact_typ:"Mehrumsatz", typ:"extern",
+  fortschritt_prozent:0, quelle:"Daniel", ideengeber:"Daniel Weisbrod", tool_link:"", wartet_auf:"",
+  letzte_aktualisierung:"2026-07-03",
+  notizen:"Zählt über GEHALTENE Provision (Storno-Prävention beginnt genau hier). Bündeln mit Backlog 5.2/5.3 und F1. Trigger über PD-Phase (lesen)." },
+{ id:"D7", titel:"Empfehlungsmanagement systematisieren", kategorie:"Vertrieb & CRM",
+  beschreibung:"Empfehlung entpersonalisieren: teilbare Tools mit Referral-Kennung, Trigger im Hoch-Moment (policiert/Review), Partner-Route (F8), Webinar als weitergebbares Asset (D11).",
+  status:"Ideen", aufwand:"M", wow:3, impact_eur_monat:400, realisiert_eur_monat:0, impact_typ:"Mehrumsatz", typ:"extern",
+  fortschritt_prozent:0, quelle:"Daniel", ideengeber:"Daniel Weisbrod", tool_link:"", wartet_auf:"",
+  letzte_aktualisierung:"2026-07-03",
+  notizen:"Kern-Insight: Kunden reden ungern über Geld → sie teilen lieber Werkzeuge/Anlässe als Empfehlungen auszusprechen. Ziel: Empfehlerquote 25 % → 35 %." },
+{ id:"D8", titel:"PKV-System: 3 Abschlüsse/Monat", kategorie:"Lead-Generierung",
+  beschreibung:"Skalierbares System aus 4 Bausteinen: (1) Bestandskunden-Screening (GKV, Einkommen nahe/über JAEG), (2) PKV-Beitragsrechner als Lead-Magnet (B3.4), (3) Influencer-PKV-Serie (D9), (4) standardisierte Follow-up-Strecke.",
+  status:"Ideen", aufwand:"L", wow:3, impact_eur_monat:1000, realisiert_eur_monat:0, impact_typ:"Mehrumsatz", typ:"extern",
+  fortschritt_prozent:0, quelle:"Daniel", ideengeber:"Daniel Weisbrod", tool_link:"", wartet_auf:"DSB-Klärung Bestands-Screening (oder manueller Export durch Team)",
+  letzte_aktualisierung:"2026-07-03",
+  notizen:"Größter €-Hebel: +1 PKV-Abschluss/Monat übererfüllt das Q3-Ziel allein (konservativ 1.000 € angesetzt). Kandidat für eigenes Projekt 02_PKV-System. Pipedrive-Regel: kein flächiges KI-Durchsuchen!" },
+{ id:"D9", titel:"Influencer-Lead-System (Vanessa, Dr. Bea)", kategorie:"Lead-Generierung",
+  beschreibung:"Verlässliche Leads statt eBook-Spikes: Evergreen-Lead-Magnete (vorhandene Rechner!) wöchentlich in Story/Reel bespielbar; KI liefert Content-Pakete im Voice der Influencerin + Nurture zwischen Launches.",
+  status:"Ideen", aufwand:"M", wow:3, impact_eur_monat:400, realisiert_eur_monat:0, impact_typ:"Mehrumsatz", typ:"extern",
+  fortschritt_prozent:0, quelle:"Daniel", ideengeber:"Daniel Weisbrod", tool_link:"", wartet_auf:"",
+  letzte_aktualisierung:"2026-07-03",
+  notizen:"Ein Rechner nutzt sich nicht ab wie ein eBook → kein Überladen der Follower. Fehlende Brücke: Content → Tool → Lead-Formular → Pipedrive (B4.1)." },
+{ id:"D10", titel:"KI-Video-Schnitt", kategorie:"Content & Marketing",
+  beschreibung:"KI-gestützter Schnitt-Workflow (transkriptbasiertes Schneiden, Auto-Captions, Reel-Formate) statt langsamem Cutter — Content geht deutlich schneller live.",
+  status:"Ideen", aufwand:"S", wow:2, impact_eur_monat:200, realisiert_eur_monat:0, impact_typ:"Kostenersparnis", typ:"intern",
+  fortschritt_prozent:0, quelle:"Daniel", ideengeber:"Daniel Weisbrod", tool_link:"", wartet_auf:"Info: aktuelle Cutter-Kosten/Monat",
+  letzte_aktualisierung:"2026-07-03",
+  notizen:"Zählt nur als Kostenersparnis, wenn die Cutter-Ausgaben real sinken — sonst ehrlich: Enabler. Pilot mit 2–3 Rohvideos, dann Budget anpassen. Zahlt auf D9 ein." },
+{ id:"D11", titel:"Webinar-System (Bestandskunden + Influencer)", kategorie:"Lead-Generierung",
+  beschreibung:"Zwei Formate: Bestandskunden-Webinar (Cross-Sell: PKV-Check, BU, 'läuft dein Plan noch?') + Influencer-Lead-Webinar als planbares Quartalsformat. KI: Themen aus Einwand-Clustern, Slides im CD, Promo, Follow-up-Sequenzen.",
+  status:"Ideen", aufwand:"L", wow:2, impact_eur_monat:300, realisiert_eur_monat:0, impact_typ:"Mehrumsatz", typ:"extern",
+  fortschritt_prozent:0, quelle:"Daniel", ideengeber:"Daniel Weisbrod", tool_link:"", wartet_auf:"D6/D9 zuerst (Follow-up-Strecke)",
+  letzte_aktualisierung:"2026-07-03",
+  notizen:"Webinar ohne Follow-up-Strecke verbrennt Leads → nach D6/D9 starten. Einwilligung für Aufzeichnung beachten." },
+{ id:"D12", titel:"Vertragscheck-Tool für Kunden", kategorie:"Kundentools",
+  beschreibung:"Kunden bewerten ihre Bestandsverträge (Kosten, Flexibilität, ETF-Tauglichkeit) → verständliches Ergebnis + CTA zum T1. v1 als strukturiertes Formular statt Dokument-Upload.",
+  status:"Ideen", aufwand:"M", wow:3, impact_eur_monat:250, realisiert_eur_monat:0, impact_typ:"Mehrumsatz", typ:"extern",
+  fortschritt_prozent:0, quelle:"Daniel", ideengeber:"Daniel Weisbrod", tool_link:"", wartet_auf:"Upload-Variante: EU-Hosting/AVV-Klärung",
+  letzte_aktualisierung:"2026-07-03",
+  notizen:"Datenschutz (Daniels Warnung berechtigt): v1 ohne Upload — Kunde tippt Eckdaten, kein sensibles Dokument, kein US-Tool. Lead-Magnet + T2-Munition + Storno-Prävention." },
+
+/* ── Quelle: Fable 5 (Vorschläge, 03.07.2026) ────────── */
+{ id:"F1", titel:"Storno-Frühwarnsystem", kategorie:"After-Sales & Storno",
+  beschreibung:"Präventiv (nicht rückblickend wie B2.5): Risikosignale erkennen (Beitragssenkung angefragt, Zahlungsrückläufer, Funkstille, kein App-Login) → wöchentliche Risiko-Liste + Save-Call-Leitfaden je Kunde.",
+  status:"Ideen", aufwand:"M", wow:3, impact_eur_monat:350, realisiert_eur_monat:0, impact_typ:"Mehrumsatz", typ:"intern",
+  fortschritt_prozent:0, quelle:"Fable5", ideengeber:"Fable 5 (Vorschlag)", tool_link:"", wartet_auf:"",
+  letzte_aktualisierung:"2026-07-03",
+  notizen:"Gehaltene Provision = Mehrumsatz laut Masterplan. Bei 15–20 % Storno retten 2–3 pp mehrere hundert €/Monat. Ehrlichster €-Hebel: hier geht aktuell nachweislich Geld verloren." },
+{ id:"F2", titel:"Reaktivierung verlorener Leads & No-Shows", kategorie:"Vertrieb & CRM",
+  beschreibung:"Lost-Deals/No-Shows der letzten 12–24 Monate mit Anlass-Kampagnen reaktivieren (Rentenanpassung, Gesetzesänderung, 'dein Quick-Check von damals — rechne neu').",
+  status:"Ideen", aufwand:"S", wow:2, impact_eur_monat:300, realisiert_eur_monat:0, impact_typ:"Mehrumsatz", typ:"extern",
+  fortschritt_prozent:0, quelle:"Fable5", ideengeber:"Fable 5 (Vorschlag)", tool_link:"", wartet_auf:"Listen-Export durch Team (PD-Regel) + §7-UWG-Check",
+  letzte_aktualisierung:"2026-07-03",
+  notizen:"Diese Kontakte sind schon bezahlt → jeder reaktivierte Abschluss fast reine Marge. Kein flächiges KI-Durchsuchen in Pipedrive." },
+{ id:"F3", titel:"49-€-Conversion-Autopilot", kategorie:"Vertrieb & CRM",
+  beschreibung:"Automatisierte Strecke T1 → Zahlungseingang: Zahlungsmail sofort nach T1, freundliche Reminder nach 48 h / 5 Tagen, Eskalation an Daniel bei Ausbleiben. Ohne 49 € kein T2!",
+  status:"Ideen", aufwand:"S", wow:1, impact_eur_monat:150, realisiert_eur_monat:0, impact_typ:"Mehrumsatz", typ:"intern",
+  fortschritt_prozent:0, quelle:"Fable5", ideengeber:"Fable 5 (Vorschlag)", tool_link:"", wartet_auf:"",
+  letzte_aktualisierung:"2026-07-03",
+  notizen:"Kritischste Funnel-Stelle. Kürzt den Sales Cycle Richtung 12-Tage-Ziel. Ideales kleines Warm-up-Projekt, schnell messbar." },
+{ id:"F4", titel:"Jahres-Check-up mit Cross-Sell-Anlässen", kategorie:"After-Sales & Storno",
+  beschreibung:"Vor jedem Mid-Year-/Year-End-Review-Call erstellt die KI je Kunde eine Anlassliste: Gehaltssprung→Dynamik, Kind→BU/KV, Einkommen über JAEG→PKV (Zulauf für D8!), Immobilie→Absicherung.",
+  status:"Ideen", aufwand:"M", wow:2, impact_eur_monat:300, realisiert_eur_monat:0, impact_typ:"Mehrumsatz", typ:"intern",
+  fortschritt_prozent:0, quelle:"Fable5", ideengeber:"Fable 5 (Vorschlag)", tool_link:"", wartet_auf:"",
+  letzte_aktualisierung:"2026-07-03",
+  notizen:"Bestandskunden-Umsatz = günstigster Umsatz. PD-Zugriff je konkretem Kunden vor dem Termin = regelkonform." },
+{ id:"F5", titel:"Tool-/Abo-Audit: Was ersetzt Claude Max?", kategorie:"Backoffice & Finanzen",
+  beschreibung:"Alle SaaS-Abos und Fremdleistungen (Design, Copy, Transkription, Recherche, Cutter → D10) gegen die Claude-Max-Fähigkeiten prüfen → Ersetzbares kündigen.",
+  status:"Ideen", aufwand:"S", wow:1, impact_eur_monat:150, realisiert_eur_monat:0, impact_typ:"Kostenersparnis", typ:"intern",
+  fortschritt_prozent:0, quelle:"Fable5", ideengeber:"Fable 5 (Vorschlag)", tool_link:"", wartet_auf:"",
+  letzte_aktualisierung:"2026-07-03",
+  notizen:"Schnellster, sicherster Beitrag zum 1.000-€-Balken: jede Kündigung ist sofort belegbar echtes Geld. D1 (BWA) liefert die Ausgabenliste gleich mit." },
+{ id:"F6", titel:"Ad-Creative-Labor", kategorie:"Content & Marketing",
+  beschreibung:"KI erzeugt und iteriert systematisch Hook-/Creative-Varianten für Paid-Reichweite, wertet Performance aus → gleicher Lead-Output bei niedrigerem Budget (CPL runter).",
+  status:"Ideen", aufwand:"M", wow:2, impact_eur_monat:150, realisiert_eur_monat:0, impact_typ:"Kostenersparnis", typ:"intern",
+  fortschritt_prozent:0, quelle:"Fable5", ideengeber:"Fable 5 (Vorschlag)", tool_link:"", wartet_auf:"",
+  letzte_aktualisierung:"2026-07-03",
+  notizen:"Zählt nur bei real gesenktem Werbebudget bei gleicher Lead-Zahl (Masterplan-Definition)." },
+{ id:"F7", titel:"Honorar-Zweitweg: Konzept-Paket zum Festpreis", kategorie:"Vertrieb & CRM",
+  beschreibung:"Produktisiertes Honorarangebot (z. B. 490–990 €) für die ~65 % Nicht-Abschließer — wirtschaftlich, sobald der Konzept-Generator (B1.2) die Erstellung von Tagen auf Stunden drückt.",
+  status:"Ideen", aufwand:"M", wow:3, impact_eur_monat:300, realisiert_eur_monat:0, impact_typ:"Mehrumsatz", typ:"extern",
+  fortschritt_prozent:0, quelle:"Fable5", ideengeber:"Fable 5 (Vorschlag)", tool_link:"", wartet_auf:"Konzept-Generator (B1.2)",
+  letzte_aktualisierung:"2026-07-03",
+  notizen:"Ohne Storno-Risiko. Löst das Preis-Dilemma (490 € Online-Konkurrenz) über KI-Effizienz. Zweite Erlösquelle aus bereits bezahlten Leads." },
+{ id:"F8", titel:"Partner-/Haushalts-Mitberatung (Zweitkunde im Haus)", kategorie:"Vertrieb & CRM",
+  beschreibung:"Die Datenaufnahme erfasst Partner-Daten bereits (Block E) → KI flaggt automatisch Partner-Potenzial (Rentenlücke, PKV, BU) als Gesprächsimpuls im T2/T3.",
+  status:"Ideen", aufwand:"S", wow:2, impact_eur_monat:250, realisiert_eur_monat:0, impact_typ:"Mehrumsatz", typ:"intern",
+  fortschritt_prozent:0, quelle:"Fable5", ideengeber:"Fable 5 (Vorschlag)", tool_link:"", wartet_auf:"",
+  letzte_aktualisierung:"2026-07-03",
+  notizen:"Kein Fremdkontakt, keine Akquisekosten, keine Empfehlungshürde — der niedrigst hängende Mehrumsatz. Verstärkt D7 (Partner-Route)." },
+
+/* ── Quelle: Backlog (KI-Ideen-Backlog.md, 15.06.2026) ── */
+{ id:"B0", titel:"Vermögensrechner als Lead-Magnet", kategorie:"Kundentools",
+  beschreibung:"Kundenseitiger Rechner (Sparbeitrag → Entwicklung + Bandbreite + Zusatzrente) — gebaut, als Lead-Magnet in Funnel/Bio einbinden.",
+  status:"Test", aufwand:"S", wow:2, impact_eur_monat:100, realisiert_eur_monat:0, impact_typ:"Mehrumsatz", typ:"extern",
+  fortschritt_prozent:85, quelle:"Backlog", ideengeber:"Backlog", tool_link:"vermoegens-rechner.html", wartet_auf:"Buchungslink + Impressum/Datenschutz",
+  letzte_aktualisierung:"2026-07-03",
+  notizen:"Fertig gebaut. Offen: Buchungslink, Impressum/Datenschutz, optional Lead-Brücke zu Pipedrive (B4.1). Evergreen-Baustein für D9." },
+{ id:"B1.1", titel:"Beitragsänderungs-/Auftrags-Generator", kategorie:"Dokumente & Vorlagen",
+  beschreibung:"Formular ausfüllen → unterschriftsreifes DOCX/PDF aus geprüfter Vorlage (Beitrag ändern, Dynamik, Freistellung, Zuzahlung, Kündigung …). v1 bewusst deterministisch.",
+  status:"In Umsetzung", aufwand:"S", wow:3, impact_eur_monat:0, realisiert_eur_monat:0, impact_typ:"Enabler", typ:"intern",
+  fortschritt_prozent:60, quelle:"Backlog", ideengeber:"Backlog (Pain 2)", tool_link:"beitragsaenderung-generator.html", wartet_auf:"Je Vorgangsart 1 Beispiel-DOCX/Wortlaut",
+  letzte_aktualisierung:"2026-07-03",
+  notizen:"Roadmap-Empfehlung Nr. 1 — täglicher Zeitfresser, schneller sichtbarer Win. Basis-Tool existiert." },
+{ id:"B1.2", titel:"Konzept-/Report-Generator", kategorie:"Dokumente & Vorlagen",
+  beschreibung:"Aus der Datenaufnahme (7 Blöcke + Bischoff-Ziele) auf 1 Klick ein mehrseitiges Konzept als PDF/PPTX — statt 3–5 Tage Handarbeit.",
+  status:"In Umsetzung", aufwand:"L", wow:3, impact_eur_monat:0, realisiert_eur_monat:0, impact_typ:"Enabler", typ:"intern",
+  fortschritt_prozent:50, quelle:"Backlog", ideengeber:"Backlog (Pain 1)", tool_link:"konzept-generator.html", wartet_auf:"",
+  letzte_aktualisierung:"2026-07-03",
+  notizen:"Größter interner Hebel (Engpass + Sales Cycle 17→12). Enabler — wird aber zur Voraussetzung für F7 (Honorar-Konzeptpaket) und damit indirekt umsatzwirksam." },
+{ id:"B1.3", titel:"Onepager-/Angebots-Generator", kategorie:"Dokumente & Vorlagen",
+  beschreibung:"Pro Kunde in Minuten ein Onepager im CD (Templates aus dem PKV-Funnel vorhanden) — Spar-Rechnung, Einwand-Antworten.",
+  status:"Ideen", aufwand:"S", wow:2, impact_eur_monat:0, realisiert_eur_monat:0, impact_typ:"Enabler", typ:"intern",
+  fortschritt_prozent:0, quelle:"Backlog", ideengeber:"Backlog", tool_link:"", wartet_auf:"",
+  letzte_aktualisierung:"2026-07-03", notizen:"" },
+{ id:"B1.4", titel:"Standard-Schreiben-Bibliothek", kategorie:"Dokumente & Vorlagen",
+  beschreibung:"Gleiche Engine wie B1.1 für Kündigung, Widerruf, Vollmacht/Maklerauftrag, Erstinformation (§15 VersVermV), Bestätigungen.",
+  status:"Ideen", aufwand:"S", wow:2, impact_eur_monat:0, realisiert_eur_monat:0, impact_typ:"Enabler", typ:"intern",
+  fortschritt_prozent:0, quelle:"Backlog", ideengeber:"Backlog", tool_link:"", wartet_auf:"",
+  letzte_aktualisierung:"2026-07-03", notizen:"Einmal Vorlagen hinterlegen → immer in Sekunden." },
+{ id:"B1.5", titel:"E-Mail-/WhatsApp-Vorlagen-Generator", kategorie:"Dokumente & Vorlagen",
+  beschreibung:"Bausteine für die Touchpoints (49-€-Zahlungsaufforderung, 'Konzept ist fertig', 'Vertrag bereit + Bewertung?') — personalisiert auf Knopfdruck.",
+  status:"Ideen", aufwand:"S", wow:1, impact_eur_monat:0, realisiert_eur_monat:0, impact_typ:"Enabler", typ:"intern",
+  fortschritt_prozent:0, quelle:"Backlog", ideengeber:"Backlog", tool_link:"", wartet_auf:"",
+  letzte_aktualisierung:"2026-07-03", notizen:"Bausteine fließen in F3 (49-€-Autopilot) und D6 (After-Sales) ein." },
+{ id:"B2.1", titel:"Datenaufnahme-Assistent", kategorie:"Vertrieb & CRM",
+  beschreibung:"Strukturierte Erfassung (live im T1) → sauber & vollständig direkt ins CRM. Weniger Nacharbeit, keine Lücken vor der Konzepterstellung.",
+  status:"Ideen", aufwand:"M", wow:2, impact_eur_monat:0, realisiert_eur_monat:0, impact_typ:"Enabler", typ:"intern",
+  fortschritt_prozent:0, quelle:"Backlog", ideengeber:"Backlog", tool_link:"", wartet_auf:"",
+  letzte_aktualisierung:"2026-07-03", notizen:"Liefert nebenbei die Datenbasis für F8 (Partner-Flag)." },
+{ id:"B2.2", titel:"KI-Notetaker (Google Meet)", kategorie:"Vertrieb & CRM",
+  beschreibung:"Automatische Mitschrift, Zusammenfassung, To-dos & Einwände aus T1–T3 → Pipedrive. Im Gespräch präsenter sein.",
+  status:"Ideen", aufwand:"S", wow:2, impact_eur_monat:0, realisiert_eur_monat:0, impact_typ:"Enabler", typ:"intern",
+  fortschritt_prozent:0, quelle:"Backlog", ideengeber:"Backlog", tool_link:"", wartet_auf:"Einwilligung + EU-Hosting klären",
+  letzte_aktualisierung:"2026-07-03", notizen:"Kostenersparnis nur, falls er ein bezahltes Notetaker-Abo ersetzt/vermeidet. Liefert Rohmaterial für D5." },
+{ id:"B2.3", titel:"Termin-Vorbereitungs-Briefing", kategorie:"Vertrieb & CRM",
+  beschreibung:"Vor jedem Termin fasst die KI CRM-Stand, offene Punkte & letzte Notizen auf 1 Seite zusammen.",
+  status:"Ideen", aufwand:"S", wow:2, impact_eur_monat:0, realisiert_eur_monat:0, impact_typ:"Enabler", typ:"intern",
+  fortschritt_prozent:0, quelle:"Backlog", ideengeber:"Backlog", tool_link:"", wartet_auf:"",
+  letzte_aktualisierung:"2026-07-03", notizen:"PD-Lesen je konkretem Kunden = regelkonform." },
+{ id:"B2.4", titel:"ETF-vs-Versicherung-Rechner", kategorie:"Kundentools",
+  beschreibung:"Kundenindividuelle Netto-ROI-/Steuer-Visualisierung (Günstigerprüfung, Halbeinkünfte, Basis/Rürup) — das schwer kommunizierbare Kernargument sichtbar gemacht.",
+  status:"Ideen", aufwand:"M", wow:3, impact_eur_monat:300, realisiert_eur_monat:0, impact_typ:"Mehrumsatz", typ:"extern",
+  fortschritt_prozent:0, quelle:"Backlog", ideengeber:"Backlog", tool_link:"", wartet_auf:"",
+  letzte_aktualisierung:"2026-07-03", notizen:"Direkter Storno-Hebel (Kunde versteht das Warum) + Abschluss-Hebel im T2/T3." },
+{ id:"B2.5", titel:"Einwand-/Storno-Analyse", kategorie:"After-Sales & Storno",
+  beschreibung:"KI clustert Absage-/Stornogründe aus Notizen → endlich systematisch sehen, warum 15–20 % stornieren.",
+  status:"Ideen", aufwand:"S", wow:2, impact_eur_monat:200, realisiert_eur_monat:0, impact_typ:"Mehrumsatz", typ:"intern",
+  fortschritt_prozent:0, quelle:"Backlog", ideengeber:"Backlog", tool_link:"", wartet_auf:"",
+  letzte_aktualisierung:"2026-07-03", notizen:"Rückblickende Analyse; F1 ist das präventive Gegenstück. Gehaltene Provision = Mehrumsatz." },
+{ id:"B3.2", titel:"Portfolio-Report / Bestandskunden-Check", kategorie:"Kundentools",
+  beschreibung:"FFV-Tool 'besser & schöner' im CD, klar als Simulation gekennzeichnet, jährlicher Auto-Report 'Läuft dein Plan noch?'.",
+  status:"Ideen", aufwand:"M", wow:3, impact_eur_monat:200, realisiert_eur_monat:0, impact_typ:"Mehrumsatz", typ:"extern",
+  fortschritt_prozent:0, quelle:"Backlog", ideengeber:"Backlog", tool_link:"", wartet_auf:"",
+  letzte_aktualisierung:"2026-07-03", notizen:"Stärkt After-Sales + Empfehlungen (D7). Basis (FFV) vorhanden." },
+{ id:"B3.3", titel:"Rentenlücken-Quick-Check (60 Sek.)", kategorie:"Lead-Generierung",
+  beschreibung:"Mini-Tool als Lead-Magnet: 3 Eingaben → Lückenbetrag → CTA T1. Schlanke Variante des vorhandenen Rentenlücken-Rechners.",
+  status:"Ideen", aufwand:"S", wow:2, impact_eur_monat:200, realisiert_eur_monat:0, impact_typ:"Mehrumsatz", typ:"extern",
+  fortschritt_prozent:20, quelle:"Backlog", ideengeber:"Backlog", tool_link:"rentenluecken-rechner.html", wartet_auf:"",
+  letzte_aktualisierung:"2026-07-03", notizen:"Basis vorhanden. Zentraler Evergreen-Baustein für D9 (wöchentlich bespielbar) und D7 (teilbarer Link)." },
+{ id:"B3.4", titel:"PKV-Beitragsrechner", kategorie:"Lead-Generierung",
+  beschreibung:"GKV-vs-PKV-Vergleich mit echten Spar-Beispielen (Clara/Dominik vorhanden) — passend zum PKV-Funnel.",
+  status:"Ideen", aufwand:"M", wow:2, impact_eur_monat:250, realisiert_eur_monat:0, impact_typ:"Mehrumsatz", typ:"extern",
+  fortschritt_prozent:0, quelle:"Backlog", ideengeber:"Backlog", tool_link:"", wartet_auf:"",
+  letzte_aktualisierung:"2026-07-03", notizen:"Baustein 2 von D8 (PKV-System). Dauerhafter Funnel-Eingang." },
+{ id:"B3.5", titel:"Kundenportal / Kunden-Dashboard", kategorie:"Kundentools",
+  beschreibung:"Login-Bereich für Kunden: Verträge, Reports, Termine, Dokumente. Mittel-/langfristig, hohe Bindung.",
+  status:"Ideen", aufwand:"L", wow:3, impact_eur_monat:150, realisiert_eur_monat:0, impact_typ:"Mehrumsatz", typ:"extern",
+  fortschritt_prozent:0, quelle:"Backlog", ideengeber:"Backlog", tool_link:"", wartet_auf:"",
+  letzte_aktualisierung:"2026-07-03", notizen:"Langfristprojekt — nicht Q3-relevant, aber Bindungs-/Storno-Hebel." },
+{ id:"B4.1", titel:"Lead-Brücke: Tools → Pipedrive", kategorie:"Lead-Generierung",
+  beschreibung:"Rechner/Quick-Check schreiben Leads automatisch als Deal nach Pipedrive — die fehlende Brücke zwischen Content und CRM.",
+  status:"Ideen", aufwand:"M", wow:2, impact_eur_monat:150, realisiert_eur_monat:0, impact_typ:"Mehrumsatz", typ:"intern",
+  fortschritt_prozent:0, quelle:"Backlog", ideengeber:"Backlog", tool_link:"", wartet_auf:"Technik-Klärung: PD-Webform/API statt Claude-Schreibzugriff",
+  letzte_aktualisierung:"2026-07-03", notizen:"Achtung PD-Regel (Claude nur lesen): Schreiben läuft über PD-Webformular/eigene API-Anbindung, nicht über Claude." },
+{ id:"B4.2", titel:"Lead-Scoring & Next-Best-Action", kategorie:"Vertrieb & CRM",
+  beschreibung:"KI priorisiert Leads und schlägt nächsten Schritt/Text vor → Close Rate ↑.",
+  status:"Ideen", aufwand:"M", wow:2, impact_eur_monat:200, realisiert_eur_monat:0, impact_typ:"Mehrumsatz", typ:"intern",
+  fortschritt_prozent:0, quelle:"Backlog", ideengeber:"Backlog", tool_link:"", wartet_auf:"",
+  letzte_aktualisierung:"2026-07-03", notizen:"" },
+{ id:"B4.3", titel:"Automatische Follow-ups / Nurture", kategorie:"Vertrieb & CRM",
+  beschreibung:"Die 'noch-nicht-jetzt'-Mehrheit rechtssauber nachfassen (Sequenzen, Anlässe).",
+  status:"Ideen", aufwand:"M", wow:2, impact_eur_monat:250, realisiert_eur_monat:0, impact_typ:"Mehrumsatz", typ:"intern",
+  fortschritt_prozent:0, quelle:"Backlog", ideengeber:"Backlog", tool_link:"", wartet_auf:"§7-UWG-Check",
+  letzte_aktualisierung:"2026-07-03", notizen:"Überschneidet F2 (Reaktivierung) — zusammen denken." },
+{ id:"B4.4", titel:"Sales-KPI-Dashboard", kategorie:"Vertrieb & CRM",
+  beschreibung:"Sales Cycle, Close Rate, Storno live sichtbar.",
+  status:"Ideen", aufwand:"S", wow:1, impact_eur_monat:0, realisiert_eur_monat:0, impact_typ:"Enabler", typ:"intern",
+  fortschritt_prozent:0, quelle:"Backlog", ideengeber:"Backlog", tool_link:"", wartet_auf:"",
+  letzte_aktualisierung:"2026-07-03", notizen:"" },
+{ id:"B5.1", titel:"Automatischer Jahres-Portfolio-Report", kategorie:"After-Sales & Storno",
+  beschreibung:"Jährlicher Report je Bestandskunde (an B3.2 gekoppelt) — Bindung + Gesprächsanlass.",
+  status:"Ideen", aufwand:"M", wow:2, impact_eur_monat:150, realisiert_eur_monat:0, impact_typ:"Mehrumsatz", typ:"extern",
+  fortschritt_prozent:0, quelle:"Backlog", ideengeber:"Backlog", tool_link:"", wartet_auf:"B3.2",
+  letzte_aktualisierung:"2026-07-03", notizen:"Bindung/Storno-Hebel + Anlass für F4 (Cross-Sell)." },
+{ id:"B5.2", titel:"Anlass-/Gesetzesänderungs-Kommunikation", kategorie:"After-Sales & Storno",
+  beschreibung:"Wie der PKV-Bestandskunden-Onepager, aber automatisiert bei jedem relevanten Anlass.",
+  status:"Ideen", aufwand:"S", wow:2, impact_eur_monat:150, realisiert_eur_monat:0, impact_typ:"Mehrumsatz", typ:"extern",
+  fortschritt_prozent:0, quelle:"Backlog", ideengeber:"Backlog", tool_link:"", wartet_auf:"",
+  letzte_aktualisierung:"2026-07-03", notizen:"Mit D6 zu einem After-Sales-Paket bündeln." },
+{ id:"B5.3", titel:"Bewertungs-/Empfehlungs-Automatik", kategorie:"After-Sales & Storno",
+  beschreibung:"Google-Reviews strukturiert nach Vertragszustellung anstoßen (der 'Vertrag bereit'-Moment).",
+  status:"Ideen", aufwand:"S", wow:2, impact_eur_monat:200, realisiert_eur_monat:0, impact_typ:"Mehrumsatz", typ:"intern",
+  fortschritt_prozent:0, quelle:"Backlog", ideengeber:"Backlog", tool_link:"", wartet_auf:"",
+  letzte_aktualisierung:"2026-07-03", notizen:"Wird Baustein von D7 (Empfehlungsmanagement) — Trigger im Hoch-Moment." },
+{ id:"B6.1", titel:"Interner Wissens-Assistent", kategorie:"Wissen & Compliance",
+  beschreibung:"Chat auf euren Tarifen/FAQs/ETF-vs-Versicherung-Argumenten für alle Berater.",
+  status:"Ideen", aufwand:"M", wow:2, impact_eur_monat:0, realisiert_eur_monat:0, impact_typ:"Enabler", typ:"intern",
+  fortschritt_prozent:0, quelle:"Backlog", ideengeber:"Backlog", tool_link:"", wartet_auf:"",
+  letzte_aktualisierung:"2026-07-03", notizen:"" },
+{ id:"B6.2", titel:"Compliance-Check für Außentexte", kategorie:"Wissen & Compliance",
+  beschreibung:"UWG-/VersVermV-/DSGVO-Prüfung von Captions, Onepagern, Mails vor Veröffentlichung.",
+  status:"Ideen", aufwand:"S", wow:1, impact_eur_monat:0, realisiert_eur_monat:0, impact_typ:"Enabler", typ:"intern",
+  fortschritt_prozent:0, quelle:"Backlog", ideengeber:"Backlog", tool_link:"", wartet_auf:"",
+  letzte_aktualisierung:"2026-07-03", notizen:"Wichtig für D3/D9/F2 (Werbetexte)." },
+
+/* ── Projekt 1 (dieses Dashboard) ────────────────────── */
+{ id:"P1", titel:"KI-Ideen-Dashboard (dieses Tool)", kategorie:"Steuerung",
+  beschreibung:"Zentrale, teilbare Übersicht aller KI-Ideen + Status + Fortschritt + Feedback-Kanal für Kollegen. Kachel im Tool-Portal.",
+  status:"Test", aufwand:"M", wow:2, impact_eur_monat:0, realisiert_eur_monat:0, impact_typ:"Enabler", typ:"intern",
+  fortschritt_prozent:80, quelle:"Daniel", ideengeber:"Daniel Weisbrod", tool_link:"", wartet_auf:"Feedback der Kollegen, dann Live",
+  letzte_aktualisierung:"2026-07-03",
+  notizen:"Gebaut am 03.07.2026. Offen: Kollegen-Feedback einsammeln, ggf. Formular-Embed (Tally/Formspree) nachrüsten, dann auf Live setzen." }
+];
+
+/* ── Rendering ──────────────────────────────────────── */
+const SPALTEN = ["Ideen", "Priorisiert", "In Umsetzung", "Test", "Live"];
+const MAIL_TO = "daniel.weisbrod@iquadrat.de";
+let view = "kanban";
+let sortKey = "impact_eur_monat", sortDir = -1;
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+const eur = n => n.toLocaleString("de-DE") + " €";
+
+function impactBadge(i) {
+  if (i.impact_typ === "Mehrumsatz")     return `<span class="badge b-mu">↑ ${eur(i.impact_eur_monat)}/Mon · Mehrumsatz</span>`;
+  if (i.impact_typ === "Kostenersparnis") return `<span class="badge b-ke">↓ ${eur(i.impact_eur_monat)}/Mon · Kostenersparnis</span>`;
+  return `<span class="badge b-en">Enabler · zählt nicht aufs Ziel</span>`;
+}
+const quelleBadge = i => `<span class="badge b-quelle">${esc(i.quelle)}</span>`;
+const katBadge    = i => `<span class="badge b-kat">${esc(i.kategorie)}</span>`;
+const stars       = w => "★".repeat(w) + "☆".repeat(3 - w);
+
+function mailtoIdee(titel) {
+  const subject = encodeURIComponent(`[KI-Idee] ${titel || "Neue Idee"}`);
+  const body = encodeURIComponent(`Name:\n\nIdee/Ergänzung:\n\nWarum (was bringt es in €/Zeit):\n`);
+  return `mailto:${MAIL_TO}?subject=${subject}&body=${body}`;
+}
+$("btn-neue-idee").href = mailtoIdee("");
+
+function gefiltert() {
+  const k = $("f-kategorie").value, s = $("f-status").value, q = $("f-quelle").value,
+        it = $("f-impact").value, t = $("f-typ").value,
+        such = $("f-suche").value.trim().toLowerCase();
+  return IDEEN.filter(i =>
+    (!k || i.kategorie === k) && (!s || i.status === s) && (!q || i.quelle === q) &&
+    (!it || i.impact_typ === it) && (!t || i.typ === t) &&
+    (!such || [i.titel, i.beschreibung, i.notizen, i.ideengeber, i.id, i.kategorie].join(" ").toLowerCase().includes(such))
+  );
+}
+
+function cardHTML(i) {
+  return `<div class="idea-card" onclick="openModal('${i.id}')">
+    <div class="idea-title">${esc(i.titel)}</div>
+    <div class="badges">${katBadge(i)}${quelleBadge(i)}${impactBadge(i)}
+      ${i.wartet_auf ? `<span class="badge b-wartet">⏳ Wartet: ${esc(i.wartet_auf)}</span>` : ""}</div>
+    <div class="meta-row"><span>Aufwand ${esc(i.aufwand)}</span><span class="stars">${stars(i.wow)}</span>
+      <span>${i.typ === "extern" ? "Kunde sieht es" : "intern"}</span></div>
+    <div class="progress-wrap"><div class="progress"><div class="progress-fill" style="width:${i.fortschritt_prozent}%"></div></div>
+      <span class="progress-pct">${i.fortschritt_prozent} %</span></div>
+  </div>`;
+}
+
+function renderKanban(liste) {
+  $("kanban").innerHTML = SPALTEN.map(sp => {
+    const items = liste.filter(i => i.status === sp)
+      .sort((a, b) => b.impact_eur_monat - a.impact_eur_monat || a.titel.localeCompare(b.titel, "de"));
+    return `<div class="kb-col">
+      <div class="kb-col-head"><span>${sp}</span><span class="kb-count">${items.length}</span></div>
+      <div class="kb-cards">${items.map(cardHTML).join("") || '<div style="font-size:0.75rem;color:var(--muted);padding:8px 6px;">— leer —</div>'}</div>
+    </div>`;
+  }).join("");
+}
+
+function renderTabelle(liste) {
+  const sorted = [...liste].sort((a, b) => {
+    const va = a[sortKey], vb = b[sortKey];
+    const cmp = typeof va === "number" ? va - vb : String(va).localeCompare(String(vb), "de");
+    return cmp * sortDir;
+  });
+  $("tbody").innerHTML = sorted.map(i => `<tr onclick="openModal('${i.id}')">
+    <td><strong>${esc(i.titel)}</strong>${i.wartet_auf ? ' <span class="badge b-wartet">⏳</span>' : ""}</td>
+    <td>${esc(i.kategorie)}</td><td>${esc(i.status)}</td>
+    <td>${i.impact_typ === "Enabler" ? "—" : eur(i.impact_eur_monat)}</td>
+    <td>${impactBadge(i)}</td><td>${esc(i.aufwand)}</td>
+    <td class="stars">${stars(i.wow)}</td>
+    <td><div class="progress-wrap"><div class="progress"><div class="progress-fill" style="width:${i.fortschritt_prozent}%"></div></div>
+      <span class="progress-pct">${i.fortschritt_prozent} %</span></div></td>
+    <td>${quelleBadge(i)}</td>
+  </tr>`).join("");
+}
+
+function renderKPIs() {
+  const zaehlbar = IDEEN.filter(i => i.impact_typ !== "Enabler");
+  const realisiert = zaehlbar.reduce((s, i) => s + i.realisiert_eur_monat, 0);
+  const aktive = IDEEN.filter(i => ["In Umsetzung", "Test", "Live"].includes(i.status));
+  const pipeline = aktive.filter(i => i.impact_typ !== "Enabler")
+    .reduce((s, i) => s + Math.max(i.impact_eur_monat - i.realisiert_eur_monat, 0), 0);
+  const potenzial = zaehlbar.reduce((s, i) => s + i.impact_eur_monat, 0);
+  const enablerZahl = IDEEN.length - zaehlbar.length;
+
+  $("kpi-roi-val").innerHTML = `${eur(realisiert)} <small>/ ${eur(ZIEL_EUR)} realisiert</small>`;
+  $("roi-fill-real").style.width = Math.min(realisiert / ZIEL_EUR * 100, 100) + "%";
+  $("roi-fill-pipe").style.width = Math.min(pipeline / ZIEL_EUR * 100, 100 - Math.min(realisiert / ZIEL_EUR * 100, 100)) + "%";
+  $("kpi-roi-sub").innerHTML =
+    `Schraffiert: <strong>${eur(pipeline)}</strong> geschätzt in aktiven Projekten (In Umsetzung/Test/Live). ` +
+    `Potenzial aller Ideen: <strong>${eur(potenzial)}</strong>/Mon (nicht addierbar — Überschneidungen). ` +
+    `<strong>${enablerZahl} Enabler-Ideen</strong> zählen nicht aufs Ziel.`;
+
+  const avg = aktive.length ? Math.round(aktive.reduce((s, i) => s + i.fortschritt_prozent, 0) / aktive.length) : 0;
+  $("kpi-prog-val").textContent = avg + " %";
+  $("prog-fill").style.width = avg + "%";
+  $("kpi-prog-sub").innerHTML = `Ø über <strong>${aktive.length} aktive Projekte</strong> ` +
+    `(${aktive.map(i => esc(i.id)).join(", ") || "—"}). ${IDEEN.length} Ideen gesamt. ` +
+    `Nach jeder Bau-Session wird der Fortschritt je Projekt aktualisiert (KI schätzt, Daniel bestätigt).`;
+}
+
+function openModal(id) {
+  const i = IDEEN.find(x => x.id === id);
+  if (!i) return;
+  $("modal-content").innerHTML = `
+    <h2>${esc(i.id)} · ${esc(i.titel)}</h2>
+    <div class="badges">${katBadge(i)}${quelleBadge(i)}${impactBadge(i)}
+      <span class="badge b-kat">${esc(i.status)}</span></div>
+    <p class="modal-desc">${esc(i.beschreibung)}</p>
+    <div class="modal-grid">
+      <div><div class="lbl">€ / Monat (Schätzung)</div>${i.impact_typ === "Enabler" ? "— (Enabler)" : eur(i.impact_eur_monat)}</div>
+      <div><div class="lbl">Realisiert</div>${eur(i.realisiert_eur_monat)}</div>
+      <div><div class="lbl">Aufwand / Wow</div>${esc(i.aufwand)} · <span class="stars">${stars(i.wow)}</span></div>
+      <div><div class="lbl">Typ</div>${i.typ === "extern" ? "Extern (Kunde sieht es)" : "Intern"}</div>
+      <div><div class="lbl">Ideengeber</div>${esc(i.ideengeber)}</div>
+      <div><div class="lbl">Letzte Aktualisierung</div>${esc(i.letzte_aktualisierung)}</div>
+    </div>
+    <div class="progress-wrap" style="margin-bottom:14px;">
+      <div class="progress" style="height:10px;"><div class="progress-fill" style="width:${i.fortschritt_prozent}%"></div></div>
+      <span class="progress-pct">${i.fortschritt_prozent} %</span>
+    </div>
+    ${i.wartet_auf ? `<div class="modal-notes">⏳ <strong>Wartet auf:</strong> ${esc(i.wartet_auf)}</div>` : ""}
+    ${i.notizen ? `<div class="modal-notes">${esc(i.notizen)}</div>` : ""}
+    <div class="modal-actions">
+      <a class="btn btn-navy" href="${mailtoIdee(i.id + " " + i.titel)}">✉️ Ergänzung / Feedback</a>
+      ${i.tool_link ? `<a class="btn btn-outline" href="${esc(i.tool_link)}" target="_blank">Tool öffnen →</a>` : ""}
+    </div>`;
+  $("modal-overlay").style.display = "flex";
+}
+function closeModal() { $("modal-overlay").style.display = "none"; }
+document.addEventListener("keydown", e => { if (e.key === "Escape") closeModal(); });
+
+function setView(v) {
+  view = v;
+  $("kanban").style.display  = v === "kanban"  ? "flex"  : "none";
+  $("tabelle").style.display = v === "tabelle" ? "block" : "none";
+  $("vt-kanban").classList.toggle("active",  v === "kanban");
+  $("vt-tabelle").classList.toggle("active", v === "tabelle");
+  render();
+}
+function resetFilter() {
+  ["f-kategorie", "f-status", "f-quelle", "f-impact", "f-typ"].forEach(id => $(id).value = "");
+  $("f-suche").value = "";
+  render();
+}
+function render() {
+  const liste = gefiltert();
+  if (view === "kanban") renderKanban(liste); else renderTabelle(liste);
+  renderKPIs();
+}
+
+/* Filter-Optionen dynamisch füllen */
+function fillSelect(id, werte) {
+  const sel = $(id);
+  werte.forEach(w => { const o = document.createElement("option"); o.value = w; o.textContent = w; sel.appendChild(o); });
+}
+fillSelect("f-kategorie", [...new Set(IDEEN.map(i => i.kategorie))].sort((a, b) => a.localeCompare(b, "de")));
+fillSelect("f-status", SPALTEN);
+fillSelect("f-quelle", [...new Set(IDEEN.map(i => i.quelle))]);
+fillSelect("f-impact", ["Mehrumsatz", "Kostenersparnis", "Enabler"]);
+["f-kategorie", "f-status", "f-quelle", "f-impact", "f-typ"].forEach(id => $(id).addEventListener("change", render));
+$("f-suche").addEventListener("input", render);
+document.querySelectorAll("th[data-sort]").forEach(th => th.addEventListener("click", () => {
+  const k = th.dataset.sort;
+  if (sortKey === k) sortDir *= -1; else { sortKey = k; sortDir = k === "titel" ? 1 : -1; }
+  render();
+}));
+
+const stände = IDEEN.map(i => i.letzte_aktualisierung).sort();
+$("stand-datum").textContent = stände[stände.length - 1] || "—";
+render();
+</script>
+
+</body>
+</html>
